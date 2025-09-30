@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <UseAppHost>false</UseAppHost>
+    <UseAppHost>true</UseAppHost>
     <AssemblyName>WpfApp1.Debug</AssemblyName>
   </PropertyGroup>
 

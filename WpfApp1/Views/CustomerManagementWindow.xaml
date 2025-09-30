@@ -1,0 +1,224 @@
+<Window x:Class="WpfApp1.CustomerManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Quản Lý Khách Hàng" Height="700" Width="1000"
+        SizeToContent="WidthAndHeight" MinWidth="1000" MinHeight="700"
+        WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1CB5E0" Padding="20">
+            <TextBlock Text="👥 Quản Lý Khách Hàng" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"/>
+        </Border>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Input Form -->
+            <Border Grid.Column="0" 
+                    Background="White" 
+                    CornerRadius="10" 
+                    Padding="20" 
+                    Margin="0,0,10,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Thông Tin Khách Hàng" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="#1CB5E0" 
+                                   Margin="0,0,0,20"/>
+                        
+                        <!-- Customer Name -->
+                        <TextBlock Text="Tên Khách Hàng *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="CustomerNameTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Phone -->
+                        <TextBlock Text="Số Điện Thoại" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="PhoneTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Email -->
+                        <TextBlock Text="Địa Chỉ Email" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="EmailTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Customer Type -->
+                        <TextBlock Text="Loại Khách Hàng" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="CustomerTypeComboBox" 
+                                  Margin="0,0,0,15">
+                            <ComboBoxItem Content="Thường" IsSelected="True"/>
+                            <ComboBoxItem Content="VIP"/>
+                            <ComboBoxItem Content="Sỉ"/>
+                            <ComboBoxItem Content="Doanh Nghiệp"/>
+                        </ComboBox>
+
+                        <!-- Customer Segment -->
+                        <TextBlock Text="Phân loại (Segment)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="SegmentComboBox" Margin="0,0,0,15">
+                            <ComboBoxItem Content="Thân thiết"/>
+                            <ComboBoxItem Content="VIP"/>
+                            <ComboBoxItem Content="Tiềm năng"/>
+                            <ComboBoxItem Content="Rủi ro"/>
+                        </ComboBox>
+                        
+                        <!-- Address -->
+                        <TextBlock Text="Địa Chỉ" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="AddressTextBox" 
+                                 Height="80" 
+                                 TextWrapping="Wrap" 
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,0,0,20"/>
+                        
+                        <!-- Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Thêm" 
+                                    Width="80" 
+                                    Background="#4CAF50" 
+                                    Foreground="White" 
+                                    Click="AddButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Cập Nhật" 
+                                    Width="80" 
+                                    Background="#2196F3" 
+                                    Foreground="White" 
+                                    Click="UpdateButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Xóa" 
+                                    Width="80" 
+                                    Background="#F44336" 
+                                    Foreground="White" 
+                                    Click="DeleteButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Xóa Tất Cả" 
+                                    Width="80" 
+                                    Background="#9E9E9E" 
+                                    Foreground="White" 
+                                    Click="ClearButton_Click"/>
+                        </StackPanel>
+                        
+                        <!-- Status -->
+                        <TextBlock x:Name="StatusTextBlock" 
+                                   Text="Sẵn sàng" 
+                                   FontSize="12" 
+                                   Foreground="#666666" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,15,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+            
+            <!-- Customer List -->
+            <Border Grid.Column="1" 
+                    Background="White" 
+                    CornerRadius="10" 
+                    Padding="20">
+                <StackPanel>
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" 
+                                   Text="Danh Sách Khách Hàng" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="#1CB5E0"/>
+                        
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox x:Name="SearchTextBox" 
+                                     Width="200" 
+                                     Margin="0,0,10,0"
+                                     TextChanged="SearchTextBox_TextChanged"
+                                     VerticalContentAlignment="Center"/>
+                            <Button Content="Tìm Kiếm" 
+                                    Width="80" 
+                                    Background="#FF9800" 
+                                    Foreground="White"
+                                    Click="SearchButton_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <DataGrid x:Name="CustomerDataGrid" 
+                                  AutoGenerateColumns="False" 
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  SelectionChanged="CustomerDataGrid_SelectionChanged"
+                                  Height="300">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="150"/>
+                            <DataGridTextColumn Header="Điện Thoại" Binding="{Binding Phone}" Width="100"/>
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="150"/>
+                            <DataGridTextColumn Header="Loại" Binding="{Binding CustomerType}" Width="80"/>
+                            <DataGridTextColumn Header="Địa Chỉ" Binding="{Binding Address}" Width="200"/>
+                        </DataGrid.Columns>
+                        </DataGrid>
+                    </ScrollViewer>
+
+                    <!-- Purchase History Panel -->
+                    <TextBlock Text="Lịch Sử Mua Hàng" FontSize="18" FontWeight="Bold" Foreground="#1CB5E0" Margin="0,16,0,8"/>
+                    <DataGrid x:Name="PurchaseHistoryDataGrid"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Height="200">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding InvoiceId}" Width="70"/>
+                            <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedAt}" Width="150"/>
+                            <DataGridTextColumn Header="Mặt hàng" Binding="{Binding ItemCount}" Width="80"/>
+                            <DataGridTextColumn Header="Tổng" Binding="{Binding Total}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

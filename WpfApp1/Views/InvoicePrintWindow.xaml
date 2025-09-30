@@ -1,0 +1,255 @@
+<Window x:Class="WpfApp1.InvoicePrintWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Xem Trước In Hóa Đơn" Height="800" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="White">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Print Controls -->
+        <Border Grid.Row="0" Background="#F0F0F0" Padding="10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="PrintButton" Content="🖨️ In" Width="100" Height="35" 
+                        Background="#2196F3" Foreground="White" Click="PrintButton_Click" Margin="5"/>
+                <Button x:Name="CloseButton" Content="❌ Đóng" Width="100" Height="35" 
+                        Background="#F44336" Foreground="White" Click="CloseButton_Click" Margin="5"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Invoice Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Border Background="White" Padding="50" Margin="20">
+                <Grid Width="800">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Section -->
+                    <Grid Grid.Row="0" Margin="0,0,0,30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Company Info -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="CompanyNameText" Text="TÊN CÔNG TY CỦA BẠN" 
+                                       FontSize="24" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="CompanySloganText" Text="Khẩu hiệu công ty của bạn" 
+                                       FontSize="14" Foreground="#7F8C8D" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="CompanyAddressText" Text="123 Đường Kinh Doanh" 
+                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
+                            <TextBlock x:Name="CompanyCityText" Text="Thành phố, Tỉnh 12345" 
+                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
+                            <TextBlock x:Name="CompanyPhoneText" Text="Điện thoại: (555) 123-4567" 
+                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
+                            <TextBlock x:Name="CompanyFaxText" Text="Fax: (555) 123-4568" 
+                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
+                            <TextBlock x:Name="CompanyEmailText" Text="Email: info@company.com" 
+                                       FontSize="12" Foreground="#34495E"/>
+                        </StackPanel>
+
+                        <!-- Invoice Info -->
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <TextBlock Text="HÓA ĐƠN" FontSize="28" FontWeight="Bold" 
+                                       Foreground="#E74C3C" HorizontalAlignment="Right" Margin="0,0,0,10"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Số HD:" FontWeight="Bold" Margin="0,0,10,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InvoiceNumberText" Text="#0001" Margin="0,0,0,5"/>
+                                
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Ngày:" FontWeight="Bold" Margin="0,0,10,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="InvoiceDateText" Text="01/01/2024" Margin="0,0,0,5"/>
+                                
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Giờ:" FontWeight="Bold" Margin="0,0,10,0"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InvoiceTimeText" Text="10:30 AM"/>
+                            </Grid>
+                            <TextBlock x:Name="InvoiceForText" Text="Giao dịch bán hàng" 
+                                       FontSize="12" Foreground="#7F8C8D" HorizontalAlignment="Right" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Customer Section -->
+                    <Border Grid.Row="1" Background="#F8F9FA" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="THÔNG TIN KHÁCH HÀNG" FontSize="16" FontWeight="Bold" 
+                                           Foreground="#2C3E50" Margin="0,0,0,10"/>
+                                <TextBlock x:Name="CustomerNameText" Text="Tên khách hàng" 
+                                           FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="CustomerCompanyText" Text="Công ty khách hàng" 
+                                           FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="CustomerAddressText" Text="Địa chỉ khách hàng" 
+                                           FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="CustomerCityText" Text="Thành phố, Mã bưu điện" 
+                                           FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="CustomerPhoneText" Text="Số điện thoại" 
+                                           FontSize="12" Margin="0,0,0,2"/>
+                                <TextBlock x:Name="CustomerEmailText" Text="Email khách hàng" 
+                                           FontSize="12"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="THÔNG TIN THANH TOÁN" FontSize="16" FontWeight="Bold" 
+                                           Foreground="#2C3E50" Margin="0,0,0,10"/>
+                                <TextBlock Text="Phương thức thanh toán: Tiền mặt" FontSize="12" Margin="0,0,0,5"/>
+                                <TextBlock Text="Trạng thái: Đã thanh toán" FontSize="12" Margin="0,0,0,5"/>
+                                <TextBlock Text="Nhân viên: Nguyễn Văn A" FontSize="12"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Items Section -->
+                    <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1" 
+                            CornerRadius="8" Padding="0" Margin="0,0,0,20">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Items Header -->
+                            <Border Grid.Row="0" Background="#34495E" CornerRadius="8,8,0,0" Padding="15,10,15,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Grid.Column="0" Text="#" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Grid.Column="1" Text="SẢN PHẨM" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Grid.Column="2" Text="ĐƠN GIÁ" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="SL" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="THÀNH TIỀN" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Border>
+                            
+                            <!-- Items List -->
+                            <ItemsControl Grid.Row="1" x:Name="InvoiceItemsList" Margin="0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="15,10,15,10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Grid.Column="0" Text="{Binding RowNumber}" FontSize="12"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding ProductName}" FontSize="12"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding UnitPrice, StringFormat=F2}" FontSize="12" HorizontalAlignment="Right"/>
+                                                <TextBlock Grid.Column="3" Text="{Binding Quantity}" FontSize="12" HorizontalAlignment="Center"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding LineTotal, StringFormat=F2}" FontSize="12" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+
+                    <!-- Totals Section -->
+                    <Grid Grid.Row="3" Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="300"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Notes -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="GHI CHÚ" FontSize="14" FontWeight="Bold" 
+                                       Foreground="#2C3E50" Margin="0,0,0,10"/>
+                            <TextBlock Text="Cảm ơn quý khách đã sử dụng dịch vụ của chúng tôi!" 
+                                       FontSize="12" Foreground="#7F8C8D" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        
+                        <!-- Totals -->
+                        <Border Grid.Column="1" Background="#F8F9FA" CornerRadius="8" Padding="20">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Tạm tính:" FontSize="12" Margin="0,0,10,6"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="SubtotalText" Text="$0.00" FontSize="12" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Thuế:" FontSize="12" Margin="0,0,10,6"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TaxRateText" Text="0.00%" FontSize="12" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Số tiền thuế:" FontSize="12" Margin="0,0,10,6"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="SalesTaxText" Text="$0.00" FontSize="12" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Giảm giá:" FontSize="12" Margin="0,0,10,6"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="OtherText" Text="$0.00" FontSize="12" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                
+                                <Border Grid.Row="4" Grid.ColumnSpan="2" Background="#E0E0E0" Height="1" Margin="0,6,0,6"/>
+                                
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="TỔNG CỘNG:" FontSize="14" FontWeight="Bold" Margin="0,0,10,6"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="TotalText" Text="$0.00" FontSize="14" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Đã trả:" FontSize="12" Margin="0,0,10,0"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" x:Name="PaidText" Text="$0.00" FontSize="12" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Footer -->
+                    <Border Grid.Row="4" Background="#2C3E50" CornerRadius="8" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="CẢM ƠN QUÝ KHÁCH!" FontSize="18" FontWeight="Bold" 
+                                       Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                            <TextBlock Text="Hẹn gặp lại quý khách lần sau!" FontSize="14" 
+                                       Foreground="#BDC3C7" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </ScrollViewer>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#F0F0F0" Padding="10">
+            <TextBlock x:Name="StatusText" Text="Sẵn sàng in hóa đơn" FontSize="12" 
+                       Foreground="#666666" HorizontalAlignment="Center"/>
+        </Border>
+    </Grid>
+</Window>

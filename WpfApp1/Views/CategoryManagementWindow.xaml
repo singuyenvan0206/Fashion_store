@@ -1,0 +1,121 @@
+<Window x:Class="WpfApp1.CategoryManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:system="clr-namespace:System;assembly=mscorlib"
+        Title="Quản Lý Danh Mục" Height="500" Width="600"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="12"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="#4FC3F7"
+                                    BorderThickness="2"
+                                    CornerRadius="10">
+                                <ScrollViewer x:Name="PART_ContentHost"/>
+                            </Border>
+                            <TextBlock Text="Tên Danh Mục"
+                                       Foreground="Gray"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False"
+                                       Visibility="{Binding Text.IsEmpty, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid Background="#FAD2D2" Margin="0">
+        <Border CornerRadius="24" Padding="20" Margin="0,10,22,30"
+                Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
+            <StackPanel>
+                <TextBlock Text="Quản Lý Danh Mục" FontSize="24" FontWeight="Bold" Foreground="#1CB5E0" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBox x:Name="CategoryNameTextBox" Width="220" Height="32" Margin="0,0,12,0">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Grid>
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="#4FC3F7"
+                                                        BorderThickness="2"
+                                                        CornerRadius="10">
+                                                    <ScrollViewer x:Name="PART_ContentHost"/>
+                                                </Border>
+                                                <TextBlock Text="Tên Danh Mục"
+                                                           Foreground="Gray"
+                                                           Margin="8,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           IsHitTestVisible="False"
+                                                           Visibility="{Binding Text.IsEmpty, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <Button Content="Thêm" Width="80" Height="32" Background="#1CB5E0" Foreground="White" Click="AddButton_Click"/>
+                    <Button Content="Cập Nhật" Width="80" Height="32" Background="#FF6A82FB" Foreground="White" Margin="8,0,0,0" Click="UpdateButton_Click"/>
+                    <Button Content="Xóa" Width="80" Height="32" Background="#FC5C7D" Foreground="White" Margin="8,0,0,0" Click="DeleteButton_Click"/>
+                    <Button Content="Xóa Tất Cả" Width="80" Height="32" Background="#9E9E9E" Foreground="White" Margin="8,0,0,0" Click="ClearButton_Click"/>
+                </StackPanel>
+                <ListBox x:Name="CategoryListBox" Height="280" DisplayMemberPath="Name" SelectionChanged="CategoryListBox_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="8,4"/>
+                            <Setter Property="Margin" Value="2"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="#4FC3F7"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Margin="2">
+                                            <ContentPresenter Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#E3F2FD"/>
+                                                <Setter Property="BorderBrush" Value="#2196F3"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#F5F5F5"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+                <TextBlock x:Name="StatusTextBlock" Text="Sẵn sàng" FontSize="12" Foreground="#666666" Margin="0,8,0,0" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

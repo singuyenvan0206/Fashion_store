@@ -1,0 +1,166 @@
+<Window x:Class="WpfApp1.UserManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Quản Lý Người Dùng" Height="600" Width="1000"
+        SizeToContent="WidthAndHeight" MinWidth="1000" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+    
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#E91E63" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" Text="👥 Quản Lý Người Dùng" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+                
+                <Button x:Name="AddUserButton" 
+                        Grid.Column="1" 
+                        Content="➕ Thêm Người Dùng" 
+                        Width="150" 
+                        Height="40" 
+                        Background="#4CAF50" 
+                        Foreground="White" 
+                        Click="AddUserButton_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Search and Filter -->
+        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="16" Margin="20,16,20,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBox x:Name="SearchTextBox" 
+                         Grid.Column="0" 
+                         Height="40" 
+                         FontSize="16"
+                         TextChanged="SearchTextBox_TextChanged"
+                         VerticalContentAlignment="Center"
+                         Padding="10,0">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border Background="{TemplateBinding Background}" 
+                                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                                CornerRadius="8">
+                                            <ScrollViewer x:Name="PART_ContentHost" 
+                                                          VerticalAlignment="Center" 
+                                                          Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+                
+                <ComboBox x:Name="RoleFilterComboBox" 
+                          Grid.Column="1" 
+                          Width="150" 
+                          Height="40" 
+                          Margin="10,0,0,0"
+                          SelectionChanged="FilterChanged">
+                    <ComboBoxItem Content="Tất cả vai trò" Tag=""/>
+                    <ComboBoxItem Content="Quản trị viên" Tag="Admin"/>
+                    <ComboBoxItem Content="Quản lý" Tag="Manager"/>
+                    <ComboBoxItem Content="Thu ngân" Tag="Cashier"/>
+                </ComboBox>
+                
+                <Button x:Name="RefreshButton" 
+                        Grid.Column="2" 
+                        Content="🔄 Làm mới" 
+                        Width="100" 
+                        Height="40" 
+                        Background="#2196F3" 
+                        Foreground="White" 
+                        Margin="10,0,0,0"
+                        Click="RefreshButton_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- Users List -->
+        <Border Grid.Row="2" Background="White" CornerRadius="12" Padding="16" Margin="20,8,20,8">
+                <DataGrid x:Name="UsersDataGrid" 
+                      AutoGenerateColumns="False" 
+                      CanUserAddRows="False" 
+                      SelectionMode="Single"
+                      HeadersVisibility="Column" 
+                      GridLinesVisibility="Horizontal"
+                      Background="Transparent" 
+                      BorderThickness="0"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      EnableRowVirtualization="True"
+                      EnableColumnVirtualization="True">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <EventSetter Event="MouseDoubleClick" Handler="UsersDataGrid_MouseDoubleClick"/>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Tên đăng nhập" Binding="{Binding Username}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Họ tên" Binding="{Binding EmployeeName}" Width="200" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Vai trò" Binding="{Binding RoleDisplayName}" Width="120" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Mô tả" Binding="{Binding RoleDescription}" Width="*" IsReadOnly="True"/>
+                    <DataGridTemplateColumn Header="Thao tác" Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Sửa" 
+                                            Background="#FF9800" 
+                                            Foreground="White" 
+                                            Padding="8,4"
+                                            Margin="0,0,5,0"
+                                            Click="EditUserButton_Click"/>
+                                    <Button Content="Xóa" 
+                                            Background="#F44336" 
+                                            Foreground="White" 
+                                            Padding="8,4"
+                                            Click="DeleteUserButton_Click"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+                </DataGrid>
+        </Border>
+
+        <!-- Footer -->
+        <Border Grid.Row="3" Background="#F0F0F0" Padding="16">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock x:Name="StatusTextBlock" 
+                           Text="Sẵn sàng..." 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,20,0"/>
+                <Button x:Name="CloseButton" 
+                        Content="Đóng" 
+                        Width="100" 
+                        Height="35" 
+                        Background="#9E9E9E" 
+                        Foreground="White" 
+                        Click="CloseButton_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

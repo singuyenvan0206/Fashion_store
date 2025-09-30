@@ -1,0 +1,203 @@
+<Window x:Class="WpfApp1.ProductManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Quản Lý Sản Phẩm" Height="700" Width="1000"
+        SizeToContent="WidthAndHeight" MinWidth="1000" MinHeight="700"
+        WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1CB5E0" Padding="20">
+            <TextBlock Text="📦 Quản Lý Sản Phẩm" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"/>
+        </Border>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Input Form -->
+            <Border Grid.Column="0" 
+                    Background="White" 
+                    CornerRadius="10" 
+                    Padding="20" 
+                    Margin="0,0,10,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Thông Tin Sản Phẩm" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="#1CB5E0" 
+                                   Margin="0,0,0,20"/>
+                        
+                        <!-- Product Name -->
+                        <TextBlock Text="Tên Sản Phẩm *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="ProductNameTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Product Code -->
+                        <TextBlock Text="Mã Sản Phẩm" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="ProductCodeTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Category -->
+                        <TextBlock Text="Danh Mục" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="CategoryComboBox" 
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="Id"
+                                  Margin="0,0,0,15"/>
+                        
+                        <!-- Price -->
+                        <TextBlock Text="Giá *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="PriceTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Stock Quantity -->
+                        <TextBlock Text="Số Lượng Tồn *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="StockQuantityTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Description -->
+                        <TextBlock Text="Mô Tả" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="DescriptionTextBox" 
+                                 Height="80" 
+                                 TextWrapping="Wrap" 
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,0,0,20"/>
+                        
+                        <!-- Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Thêm" 
+                                    Width="80" 
+                                    Background="#4CAF50" 
+                                    Foreground="White" 
+                                    Click="AddButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Cập Nhật" 
+                                    Width="80" 
+                                    Background="#2196F3" 
+                                    Foreground="White" 
+                                    Click="UpdateButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Xóa" 
+                                    Width="80" 
+                                    Background="#F44336" 
+                                    Foreground="White" 
+                                    Click="DeleteButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Xóa Tất Cả" 
+                                    Width="80" 
+                                    Background="#9E9E9E" 
+                                    Foreground="White" 
+                                    Click="ClearButton_Click"/>
+                        </StackPanel>
+                        
+                        <!-- Status -->
+                        <TextBlock x:Name="StatusTextBlock" 
+                                   Text="Sẵn sàng" 
+                                   FontSize="12" 
+                                   Foreground="#666666" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="0,15,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+            
+            <!-- Product List -->
+            <Border Grid.Column="1" 
+                    Background="White" 
+                    CornerRadius="10" 
+                    Padding="20">
+                <StackPanel>
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Grid.Column="0" 
+                                   Text="Danh Sách Sản Phẩm" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="#1CB5E0"/>
+                        
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBox x:Name="SearchTextBox" 
+                                     Width="200" 
+                                     Margin="0,0,10,0"
+                                     TextChanged="SearchTextBox_TextChanged"
+                                     VerticalContentAlignment="Center"/>
+                            <Button Content="Tìm Kiếm" 
+                                    Width="80" 
+                                    Background="#FF9800" 
+                                    Foreground="White"
+                                    Click="SearchButton_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <DataGrid x:Name="ProductDataGrid" 
+                                  AutoGenerateColumns="False" 
+                                  IsReadOnly="True"
+                                  SelectionMode="Single"
+                                  SelectionChanged="ProductDataGrid_SelectionChanged"
+                                  Height="400">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="150"/>
+                            <DataGridTextColumn Header="Mã" Binding="{Binding Code}" Width="100"/>
+                            <DataGridTextColumn Header="Danh Mục" Binding="{Binding CategoryName}" Width="100"/>
+                            <DataGridTextColumn Header="Giá" Binding="{Binding Price, StringFormat=C}" Width="80"/>
+                            <DataGridTextColumn Header="Tồn" Binding="{Binding StockQuantity}" Width="60"/>
+                            <DataGridTextColumn Header="Mô Tả" Binding="{Binding Description}" Width="200"/>
+                        </DataGrid.Columns>
+                        </DataGrid>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

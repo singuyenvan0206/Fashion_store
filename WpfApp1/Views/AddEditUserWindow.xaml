@@ -1,0 +1,112 @@
+<Window x:Class="WpfApp1.AddEditUserWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Thêm/Sửa Người Dùng"
+        MinWidth="480"
+        MinHeight="420"
+        Height="600"
+        Width="520"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
+
+    <DockPanel Background="#F5F5F5" LastChildFill="True">
+        <!-- Header -->
+        <Border Background="#E91E63" Padding="16" DockPanel.Dock="Top">
+            <TextBlock x:Name="HeaderText" Text="➕ Thêm Người Dùng" 
+                       FontSize="20" 
+                       FontWeight="Bold" 
+                       Foreground="White"
+                       HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Buttons (always at bottom) -->
+        <Border Background="#F0F0F0" Padding="16" DockPanel.Dock="Bottom">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" 
+                        Content="Hủy" 
+                        Width="100" 
+                        Height="40" 
+                        Background="#9E9E9E" 
+                        Foreground="White" 
+                        Margin="0,0,10,0"
+                        Click="CancelButton_Click"/>
+                <Button x:Name="SaveButton" 
+                        Content="Lưu" 
+                        Width="100" 
+                        Height="40" 
+                        Background="#4CAF50" 
+                        Foreground="White" 
+                        Click="SaveButton_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Scrollable Form -->
+        <Border Background="White" CornerRadius="12" Padding="24" Margin="20,20,20,20">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <!-- Username -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="Tên đăng nhập:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="UsernameTextBox" 
+                                 Height="40" 
+                                 FontSize="16"
+                                 VerticalContentAlignment="Center"
+                                 Padding="10,0"/>
+                    </StackPanel>
+
+                    <!-- Employee Name -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="Họ tên nhân viên:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="EmployeeNameTextBox" 
+                                 Height="40" 
+                                 FontSize="16"
+                                 VerticalContentAlignment="Center"
+                                 Padding="10,0"/>
+                    </StackPanel>
+
+                    <!-- Password -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="Mật khẩu:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <PasswordBox x:Name="PasswordBox" 
+                                     Height="40" 
+                                     FontSize="16"
+                                     VerticalContentAlignment="Center"
+                                     Padding="10,0"/>
+                    </StackPanel>
+
+                    <!-- Confirm Password -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="Xác nhận mật khẩu:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <PasswordBox x:Name="ConfirmPasswordBox" 
+                                     Height="40" 
+                                     FontSize="16"
+                                     VerticalContentAlignment="Center"
+                                     Padding="10,0"/>
+                    </StackPanel>
+
+                    <!-- Role -->
+                    <StackPanel Margin="0,0,0,8">
+                        <TextBlock Text="Vai trò:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="RoleComboBox" 
+                                  Height="40" 
+                                  FontSize="16"
+                                  VerticalContentAlignment="Center"
+                                  Padding="10,0">
+                            <ComboBoxItem Content="Quản lý" Tag="Manager"/>
+                            <ComboBoxItem Content="Thu ngân" Tag="Cashier"/>
+                            <ComboBoxItem Content="Quản trị viên" Tag="Admin"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Error Message -->
+                    <TextBlock x:Name="ErrorMessageText" 
+                               Foreground="#F44336" 
+                               FontWeight="Bold" 
+                               TextWrapping="Wrap"
+                               Visibility="Collapsed"
+                               Margin="0,12,0,0"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </DockPanel>
+</Window>

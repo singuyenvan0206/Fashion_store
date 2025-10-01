@@ -45,10 +45,10 @@ namespace WpfApp1
             // Set company information
             CompanyNameText.Text = "HỆ THỐNG QUẢN LÝ BÁN HÀNG";
             CompanySloganText.Text = "Giải pháp bán hàng chuyên nghiệp";
-            CompanyAddressText.Text = "123 Đường Kinh Doanh";
-            CompanyCityText.Text = "Thành phố Hồ Chí Minh, 700000";
-            CompanyPhoneText.Text = "Điện thoại: (028) 1234-5678";
-            CompanyFaxText.Text = "Fax: (028) 1234-5679";
+            CompanyAddressText.Text = ""; // Ẩn để đơn giản
+            CompanyCityText.Text = "";    // Ẩn để đơn giản
+            CompanyPhoneText.Text = "";   // Ẩn để đơn giản
+            CompanyFaxText.Text = "";     // Ẩn để đơn giản
 
             // Set invoice information
             InvoiceDateText.Text = _invoiceDate.ToString("dd/MM/yyyy");
@@ -57,10 +57,7 @@ namespace WpfApp1
 
             // Set customer information
             CustomerNameText.Text = _customer?.Name ?? "Khách lẻ";
-            CustomerCompanyText.Text = "Công ty khách hàng";
-            CustomerAddressText.Text = "Địa chỉ khách hàng";
-            CustomerCityText.Text = "City, ZIP Code";
-            CustomerPhoneText.Text = "Phone Number";
+            CustomerPhoneText.Text = _customer?.Phone ?? string.Empty;
 
             // Load items
             InvoiceItemsList.ItemsSource = _items;
@@ -204,7 +201,7 @@ namespace WpfApp1
             Grid.SetRow(headerGrid, 0);
             mainGrid.Children.Add(headerGrid);
 
-            // Billing Information
+            // Billing Information (simplified: Name + Phone)
             var billingBorder = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(248, 249, 250)),
@@ -231,25 +228,7 @@ namespace WpfApp1
             });
             billingStack.Children.Add(new TextBlock
             {
-                Text = "Customer Company",
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            billingStack.Children.Add(new TextBlock
-            {
-                Text = "Customer Address",
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            billingStack.Children.Add(new TextBlock
-            {
-                Text = "City, ZIP Code",
-                FontSize = 12,
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            billingStack.Children.Add(new TextBlock
-            {
-                Text = "Phone Number",
+                Text = string.IsNullOrWhiteSpace(_customer?.Phone) ? "" : _customer!.Phone,
                 FontSize = 12
             });
 
@@ -329,7 +308,7 @@ namespace WpfApp1
             });
             headerGrid.Children.Add(new TextBlock
             {
-                Text = "HOURS",
+                Text = "QTY",
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 FontSize = 12,
@@ -337,7 +316,7 @@ namespace WpfApp1
             });
             headerGrid.Children.Add(new TextBlock
             {
-                Text = "RATE",
+                Text = "UNIT PRICE",
                 FontWeight = FontWeights.Bold,
                 Foreground = Brushes.White,
                 FontSize = 12,

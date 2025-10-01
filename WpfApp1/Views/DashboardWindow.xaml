@@ -153,13 +153,7 @@
                         </StackPanel>
                     </ScrollViewer>
                     
-                    <!-- Footer -->
-                    <Border Grid.Row="2" Background="#0F172A" CornerRadius="0,0,20,0" Padding="20,15,20,20">
-                        <TextBlock Text="💡 Hệ thống POS v1.0" 
-                                   Foreground="#94A3B8" 
-                                   FontSize="12" 
-                                   HorizontalAlignment="Center"/>
-                    </Border>
+                   
                 </Grid>
             </Border>
 
@@ -417,7 +411,7 @@
                     <Button Style="{StaticResource {x:Type Button}}" 
                             Background="Transparent" 
                             BorderThickness="0"
-                            Click="DataVisualization_Click">
+                            Click="DataVisualization_Click" IsEnabled="False" Visibility="Hidden">
                         <StackPanel>
                             <TextBlock Text="📈" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
                             <TextBlock Text="Trực Quan Hóa Dữ Liệu" 
@@ -441,13 +435,14 @@
                         Background="White" 
                         CornerRadius="20" 
                         Margin="10" 
-                        Padding="25">
+                        Padding="25"
+                        Visibility="Hidden">
                     <Button Style="{StaticResource {x:Type Button}}" 
                             Background="Transparent" 
                             BorderThickness="0"
                             Click="ChartsAnalytics_Click">
                         <StackPanel>
-                            <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                            <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15" Visibility="Hidden"/>
                             <TextBlock Text="Biểu Đồ &amp; Phân Tích" 
                                        FontSize="20" 
                                        FontWeight="Bold" 

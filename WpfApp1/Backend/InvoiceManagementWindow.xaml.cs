@@ -22,7 +22,7 @@ namespace WpfApp1
         private void LoadCustomers()
         {
             var customers = DatabaseHelper.GetAllCustomers();
-            var customerVms = customers.ConvertAll(c => new CustomerListItem { Id = c.Id, Name = c.Name });
+            var customerVms = customers.ConvertAll(c => new CustomerListItem { Id = c.Id, Name = c.Name, Phone = c.Phone });
             CustomerComboBox.ItemsSource = customerVms;
             if (customerVms.Count > 0)
             {
@@ -375,5 +375,6 @@ namespace WpfApp1
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
     }
 }

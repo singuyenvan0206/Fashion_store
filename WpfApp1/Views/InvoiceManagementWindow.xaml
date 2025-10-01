@@ -124,7 +124,7 @@
 						<TextBlock Text="Tổng hợp đơn hàng" FontWeight="Bold" Margin="0,0,0,8"/>
 						<oxy:PlotView x:Name="MiniSummaryPlot" Height="160"/>
 					</StackPanel>
-					<StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+					<StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Hidden">
 						<TextBlock Text="Mẹo nhanh:" FontWeight="Bold"/>
 						<TextBlock Text="- Dùng Enter để thêm nhanh"/>
 						<TextBlock Text="- Ctrl+S để lưu hóa đơn"/>
@@ -137,14 +137,14 @@
 		<Border Grid.Row="2" Background="White" CornerRadius="12" Padding="16" Margin="20">
 			<Grid>
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*"/>
 					<ColumnDefinition Width="560"/>
 				</Grid.ColumnDefinitions>
-				<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-					<Button x:Name="ClearInvoiceButton" Content="Xóa Tất Cả" Width="120" Height="40" Click="ClearInvoiceButton_Click" Margin="0,0,8,0"/>
-				</StackPanel>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                </StackPanel>
 				<Grid Grid.Column="1">
 					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
 						<RowDefinition Height="Auto"/>
@@ -163,21 +163,30 @@
 						<TextBlock Text="Thuế:" VerticalAlignment="Center" Margin="12,0,0,0"/>
 						<TextBlock x:Name="TaxAmountTextBlock" Text="0.00" Width="100" TextAlignment="Right" Margin="8,0,0,0"/>
 					</StackPanel>
-					<StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,6,0,6">
+					<StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="horizontal" HorizontalAlignment="Right" Margin="0,6,0,6">
 						<TextBlock Text="Giảm giá:" VerticalAlignment="Center"/>
 						<TextBox x:Name="DiscountTextBox" Width="120" Text="0" TextChanged="TotalsInput_TextChanged" Margin="8,0,0,0"/>
-						<CheckBox x:Name="UsePercentDiscountCheckBox" Content="%" VerticalAlignment="Center" Margin="8,0,0,0" Checked="TotalsInput_Toggle" Unchecked="TotalsInput_Toggle"/>
+						<CheckBox x:Name="UsePercentDiscountCheckBox" Content="%" VerticalAlignment="Center" Margin="12,0,0,0" Checked="TotalsInput_Toggle" Unchecked="TotalsInput_Toggle"/>
 						<TextBox x:Name="DiscountPercentTextBox" Width="80" Text="0" Margin="8,0,0,0" TextChanged="TotalsInput_TextChanged"/>
 					</StackPanel>
-					<TextBlock Grid.Row="3" Grid.Column="0" Text="Tổng cộng:" HorizontalAlignment="Right" FontWeight="Bold" Margin="0,8,8,6"/>
-					<TextBlock x:Name="TotalTextBlock" Grid.Row="3" Grid.Column="1" Text="0.00" HorizontalAlignment="Right" FontWeight="Bold"/>
-					<StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+					<TextBlock Grid.Row="3" Grid.Column="0" Text="Tổng cộng:" HorizontalAlignment="Right" FontWeight="bold" Margin="0,8,8,6"/>
+					<TextBlock x:Name="TotalTextBlock" Grid.Row="3" Grid.Column="1" Text="0.00" HorizontalAlignment="Right" FontWeight="bold"/>
+					<StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+						<TextBlock Text="PTTT:" VerticalAlignment="Center"/>
+						<ComboBox x:Name="PaymentMethodComboBox" Width="160" Margin="8,0,16,0" SelectedIndex="0">
+							<ComboBoxItem Content="Tiền mặt"/>
+							<ComboBoxItem Content="Thẻ"/>
+							<ComboBoxItem Content="Chuyển khoản"/>
+							<ComboBoxItem Content="Ví điện tử"/>
+						</ComboBox>
 						<TextBlock Text="Đã trả:" VerticalAlignment="Center"/>
-						<TextBox x:Name="PaidTextBox" Width="80" Text="0" TextChanged="TotalsInput_TextChanged" Margin="8,0,0,0"/>
+						<TextBox x:Name="PaidTextBox" Width="100" Text="0" TextChanged="TotalsInput_TextChanged" Margin="8,0,0,0"/>
 						<TextBlock Text="Tiền thừa:" VerticalAlignment="Center" Margin="12,0,0,0"/>
 						<TextBlock x:Name="ChangeTextBlock" Text="0.00" Width="100" TextAlignment="Right" Margin="8,0,0,0"/>
-						<Button x:Name="PrintInvoiceButton" Content="🖨️ In Hóa Đơn" Width="120" Height="40" Background="#FF9800" Foreground="White" Click="PrintInvoiceButton_Click" Margin="12,0,0,0"/>
-						<Button x:Name="SaveInvoiceButton" Content="Lưu Hóa Đơn" Width="140" Height="40" Background="#4CAF50" Foreground="White" Click="SaveInvoiceButton_Click" Margin="8,0,0,0"/>
+					</StackPanel>
+					<StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+						<Button x:Name="PrintInvoiceButton" Content=" In Hóa Đơn" MinWidth="130" Height="40" Background="#FF9800" Foreground="White" Click="PrintInvoiceButton_Click"/>
+						<Button x:Name="SaveInvoiceButton" Content="Lưu Hóa Đơn" MinWidth="140" Height="40" Background="#4CAF50" Foreground="White" Click="SaveInvoiceButton_Click" Margin="8,0,0,0"/>
 					</StackPanel>
 				</Grid>
 			</Grid>

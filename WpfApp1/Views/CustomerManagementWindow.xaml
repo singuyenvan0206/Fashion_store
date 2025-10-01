@@ -99,8 +99,8 @@
                         </ComboBox>
 
                         <!-- Customer Segment -->
-                        <TextBlock Text="Phân loại (Segment)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="SegmentComboBox" Margin="0,0,0,15">
+                        <TextBlock Text="Phân loại (Segment)" FontWeight="SemiBold" Margin="0,0,0,5" Visibility="Hidden"/>
+                        <ComboBox x:Name="SegmentComboBox" Margin="0,0,0,15" Visibility="Hidden">
                             <ComboBoxItem Content="Thân thiết"/>
                             <ComboBoxItem Content="VIP"/>
                             <ComboBoxItem Content="Tiềm năng"/>

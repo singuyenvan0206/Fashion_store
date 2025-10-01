@@ -88,39 +88,16 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Customer Section -->
+                    <!-- Customer Section (Simplified) -->
                     <Border Grid.Row="1" Background="#F8F9FA" CornerRadius="8" Padding="20" Margin="0,0,0,20">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="THÔNG TIN KHÁCH HÀNG" FontSize="16" FontWeight="Bold" 
-                                           Foreground="#2C3E50" Margin="0,0,0,10"/>
-                                <TextBlock x:Name="CustomerNameText" Text="Tên khách hàng" 
-                                           FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="CustomerCompanyText" Text="Công ty khách hàng" 
-                                           FontSize="12" Margin="0,0,0,2"/>
-                                <TextBlock x:Name="CustomerAddressText" Text="Địa chỉ khách hàng" 
-                                           FontSize="12" Margin="0,0,0,2"/>
-                                <TextBlock x:Name="CustomerCityText" Text="Thành phố, Mã bưu điện" 
-                                           FontSize="12" Margin="0,0,0,2"/>
-                                <TextBlock x:Name="CustomerPhoneText" Text="Số điện thoại" 
-                                           FontSize="12" Margin="0,0,0,2"/>
-                                <TextBlock x:Name="CustomerEmailText" Text="Email khách hàng" 
-                                           FontSize="12"/>
-                            </StackPanel>
-                            
-                            <StackPanel Grid.Column="1">
-                                <TextBlock Text="THÔNG TIN THANH TOÁN" FontSize="16" FontWeight="Bold" 
-                                           Foreground="#2C3E50" Margin="0,0,0,10"/>
-                                <TextBlock Text="Phương thức thanh toán: Tiền mặt" FontSize="12" Margin="0,0,0,5"/>
-                                <TextBlock Text="Trạng thái: Đã thanh toán" FontSize="12" Margin="0,0,0,5"/>
-                                <TextBlock Text="Nhân viên: Nguyễn Văn A" FontSize="12"/>
-                            </StackPanel>
-                        </Grid>
+                        <StackPanel>
+                            <TextBlock Text="THÔNG TIN KHÁCH HÀNG" FontSize="16" FontWeight="Bold" 
+                                       Foreground="#2C3E50" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="CustomerNameText" Text="Tên khách hàng" 
+                                       FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                            <TextBlock x:Name="CustomerPhoneText" Text="Số điện thoại" 
+                                       FontSize="12"/>
+                        </StackPanel>
                     </Border>
 
                     <!-- Items Section -->

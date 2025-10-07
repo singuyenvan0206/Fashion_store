@@ -88,24 +88,22 @@
                         <TextBlock Text="Địa Chỉ Email" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="EmailTextBox" Margin="0,0,0,15"/>
                         
-                        <!-- Customer Type -->
-                        <TextBlock Text="Loại Khách Hàng" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                        <ComboBox x:Name="CustomerTypeComboBox" 
-                                  Margin="0,0,0,15">
-                            <ComboBoxItem Content="Thường" IsSelected="True"/>
-                            <ComboBoxItem Content="VIP"/>
-                            <ComboBoxItem Content="Sỉ"/>
-                            <ComboBoxItem Content="Doanh Nghiệp"/>
-                        </ComboBox>
+                        <!-- Customer Type removed -->
+                        <TextBlock Text="Loại Khách Hàng" FontWeight="SemiBold" Margin="0,0,0,5" Visibility="Collapsed"/>
+                        <ComboBox x:Name="CustomerTypeComboBox" Margin="0,0,0,15" Visibility="Collapsed"/>
 
-                        <!-- Customer Segment -->
-                        <TextBlock Text="Phân loại (Segment)" FontWeight="SemiBold" Margin="0,0,0,5" Visibility="Hidden"/>
-                        <ComboBox x:Name="SegmentComboBox" Margin="0,0,0,15" Visibility="Hidden">
-                            <ComboBoxItem Content="Thân thiết"/>
-                            <ComboBoxItem Content="VIP"/>
-                            <ComboBoxItem Content="Tiềm năng"/>
-                            <ComboBoxItem Content="Rủi ro"/>
+                        <!-- Loyalty Tier & Points -->
+                        <TextBlock Text="Hạng thành viên" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="TierComboBox" Margin="0,0,0,10">
+                            <ComboBoxItem Content="Regular" IsSelected="True"/>
+                            <ComboBoxItem Content="Silver"/>
+                            <ComboBoxItem Content="Gold"/>
+                            <ComboBoxItem Content="Platinum"/>
                         </ComboBox>
+                        <TextBlock Text="Điểm tích lũy" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="PointsTextBox" Margin="0,0,0,15" Text="0"/>
+
+                        <!-- Segment removed -->
                         
                         <!-- Address -->
                         <TextBlock Text="Địa Chỉ" FontWeight="SemiBold" Margin="0,0,0,5"/>
@@ -129,6 +127,12 @@
                                     Background="#2196F3" 
                                     Foreground="White" 
                                     Click="UpdateButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Cập nhật hạng/điểm" 
+                                    Width="150" 
+                                    Background="#9C27B0" 
+                                    Foreground="White" 
+                                    Click="UpdateLoyaltyButton_Click"
                                     Margin="0,0,10,0"/>
                             <Button Content="Xóa" 
                                     Width="80" 
@@ -198,7 +202,9 @@
                             <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="150"/>
                             <DataGridTextColumn Header="Điện Thoại" Binding="{Binding Phone}" Width="100"/>
                             <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="150"/>
-                            <DataGridTextColumn Header="Loại" Binding="{Binding CustomerType}" Width="80"/>
+                            <!-- Customer type column removed -->
+                            <DataGridTextColumn Header="Hạng" Binding="{Binding Tier}" Width="90"/>
+                            <DataGridTextColumn Header="Điểm" Binding="{Binding Points}" Width="80"/>
                             <DataGridTextColumn Header="Địa Chỉ" Binding="{Binding Address}" Width="200"/>
                         </DataGrid.Columns>
                         </DataGrid>

@@ -40,6 +40,46 @@ namespace WpfApp1
             LoadInvoiceData();
         }
 
+        // New: Load from database by saved invoice id
+        public InvoicePrintWindow(int invoiceId, int employeeId)
+        {
+            InitializeComponent();
+
+            _items = new List<InvoiceItemViewModel>();
+            _customer = new CustomerListItem();
+            _subtotal = 0m;
+            _taxPercent = 0m;
+            _taxAmount = 0m;
+            _discount = 0m;
+            _total = 0m;
+            _invoiceId = invoiceId;
+            _invoiceDate = DateTime.Now;
+
+            LoadFromDatabase(invoiceId, employeeId);
+        }
+
+        // Overload: allow passing selected customer to show phone/name accurately
+        public InvoicePrintWindow(int invoiceId, int employeeId, CustomerListItem customer)
+        {
+            InitializeComponent();
+
+            _items = new List<InvoiceItemViewModel>();
+            _customer = customer;
+            _subtotal = 0m;
+            _taxPercent = 0m;
+            _taxAmount = 0m;
+            _discount = 0m;
+            _total = 0m;
+            _invoiceId = invoiceId;
+            _invoiceDate = DateTime.Now;
+
+            LoadFromDatabase(invoiceId, employeeId);
+
+            // After loading header, override with precise customer fields from selection (phone, name)
+            CustomerNameText.Text = _customer?.Name ?? CustomerNameText.Text;
+            CustomerPhoneText.Text = _customer?.Phone ?? CustomerPhoneText.Text;
+        }
+
         private void LoadInvoiceData()
         {
             // Set company information
@@ -48,7 +88,6 @@ namespace WpfApp1
             CompanyAddressText.Text = ""; // Ẩn để đơn giản
             CompanyCityText.Text = "";    // Ẩn để đơn giản
             CompanyPhoneText.Text = "";   // Ẩn để đơn giản
-            CompanyFaxText.Text = "";     // Ẩn để đơn giản
 
             // Set invoice information
             InvoiceDateText.Text = _invoiceDate.ToString("dd/MM/yyyy");
@@ -70,15 +109,71 @@ namespace WpfApp1
             TotalText.Text = _total.ToString("C");
         }
 
+        private void LoadFromDatabase(int invoiceId, int employeeId)
+        {
+            try
+            {
+                var (header, items) = DatabaseHelper.GetInvoiceDetails(invoiceId);
+
+                // Header
+                InvoiceDateText.Text = header.CreatedDate.ToString("dd/MM/yyyy");
+                InvoiceTimeText.Text = header.CreatedDate.ToString("HH:mm");
+                InvoiceNumberText.Text = header.Id.ToString();
+                InvoiceForText.Text = "Giao dịch bán hàng";
+
+                // Employee display: resolve username by id
+                var accounts = DatabaseHelper.GetAllAccounts();
+                var employee = accounts.FirstOrDefault(a => a.Id == employeeId);
+                EmployeeNameText.Text = string.IsNullOrWhiteSpace(employee.Username) ? "" : employee.Username;
+
+                // Customer
+                CustomerNameText.Text = header.CustomerName;
+                // Customer phone not provided by current API; leave blank for now
+                CustomerPhoneText.Text = string.Empty;
+
+                // Items
+                var vmItems = new List<InvoiceItemViewModel>();
+                int row = 1;
+                foreach (var it in items)
+                {
+                    vmItems.Add(new InvoiceItemViewModel
+                    {
+                        RowNumber = row++,
+                        ProductId = it.ProductId,
+                        ProductName = it.ProductName,
+                        UnitPrice = it.UnitPrice,
+                        Quantity = it.Quantity,
+                        LineTotal = it.LineTotal
+                    });
+                }
+                InvoiceItemsList.ItemsSource = vmItems;
+
+                // Totals
+                SubtotalText.Text = header.Subtotal.ToString("C");
+                var taxPercent = header.Subtotal == 0 ? 0m : (header.TaxAmount / header.Subtotal * 100m);
+                TaxRateText.Text = taxPercent.ToString("F2") + "%";
+                SalesTaxText.Text = header.TaxAmount.ToString("C");
+                OtherText.Text = header.Discount.ToString("C");
+                TotalText.Text = header.Total.ToString("C");
+                PaidText.Text = header.Paid.ToString("C");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không tải được dữ liệu hóa đơn #{invoiceId}: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 PrintDialog printDialog = new PrintDialog();
-                
-                // Configure print settings
-                printDialog.PrintTicket.PageOrientation = PageOrientation.Portrait;
-                printDialog.PrintTicket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
+
+                // Configure print settings safely (PrintTicket can be null on some drivers)
+                var ticket = printDialog.PrintTicket ?? new PrintTicket();
+                ticket.PageOrientation = PageOrientation.Portrait;
+                ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
+                printDialog.PrintTicket = ticket;
 
                 if (printDialog.ShowDialog() == true)
                 {

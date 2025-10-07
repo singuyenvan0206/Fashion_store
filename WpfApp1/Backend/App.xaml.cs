@@ -20,7 +20,6 @@ namespace WpfApp1
             try
             {
                 DatabaseHelper.InitializeDatabase();
-                DatabaseHelper.InitializeDefaultVietnameseData();
             }
             catch (System.Exception ex)
             {
@@ -33,7 +32,6 @@ namespace WpfApp1
                     try
                     {
                         DatabaseHelper.InitializeDatabase();
-                        DatabaseHelper.InitializeDefaultVietnameseData();
                     }
                     catch (System.Exception retryEx)
                     {

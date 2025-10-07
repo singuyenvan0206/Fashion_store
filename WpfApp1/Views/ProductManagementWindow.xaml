@@ -70,7 +70,7 @@
                     Margin="0,0,10,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="Thông Tin Sản Phẩm" 
+                        <TextBlock Text="📝 Thông Tin Sản Phẩm" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
                                    Foreground="#1CB5E0" 
@@ -109,30 +109,52 @@
                                  Margin="0,0,0,20"/>
                         
                         <!-- Buttons -->
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <Button Content="Thêm" 
-                                    Width="80" 
-                                    Background="#4CAF50" 
-                                    Foreground="White" 
-                                    Click="AddButton_Click"
-                                    Margin="0,0,10,0"/>
-                            <Button Content="Cập Nhật" 
-                                    Width="80" 
-                                    Background="#2196F3" 
-                                    Foreground="White" 
-                                    Click="UpdateButton_Click"
-                                    Margin="0,0,10,0"/>
-                            <Button Content="Xóa" 
-                                    Width="80" 
-                                    Background="#F44336" 
-                                    Foreground="White" 
-                                    Click="DeleteButton_Click"
-                                    Margin="0,0,10,0"/>
-                            <Button Content="Xóa Tất Cả" 
-                                    Width="80" 
-                                    Background="#9E9E9E" 
-                                    Foreground="White" 
-                                    Click="ClearButton_Click"/>
+                        <StackPanel HorizontalAlignment="Center" Margin="0,10,0,0">
+                            <!-- Main Actions Row -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                                <Button Content="➕ Thêm" 
+                                        Width="100" 
+                                        Height="35"
+                                        Background="#4CAF50" 
+                                        Foreground="White" 
+                                        Click="AddButton_Click"
+                                        Margin="0,0,15,0"
+                                        FontWeight="SemiBold"/>
+                                <Button Content="✏️ Cập Nhật" 
+                                        Width="100" 
+                                        Height="35"
+                                        Background="#2196F3" 
+                                        Foreground="White" 
+                                        Click="UpdateButton_Click"
+                                        Margin="0,0,15,0"
+                                        FontWeight="SemiBold"/>
+                                <Button Content="🗑️ Xóa" 
+                                        Width="100" 
+                                        Height="35"
+                                        Background="#F44336" 
+                                        Foreground="White" 
+                                        Click="DeleteButton_Click"
+                                        FontWeight="SemiBold"/>
+                            </StackPanel>
+                            
+                            <!-- Secondary Actions Row -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="🧹 Xóa Form" 
+                                        Width="100" 
+                                        Height="30"
+                                        Background="#FF9800" 
+                                        Foreground="White" 
+                                        Click="ClearButton_Click"
+                                        Margin="0,0,15,0"
+                                        FontWeight="SemiBold"/>
+                                <Button Content="⚠️ Xóa Tất Cả" 
+                                        Width="100" 
+                                        Height="30"
+                                        Background="#9E9E9E" 
+                                        Foreground="White" 
+                                        Click="DeleteAllButton_Click"
+                                        FontWeight="SemiBold"/>
+                            </StackPanel>
                         </StackPanel>
                         
                         <!-- Status -->
@@ -152,29 +174,36 @@
                     CornerRadius="10" 
                     Padding="20">
                 <StackPanel>
+                    <!-- Header with Search -->
                     <Grid Margin="0,0,0,15">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         
-                        <TextBlock Grid.Column="0" 
-                                   Text="Danh Sách Sản Phẩm" 
+                        <TextBlock Grid.Row="0" 
+                                   Text="📦 Danh Sách Sản Phẩm" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
-                                   Foreground="#1CB5E0"/>
+                                   Foreground="#1CB5E0"
+                                   Margin="0,0,0,10"/>
                         
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
                             <TextBox x:Name="SearchTextBox" 
-                                     Width="200" 
+                                     Width="250" 
+                                     Height="32"
                                      Margin="0,0,10,0"
                                      TextChanged="SearchTextBox_TextChanged"
-                                     VerticalContentAlignment="Center"/>
-                            <Button Content="Tìm Kiếm" 
-                                    Width="80" 
+                                     VerticalContentAlignment="Center"
+                                     FontSize="14"
+                                     Padding="8,6"/>
+                            <Button Content="🔍 Tìm Kiếm" 
+                                    Width="100" 
+                                    Height="32"
                                     Background="#FF9800" 
                                     Foreground="White"
-                                    Click="SearchButton_Click"/>
+                                    Click="SearchButton_Click"
+                                    FontWeight="SemiBold"/>
                         </StackPanel>
                     </Grid>
                     

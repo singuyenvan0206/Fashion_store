@@ -77,6 +77,7 @@ namespace WpfApp1
         }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     private void LoadFromDatabase(int invoiceId, int employeeId)
         {
             try
@@ -157,6 +158,8 @@ namespace WpfApp1
             }
         }
 
+=======
+>>>>>>> parent of 97921a3 (Change some layouts)
 =======
 >>>>>>> parent of 97921a3 (Change some layouts)
         private void PrintButton_Click(object sender, RoutedEventArgs e)

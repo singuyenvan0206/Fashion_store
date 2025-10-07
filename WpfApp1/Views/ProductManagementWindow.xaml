@@ -65,6 +65,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
 <<<<<<< HEAD
+<<<<<<< HEAD
                         <TextBlock Text="📝 Thông tin sản phẩm" FontSize="18" FontWeight="Bold" Foreground="#D6336C" Margin="0,0,0,12"/>
 
                         <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -86,6 +87,8 @@
                                 <TextBox x:Name="StockQuantityTextBox"/>
                             </StackPanel>
 =======
+=======
+>>>>>>> parent of 97921a3 (Change some layouts)
                         <TextBlock Text="Thông Tin Sản Phẩm" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
@@ -149,6 +152,7 @@
                                     Background="#9E9E9E" 
                                     Foreground="White" 
                                     Click="ClearButton_Click"/>
+<<<<<<< HEAD
 >>>>>>> parent of 97921a3 (Change some layouts)
                         </StackPanel>
 
@@ -169,6 +173,8 @@
                                     <ComboBoxItem>Unisex</ComboBoxItem><ComboBoxItem>Nam</ComboBoxItem><ComboBoxItem>Nữ</ComboBoxItem>
                                 </ComboBox>
                             </StackPanel>
+=======
+>>>>>>> parent of 97921a3 (Change some layouts)
                         </StackPanel>
 
                         <TextBlock Text="Thương hiệu" FontWeight="SemiBold" Margin="0,0,0,4"/>

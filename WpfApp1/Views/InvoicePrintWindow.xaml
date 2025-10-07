@@ -75,6 +75,7 @@
                                 </Grid.RowDefinitions>
                                 
 <<<<<<< HEAD
+<<<<<<< HEAD
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -107,6 +108,10 @@
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Số HD:" FontWeight="Bold" Margin="0,0,10,5"/>
                                 <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InvoiceNumberText" Text="#0001" Margin="0,0,0,5"/>
 >>>>>>> parent of 97921a3 (Change some layouts)
+=======
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Số HD:" FontWeight="Bold" Margin="0,0,10,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InvoiceNumberText" Text="#0001" Margin="0,0,0,5"/>
+>>>>>>> parent of 97921a3 (Change some layouts)
                                 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Ngày:" FontWeight="Bold" Margin="0,0,10,5"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" x:Name="InvoiceDateText" Text="01/01/2024" Margin="0,0,0,5"/>
@@ -122,6 +127,7 @@
                     <!-- Customer Section (Simplified) -->
                     <Border Grid.Row="1" Background="#F8F9FA" CornerRadius="8" Padding="20" Margin="0,0,0,20">
                         <StackPanel>
+<<<<<<< HEAD
 <<<<<<< HEAD
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                 <TextBlock Text="👤" FontSize="16" Margin="0,0,8,0"/>
@@ -157,12 +163,17 @@
                                 </StackPanel>
                             </Grid>
 =======
+=======
+>>>>>>> parent of 97921a3 (Change some layouts)
                             <TextBlock Text="THÔNG TIN KHÁCH HÀNG" FontSize="16" FontWeight="Bold" 
                                        Foreground="#2C3E50" Margin="0,0,0,10"/>
                             <TextBlock x:Name="CustomerNameText" Text="Tên khách hàng" 
                                        FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
                             <TextBlock x:Name="CustomerPhoneText" Text="Số điện thoại" 
                                        FontSize="12"/>
+<<<<<<< HEAD
+>>>>>>> parent of 97921a3 (Change some layouts)
+=======
 >>>>>>> parent of 97921a3 (Change some layouts)
                         </StackPanel>
                     </Border>

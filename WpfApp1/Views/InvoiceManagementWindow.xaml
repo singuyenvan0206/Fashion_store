@@ -18,6 +18,9 @@
 =======
 		<!-- Header -->
 		<Border Grid.Row="0" Background="#1CB5E0" Padding="16">
+<<<<<<< HEAD
+>>>>>>> parent of 97921a3 (Change some layouts)
+=======
 >>>>>>> parent of 97921a3 (Change some layouts)
 			<Grid>
 				<Grid.ColumnDefinitions>
@@ -26,8 +29,13 @@
 				</Grid.ColumnDefinitions>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
 <<<<<<< HEAD
+<<<<<<< HEAD
 					<TextBlock Text="👗 Quản Lý Hóa Đơn - Cửa Hàng Thời Trang" FontSize="24" FontWeight="Bold" Foreground="White"/>
 					<TextBlock Text=" - Bán lẻ áo quần, phụ kiện" FontSize="13" Foreground="#FFE6F0" Margin="10,0,0,0"/>
+=======
+					<TextBlock Text="🧾 Quản Lý Hóa Đơn" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="  " Foreground="White"/>
+>>>>>>> parent of 97921a3 (Change some layouts)
 =======
 					<TextBlock Text="🧾 Quản Lý Hóa Đơn" FontSize="24" FontWeight="Bold" Foreground="White"/>
                     <TextBlock Text="  " Foreground="White"/>
@@ -50,8 +58,13 @@
 			</Grid.RowDefinitions>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 			<!-- Product selector (tweak tooltip for fashion) -->
 			<Border Grid.Row="0" Background="White" CornerRadius="12" Padding="16" Margin="0,0,0,12" BorderBrush="#E0E0E0" BorderThickness="1">
+=======
+			<!-- Product selector -->
+			<Border Grid.Row="0" Background="White" CornerRadius="12" Padding="12" Margin="0,0,0,12">
+>>>>>>> parent of 97921a3 (Change some layouts)
 =======
 			<!-- Product selector -->
 			<Border Grid.Row="0" Background="White" CornerRadius="12" Padding="12" Margin="0,0,0,12">
@@ -64,6 +77,7 @@
 						<ColumnDefinition Width="160"/>
 						<ColumnDefinition Width="Auto"/>
 					</Grid.ColumnDefinitions>
+<<<<<<< HEAD
 <<<<<<< HEAD
 					<StackPanel Grid.Column="0" Margin="0,0,12,0">
 						<TextBlock Text="🔍 Chọn sản phẩm (Tên / Mã / Size)" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#333"/>
@@ -83,12 +97,17 @@
 							Background="#4CAF50" Foreground="White" FontWeight="SemiBold" FontSize="14" 
 							Click="AddItemButton_Click" VerticalAlignment="Bottom" ToolTip="Thêm sản phẩm vào hóa đơn (Enter)"/>
 =======
+=======
+>>>>>>> parent of 97921a3 (Change some layouts)
 					<ComboBox x:Name="ProductComboBox" Grid.Column="0" Margin="0,0,10,0" IsEditable="True" StaysOpenOnEdit="True"
 							DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="ProductComboBox_SelectionChanged"/>
 					<TextBlock Grid.Column="1" Text="SL:" VerticalAlignment="Center" Margin="0,0,6,0"/>
 					<TextBox x:Name="QuantityTextBox" Grid.Column="2" Text="1"/>
 					<TextBox x:Name="UnitPriceTextBox" Grid.Column="3"/>
 					<Button x:Name="AddItemButton" Grid.Column="4" Content="Thêm Sản Phẩm" Width="140" Height="36" Background="#1CB5E0" Foreground="White" Click="AddItemButton_Click"/>
+<<<<<<< HEAD
+>>>>>>> parent of 97921a3 (Change some layouts)
+=======
 >>>>>>> parent of 97921a3 (Change some layouts)
 				</Grid>
 			</Border>

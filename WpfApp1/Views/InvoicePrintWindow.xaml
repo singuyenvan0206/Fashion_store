@@ -117,7 +117,7 @@
                                                FontWeight="SemiBold" Foreground="#2E7D32"/>
                                     
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="👤 NV:" FontWeight="Bold" Margin="0,0,12,0" Foreground="#37474F"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EmployeeNameText" Text="" Margin="0,0,0,0" 
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EmployeeNameText" Text="[Chưa có tên nhân viên]" Margin="0,0,0,0" 
                                                FontWeight="SemiBold" Foreground="#2E7D32"/>
                                 </Grid>
                                 
@@ -150,18 +150,19 @@
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Địa chỉ:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock Text="123 Đường ABC, Quận 1, TP.HCM" 
-                                               FontSize="12" Foreground="#2E7D32" Margin="0,0,0,8"/>
+                                    <TextBlock x:Name="CustomerAddressText"  
+                                               FontSize="12" Foreground="#2E7D32" Margin="0,0,0,8"
+                                               Text="[Chưa có địa chỉ]"/>
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerPhoneText" Text="0901 234 567" 
+                                    <TextBlock x:Name="CustomerPhoneText"  
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Email:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock Text="customer@email.com" 
-                                               FontSize="12" Foreground="#2E7D32"/>
+                                    <TextBlock x:Name="CustomerEmailText"  
+                                               FontSize="12" Foreground="#2E7D32" Text="[Chưa có email]"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>

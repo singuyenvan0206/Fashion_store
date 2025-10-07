@@ -6,20 +6,26 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using MySql.Data.MySqlClient;
 
 namespace WpfApp1
 {
-    public partial class InvoicePrintWindow : Window
-    {
-        private readonly List<InvoiceItemViewModel> _items;
-        private readonly CustomerListItem _customer;
-        private readonly decimal _subtotal;
-        private readonly decimal _taxPercent;
-        private readonly decimal _taxAmount;
-        private readonly decimal _discount;
-        private readonly decimal _total;
-        private readonly int _invoiceId;
-        private readonly DateTime _invoiceDate;
+        public partial class InvoicePrintWindow : Window
+        {
+            private readonly List<InvoiceItemViewModel> _items;
+            private readonly CustomerListItem _customer = new();
+            private readonly decimal _subtotal;
+            private readonly decimal _taxPercent;
+            private readonly decimal _taxAmount;
+            private readonly decimal _discount;
+            private readonly decimal _total;
+            private readonly int _invoiceId;
+            private readonly DateTime _invoiceDate;
+
+            // Thông tin bổ sung lấy từ database
+            private string _employeeName = string.Empty;
+            private string _customerAddress = string.Empty;
+            private string _customerEmail = string.Empty;
 
         public InvoicePrintWindow(List<InvoiceItemViewModel> items, CustomerListItem customer, 
             decimal subtotal, decimal taxPercent, decimal taxAmount, decimal discount, 
@@ -109,7 +115,7 @@ namespace WpfApp1
             TotalText.Text = _total.ToString("C");
         }
 
-        private void LoadFromDatabase(int invoiceId, int employeeId)
+    private void LoadFromDatabase(int invoiceId, int employeeId)
         {
             try
             {
@@ -121,15 +127,41 @@ namespace WpfApp1
                 InvoiceNumberText.Text = header.Id.ToString();
                 InvoiceForText.Text = "Giao dịch bán hàng";
 
-                // Employee display: resolve username by id
-                var accounts = DatabaseHelper.GetAllAccounts();
-                var employee = accounts.FirstOrDefault(a => a.Id == employeeId);
-                EmployeeNameText.Text = string.IsNullOrWhiteSpace(employee.Username) ? "" : employee.Username;
-
-                // Customer
-                CustomerNameText.Text = header.CustomerName;
-                // Customer phone not provided by current API; leave blank for now
-                CustomerPhoneText.Text = string.Empty;
+                // Employee + Customer directly from database for accuracy
+                try
+                {
+                    string connStr = SettingsManager.BuildConnectionString();
+                    using var conn = new MySqlConnection(connStr);
+                    conn.Open();
+                    string sql = @"SELECT IFNULL(a.EmployeeName, a.Username) AS EmpName,
+                                          IFNULL(c.Name, '') AS CustName,
+                                          IFNULL(c.Phone, '') AS CustPhone,
+                                          IFNULL(c.Address, '') AS CustAddress,
+                                          IFNULL(c.Email, '') AS CustEmail
+                                     FROM Invoices i
+                                     LEFT JOIN Accounts a ON a.Id = i.EmployeeId
+                                     LEFT JOIN Customers c ON c.Id = i.CustomerId
+                                     WHERE i.Id = @id";
+                    using var cmd = new MySqlCommand(sql, conn);
+                    cmd.Parameters.AddWithValue("@id", invoiceId);
+                    using var r = cmd.ExecuteReader();
+                    if (r.Read())
+                    {
+                        _employeeName = r.IsDBNull(0) ? string.Empty : r.GetString(0);
+                        EmployeeNameText.Text = _employeeName;
+                        CustomerNameText.Text = r.IsDBNull(1) ? string.Empty : r.GetString(1);
+                        CustomerPhoneText.Text = r.IsDBNull(2) ? string.Empty : r.GetString(2);
+                        _customerAddress = r.IsDBNull(3) ? string.Empty : r.GetString(3);
+                        CustomerAddressText.Text = _customerAddress;
+                        _customerEmail = r.IsDBNull(4) ? string.Empty : r.GetString(4);
+                        CustomerEmailText.Text = _customerEmail;
+                    }
+                }
+                catch { /* fallback below */ }
+                
+                // Fallbacks from header (in case above query fails)
+                if (string.IsNullOrWhiteSpace(CustomerNameText.Text))
+                    CustomerNameText.Text = header.CustomerName;
 
                 // Items
                 var vmItems = new List<InvoiceItemViewModel>();
@@ -206,7 +238,7 @@ namespace WpfApp1
             return printGrid;
         }
 
-        private FrameworkElement CreateInvoiceContent()
+    private FrameworkElement CreateInvoiceContent()
         {
             var mainGrid = new Grid();
             mainGrid.Width = 800;
@@ -296,7 +328,7 @@ namespace WpfApp1
             Grid.SetRow(headerGrid, 0);
             mainGrid.Children.Add(headerGrid);
 
-            // Billing Information (simplified: Name + Phone)
+            // Billing Information (Name, Phone, Address, Email)
             var billingBorder = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(248, 249, 250)),
@@ -323,8 +355,24 @@ namespace WpfApp1
             });
             billingStack.Children.Add(new TextBlock
             {
-                Text = string.IsNullOrWhiteSpace(_customer?.Phone) ? "" : _customer!.Phone,
+                Text = !string.IsNullOrWhiteSpace(_customer?.Phone) ? _customer!.Phone : string.Empty,
                 FontSize = 12
+            });
+            billingStack.Children.Add(new TextBlock
+            {
+                Text = !string.IsNullOrWhiteSpace(_customerAddress) ? _customerAddress : string.Empty,
+                FontSize = 12
+            });
+            billingStack.Children.Add(new TextBlock
+            {
+                Text = !string.IsNullOrWhiteSpace(_customerEmail) ? _customerEmail : string.Empty,
+                FontSize = 12
+            });
+            billingStack.Children.Add(new TextBlock
+            {
+                Text = !string.IsNullOrWhiteSpace(_employeeName) ? $"Nhân viên: {_employeeName}" : string.Empty,
+                FontSize = 12,
+                FontStyle = FontStyles.Italic
             });
 
             billingBorder.Child = billingStack;
@@ -600,5 +648,7 @@ namespace WpfApp1
         {
             this.Close();
         }
+
+
     }
 }

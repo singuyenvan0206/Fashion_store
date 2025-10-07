@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:oxy="http://oxyplot.org/wpf"
-        Title="Quản Lý Hóa Đơn" Height="800" Width="1280"
+        Title="Quản Lý Hóa Đơn - Thời Trang" Height="800" Width="1280"
         WindowStartupLocation="CenterScreen"
         KeyDown="Window_KeyDown">
 	<Grid Background="#F5F5F5">
@@ -12,16 +12,16 @@
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<!-- Header -->
-		<Border Grid.Row="0" Background="#1CB5E0" Padding="20">
+		<!-- Header (modified for fashion store) -->
+		<Border Grid.Row="0" Background="#D6336C" Padding="18">
 			<Grid>
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="*"/>
 					<ColumnDefinition Width="Auto"/>
 				</Grid.ColumnDefinitions>
 				<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-					<TextBlock Text="🧾 Quản Lý Hóa Đơn" FontSize="26" FontWeight="Bold" Foreground="White"/>
-					<TextBlock Text=" - Tạo hóa đơn bán hàng" FontSize="14" Foreground="#E3F2FD" Margin="10,0,0,0"/>
+					<TextBlock Text="👗 Quản Lý Hóa Đơn - Cửa Hàng Thời Trang" FontSize="24" FontWeight="Bold" Foreground="White"/>
+					<TextBlock Text=" - Bán lẻ áo quần, phụ kiện" FontSize="13" Foreground="#FFE6F0" Margin="10,0,0,0"/>
                 </StackPanel>
 				<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
 					<TextBlock Text="👤 Khách hàng:" Foreground="White" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -52,7 +52,7 @@
 				<ColumnDefinition Width="380"/>
 			</Grid.ColumnDefinitions>
 
-			<!-- Product selector -->
+			<!-- Product selector (tweak tooltip for fashion) -->
 			<Border Grid.Row="0" Background="White" CornerRadius="12" Padding="16" Margin="0,0,0,12" BorderBrush="#E0E0E0" BorderThickness="1">
 				<Grid>
 					<Grid.ColumnDefinitions>
@@ -62,10 +62,10 @@
 						<ColumnDefinition Width="Auto"/>
 					</Grid.ColumnDefinitions>
 					<StackPanel Grid.Column="0" Margin="0,0,12,0">
-						<TextBlock Text="🔍 Chọn sản phẩm" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#333"/>
+						<TextBlock Text="🔍 Chọn sản phẩm (Tên / Mã / Size)" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#333"/>
 						<ComboBox x:Name="ProductComboBox" Height="36" IsEditable="True" StaysOpenOnEdit="True"
 								DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="ProductComboBox_SelectionChanged"
-								IsTextSearchEnabled="True" FontSize="14" Padding="8,6" ToolTip="Gõ để tìm sản phẩm theo tên hoặc mã"/>
+								IsTextSearchEnabled="True" FontSize="14" Padding="8,6" ToolTip="Gõ tên, mã hoặc kích thước (ví dụ: 'Áo M, đỏ')"/>
 					</StackPanel>
 					<StackPanel Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Bottom">
 						<TextBlock Text="📦 Số lượng" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="#333"/>
@@ -238,4 +238,4 @@
 			</Border>
 		</Grid>
 	</Grid>
-	</Window>
+</Window>

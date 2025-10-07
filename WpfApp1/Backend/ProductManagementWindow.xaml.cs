@@ -152,35 +152,6 @@ namespace WpfApp1
             ClearForm();
         }
 
-        private void DeleteAllButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_products.Count == 0)
-            {
-                MessageBox.Show("Không có sản phẩm nào để xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            var result = MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa TẤT CẢ {_products.Count} sản phẩm?\n\nHành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu sản phẩm.",
-                "Xác nhận xóa tất cả",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                if (DatabaseHelper.DeleteAllProducts())
-                {
-                    LoadProducts();
-                    ClearForm();
-                    MessageBox.Show($"Đã xóa thành công tất cả {_products.Count} sản phẩm!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Không thể xóa tất cả sản phẩm. Một số sản phẩm có thể đang được sử dụng trong hóa đơn.", "Xóa thất bại", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-        }
-
         private void ClearForm()
         {
             ProductNameTextBox.Clear();

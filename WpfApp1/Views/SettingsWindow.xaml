@@ -70,5 +70,103 @@
         <TextBlock x:Name="StatusTextBlock" Grid.Row="2" Text="" Foreground="#666" HorizontalAlignment="Center" Margin="0,0,0,12"/>
         
         <!-- Reset Data Section -->
+        <Border Grid.Row="2" Background="#FFF3CD" CornerRadius="8" Padding="16" Margin="24,0,24,12">
+            <StackPanel>
+                <TextBlock Text="🔄 Quản Lý Dữ Liệu Mẫu" 
+                           FontSize="16" 
+                           FontWeight="SemiBold" 
+                           Foreground="#856404" 
+                           Margin="0,0,0,8"/>
+                <TextBlock Text="Nếu dữ liệu mẫu bị trùng lặp hoặc lỗi, bạn có thể xóa và tạo lại." 
+                           FontSize="12" 
+                           Foreground="#856404" 
+                           Margin="0,0,0,12"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button x:Name="CheckStatusButton" 
+                            Content="🔍 Kiểm Tra Trạng Thái" 
+                            Background="#17A2B8" 
+                            Foreground="White" 
+                            Padding="12,8" 
+                            BorderThickness="0" 
+                            Click="CheckStatusButton_Click"
+                            Margin="0,0,12,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                    <Button x:Name="CreateDataNowButton" 
+                            Content="⚡ Tạo Dữ Liệu Ngay" 
+                            Background="#FF6B35" 
+                            Foreground="White" 
+                            Padding="12,8" 
+                            BorderThickness="0" 
+                            Click="CreateDataNowButton_Click"
+                            Margin="0,0,12,0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                    
+                    <Button x:Name="ResetDataButton" 
+                            Content="🗑️ Xóa Dữ Liệu Mẫu" 
+                            Background="#DC3545" 
+                            Foreground="White" 
+                            Padding="12,8" 
+                            BorderThickness="0" 
+                            Click="ResetDataButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"
+                                                                  Margin="{TemplateBinding Padding}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

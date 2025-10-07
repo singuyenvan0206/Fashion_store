@@ -25,85 +25,42 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#1CB5E0" Padding="20">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="📊 Báo Cáo và Thống Kê" FontSize="24" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text=" - Phân tích doanh thu và hiệu suất" FontSize="14" Foreground="#E3F2FD" Margin="10,0,0,0"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="🔄 Làm mới" Width="100" Height="32" Background="#FF9800" Foreground="White" 
-                            FontWeight="SemiBold" Margin="0,0,8,0" Click="RefreshButton_Click"/>
-                    <Button x:Name="OpenSettingsButton" Content="⚙️ Cài đặt" Width="100" Height="32" Background="#9C27B0" Foreground="White" 
-                            FontWeight="SemiBold" Click="OpenSettingsButton_Click" />
-                </StackPanel>
-            </Grid>
+        <Border Grid.Row="0" Background="#1CB5E0" Padding="16">
+            <TextBlock Text="📊 Báo Cáo và Thống Kê"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Foreground="White"
+                       HorizontalAlignment="Center"/>
         </Border>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Margin="20,16,20,8" Background="White" CornerRadius="12" Padding="16" BorderBrush="#E0E0E0" BorderThickness="1">
+        <Border Grid.Row="1" Margin="20,16,20,8" Background="White" CornerRadius="12" Padding="12">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                
-                <!-- First row - Date and Customer filters -->
-                <Grid Grid.Row="0" Margin="0,0,0,12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="160"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="200"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <TextBlock Grid.Column="0" Text="📅 Từ:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <DatePicker x:Name="FromDatePicker" Grid.Column="1" Height="32" SelectedDateChanged="FilterChanged" Margin="6,0,0,0"/>
-                    <TextBlock Grid.Column="2" Text="📅 Đến:" VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="SemiBold"/>
-                    <DatePicker x:Name="ToDatePicker" Grid.Column="3" Height="32" SelectedDateChanged="FilterChanged" Margin="6,0,0,0"/>
-                    <TextBlock Grid.Column="4" Text="👤 Khách hàng:" VerticalAlignment="Center" Margin="12,0,0,0" FontWeight="SemiBold"/>
-                    <ComboBox x:Name="CustomerComboBox" Grid.Column="5" Height="32" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="FilterChanged" Margin="6,0,0,0"/>
-                    <TextBox x:Name="SearchTextBox" Grid.Column="6" Height="32" Margin="12,0,12,0" TextChanged="FilterChanged" 
-                             ToolTip="🔍 Tìm theo mã KH, tên KH hoặc số hóa đơn" Padding="8,6"/>
-                    <Button Grid.Column="7" Content="📊 Xuất CSV" Width="120" Height="32" Background="#4CAF50" Foreground="White" 
-                            FontWeight="SemiBold" Click="ExportCsvButton_Click"/>
-                </Grid>
-                
-                <!-- Second row - Quick filters and actions -->
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <TextBlock Text="⚡ Lọc nhanh:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
-                        <Button Content="📅 Hôm nay" Width="80" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="RefreshButton_Click"/>
-                        <Button Content="📅 7 ngày" Width="80" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="RefreshButton_Click"/>
-                        <Button Content="📅 30 ngày" Width="80" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="RefreshButton_Click"/>
-                        <Button Content="📅 Tháng này" Width="90" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Click="RefreshButton_Click"/>
-                    </StackPanel>
-                    
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
-                        <Button Content="📈 Biểu đồ" Width="100" Height="28" Background="#FF9800" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="ShowChartsButton_Click"/>
-                        <Button Content="📋 Báo cáo" Width="100" Height="28" Background="#9C27B0" Foreground="White" 
-                                FontWeight="SemiBold" Click="ShowReportsButton_Click"/>
-                    </StackPanel>
-                </Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="260"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Từ:" VerticalAlignment="Center"/>
+                <DatePicker x:Name="FromDatePicker" Grid.Column="1" SelectedDateChanged="FilterChanged"/>
+                <TextBlock Grid.Column="2" Text="Đến:" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                <DatePicker x:Name="ToDatePicker" Grid.Column="3" SelectedDateChanged="FilterChanged"/>
+                <TextBlock Grid.Column="4" Text="Khách hàng:" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                <ComboBox x:Name="CustomerComboBox" Grid.Column="5" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="FilterChanged"/>
+                <TextBox x:Name="SearchTextBox" Grid.Column="6" Height="28" Margin="12,0,12,0" TextChanged="FilterChanged" 
+                         ToolTip="Tìm theo mã KH, tên KH hoặc số hóa đơn"/>
+                <StackPanel Grid.Column="7" Orientation="Horizontal">
+                    <Button Content="Hôm nay" Margin="0,0,6,0" Click="RefreshButton_Click"/>
+                    <Button Content="7 ngày" Margin="0,0,6,0" Click="RefreshButton_Click"/>
+                    <Button Content="30 ngày" Click="RefreshButton_Click"/>
+                </StackPanel>
+                <Button Grid.Column="8" Content="Xuất CSV" Width="110" Margin="8,0,0,0" Click="ExportCsvButton_Click"/>
             </Grid>
         </Border>
 
@@ -116,104 +73,47 @@
             </Grid.RowDefinitions>
 
             <!-- KPI Cards -->
-            <Grid Grid.Row="0" Margin="0,0,0,8" Visibility="Collapsed">
+            <Grid Grid.Row="0" Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                
                 <Border Style="{StaticResource KpiCard}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="📈 Doanh thu" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +12%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiRevenueText" Text="0₫" FontSize="22" FontWeight="Bold" Foreground="#059669" Margin="0,4,0,0"/>
-                        <TextBlock Text="Tổng doanh thu" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
+                        <TextBlock Text="📈 Doanh thu" Foreground="#777" FontSize="12"/>
+                        <TextBlock x:Name="KpiRevenueText" Text="0₫" FontSize="24" FontWeight="Bold" Foreground="#059669"/>
                     </StackPanel>
                 </Border>
-                
                 <Border Grid.Column="1" Style="{StaticResource KpiCard}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="🧾 Số hóa đơn" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +8%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiInvoiceCountText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#0D9488" Margin="0,4,0,0"/>
-                        <TextBlock Text="Hóa đơn đã tạo" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
+                        <TextBlock Text="🧾 Số hóa đơn" Foreground="#777" FontSize="12"/>
+                        <TextBlock x:Name="KpiInvoiceCountText" Text="0" FontSize="24" FontWeight="Bold" Foreground="#0D9488"/>
                     </StackPanel>
                 </Border>
-                
                 <Border Grid.Column="2" Style="{StaticResource KpiCard}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="👥 Khách hàng" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +5%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiCustomerCountText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#2563EB" Margin="0,4,0,0"/>
-                        <TextBlock Text="Khách hàng mới" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
+                        <TextBlock Text="👥 Khách hàng" Foreground="#777" FontSize="12"/>
+                        <TextBlock x:Name="KpiCustomerCountText" Text="0" FontSize="24" FontWeight="Bold" Foreground="#2563EB"/>
                     </StackPanel>
                 </Border>
-                
                 <Border Grid.Column="3" Style="{StaticResource KpiCard}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="💸 Giảm giá" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↘️ -3%" Foreground="#F44336" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiDiscountText" Text="0₫" FontSize="22" FontWeight="Bold" Foreground="#DC2626" Margin="0,4,0,0"/>
-                        <TextBlock Text="Tổng giảm giá" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-                
-                <Border Grid.Column="4" Style="{StaticResource KpiCard}">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="💰 Lợi nhuận" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +15%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiProfitText" Text="0₫" FontSize="22" FontWeight="Bold" Foreground="#FF9800" Margin="0,4,0,0"/>
-                        <TextBlock Text="Lợi nhuận ròng" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
+                        <TextBlock Text="💸 Giảm giá" Foreground="#777" FontSize="12"/>
+                        <TextBlock x:Name="KpiDiscountText" Text="0₫" FontSize="24" FontWeight="Bold" Foreground="#DC2626"/>
                     </StackPanel>
                 </Border>
             </Grid>
 
             <!-- Invoices DataGrid -->
-            <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,8">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    
-                    <!-- Grid Header -->
-                    <Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="📋 Danh sách hóa đơn" FontSize="16" FontWeight="Bold" Foreground="#333"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <TextBlock Text="Tổng:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
-                                <TextBlock x:Name="TotalInvoicesText" Text="0 hóa đơn" VerticalAlignment="Center" FontWeight="Bold" Foreground="#1CB5E0"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    
-                    <DataGrid Grid.Row="1"
-                              x:Name="InvoicesDataGrid"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              SelectionMode="Single"
-                              EnableRowVirtualization="True"
-                              EnableColumnVirtualization="True"
-                              BorderThickness="0"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column">
+            <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="12" Margin="0,0,0,8">
+                <DataGrid x:Name="InvoicesDataGrid"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          SelectionMode="Single"
+                          EnableRowVirtualization="True"
+                          EnableColumnVirtualization="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="60" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd HH:mm}" Width="160" IsReadOnly="True"/>
@@ -243,115 +143,55 @@
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource RightAlignedCell}"/>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTemplateColumn Header="⚙️ Thao tác" Width="200">
+                        <DataGridTemplateColumn Header="Thao tác" Width="200">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Content="👁️" Width="28" Height="24" Background="#2196F3" Foreground="White" 
-                                                FontWeight="Bold" Click="DetailsButton_Click" ToolTip="Xem chi tiết"/>
-                                        <Button Content="🖨️" Width="28" Height="24" Background="#FF9800" Foreground="White" 
-                                                FontWeight="Bold" Margin="4,0,0,0" Click="PrintButton_Click" ToolTip="In hóa đơn"/>
-                                        <Button Content="🗑️" Width="28" Height="24" Background="#F44336" Foreground="White" 
-                                                FontWeight="Bold" Margin="4,0,0,0" Click="DeleteButton_Click" ToolTip="Xóa hóa đơn"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Content="Chi tiết" Click="DetailsButton_Click"/>
+                                        <Button Content="In" Margin="6,0,0,0" Click="PrintButton_Click"/>
+                                        <Button Content="Xóa" Margin="6,0,0,0" Background="#FC5C7D" Foreground="White" Click="DeleteButton_Click"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-                </Grid>
             </Border>
 
             <!-- Charts -->
-            <Grid Grid.Row="2" Visibility="Collapsed">
+            <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                
-                <Border Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,8,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="📈 Doanh Thu (30 Ngày Gần Đây)" FontWeight="Bold" FontSize="14" Foreground="#333"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="📊" Width="24" Height="24" Background="#4CAF50" Foreground="White" FontSize="12" Margin="0,0,4,0" Click="LoadChartsButton_Click"/>
-                                    <Button Content="📈" Width="24" Height="24" Background="#2196F3" Foreground="White" FontSize="12" Click="LoadChartsButton_Click"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        
-                        <Border Grid.Row="1" Padding="12">
-                            <oxy:PlotView x:Name="RevenuePlot" Height="240"/>
-                        </Border>
-                    </Grid>
+                <Border Background="White" CornerRadius="12" Padding="12" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="Doanh Thu (30 Ngày Gần Đây)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <oxy:PlotView x:Name="RevenuePlot" Height="240"/>
+                    </StackPanel>
                 </Border>
-                
-                <Border Grid.Column="1" Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" Margin="8,0,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="🏆 Sản Phẩm Bán Chạy (Top 10)" FontWeight="Bold" FontSize="14" Foreground="#333"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="📊" Width="24" Height="24" Background="#FF9800" Foreground="White" FontSize="12" Margin="0,0,4,0" Click="LoadChartsButton_Click"/>
-                                    <Button Content="📋" Width="24" Height="24" Background="#9C27B0" Foreground="White" FontSize="12" Click="LoadChartsButton_Click"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        
-                        <Border Grid.Row="1" Padding="12">
-                            <oxy:PlotView x:Name="TopProductsPlot" Height="240"/>
-                        </Border>
-                    </Grid>
+                <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="12" Margin="8,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Sản Phẩm Bán Chạy (SL)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <oxy:PlotView x:Name="TopProductsPlot" Height="240"/>
+                    </StackPanel>
                 </Border>
             </Grid>
         </Grid>
 
         <!-- Summary -->
-        <Border Grid.Row="3" Margin="20,8,20,20" Background="White" CornerRadius="12" Padding="16" BorderBrush="#E0E0E0" BorderThickness="1">
+        <Border Grid.Row="3" Margin="20,8,20,20" Background="White" CornerRadius="12" Padding="12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="📊" FontSize="16" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="StatusTextBlock" Text="Báo cáo được cập nhật lần cuối: " VerticalAlignment="Center" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="LastUpdateText" Text="Chưa có dữ liệu" VerticalAlignment="Center" Foreground="#666" Margin="4,0,0,0"/>
-                </StackPanel>
-                
+                <TextBlock x:Name="StatusTextBlock" Grid.Column="0" Text="" VerticalAlignment="Center"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#E3F2FD" CornerRadius="6" Padding="8,4" Margin="0,0,8,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📋 Số lượng:" FontWeight="SemiBold" Margin="0,0,4,0"/>
-                            <TextBlock x:Name="CountTextBlock" FontWeight="Bold" Foreground="#1976D2"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Background="#E8F5E8" CornerRadius="6" Padding="8,4">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💰 Doanh thu:" FontWeight="SemiBold" Margin="0,0,4,0"/>
-                            <TextBlock x:Name="RevenueTextBlock" FontWeight="Bold" Foreground="#2E7D32"/>
-                        </StackPanel>
-                    </Border>
+                    <TextBlock Text="Số lượng:" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="CountTextBlock" Margin="0,0,16,0"/>
+                    <TextBlock Text="Doanh thu:" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="RevenueTextBlock"/>
                 </StackPanel>
             </Grid>
         </Border>

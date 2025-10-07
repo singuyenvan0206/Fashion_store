@@ -46,46 +46,6 @@ namespace WpfApp1
             LoadInvoiceData();
         }
 
-        // New: Load from database by saved invoice id
-        public InvoicePrintWindow(int invoiceId, int employeeId)
-        {
-            InitializeComponent();
-
-            _items = new List<InvoiceItemViewModel>();
-            _customer = new CustomerListItem();
-            _subtotal = 0m;
-            _taxPercent = 0m;
-            _taxAmount = 0m;
-            _discount = 0m;
-            _total = 0m;
-            _invoiceId = invoiceId;
-            _invoiceDate = DateTime.Now;
-
-            LoadFromDatabase(invoiceId, employeeId);
-        }
-
-        // Overload: allow passing selected customer to show phone/name accurately
-        public InvoicePrintWindow(int invoiceId, int employeeId, CustomerListItem customer)
-        {
-            InitializeComponent();
-
-            _items = new List<InvoiceItemViewModel>();
-            _customer = customer;
-            _subtotal = 0m;
-            _taxPercent = 0m;
-            _taxAmount = 0m;
-            _discount = 0m;
-            _total = 0m;
-            _invoiceId = invoiceId;
-            _invoiceDate = DateTime.Now;
-
-            LoadFromDatabase(invoiceId, employeeId);
-
-            // After loading header, override with precise customer fields from selection (phone, name)
-            CustomerNameText.Text = _customer?.Name ?? CustomerNameText.Text;
-            CustomerPhoneText.Text = _customer?.Phone ?? CustomerPhoneText.Text;
-        }
-
         private void LoadInvoiceData()
         {
             // Set company information
@@ -94,6 +54,7 @@ namespace WpfApp1
             CompanyAddressText.Text = ""; // Ẩn để đơn giản
             CompanyCityText.Text = "";    // Ẩn để đơn giản
             CompanyPhoneText.Text = "";   // Ẩn để đơn giản
+            CompanyFaxText.Text = "";     // Ẩn để đơn giản
 
             // Set invoice information
             InvoiceDateText.Text = _invoiceDate.ToString("dd/MM/yyyy");
@@ -115,6 +76,7 @@ namespace WpfApp1
             TotalText.Text = _total.ToString("C");
         }
 
+<<<<<<< HEAD
     private void LoadFromDatabase(int invoiceId, int employeeId)
         {
             try
@@ -195,17 +157,17 @@ namespace WpfApp1
             }
         }
 
+=======
+>>>>>>> parent of 97921a3 (Change some layouts)
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 PrintDialog printDialog = new PrintDialog();
-
-                // Configure print settings safely (PrintTicket can be null on some drivers)
-                var ticket = printDialog.PrintTicket ?? new PrintTicket();
-                ticket.PageOrientation = PageOrientation.Portrait;
-                ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
-                printDialog.PrintTicket = ticket;
+                
+                // Configure print settings
+                printDialog.PrintTicket.PageOrientation = PageOrientation.Portrait;
+                printDialog.PrintTicket.PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4);
 
                 if (printDialog.ShowDialog() == true)
                 {

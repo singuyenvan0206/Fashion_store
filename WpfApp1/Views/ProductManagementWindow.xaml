@@ -64,6 +64,7 @@
             <Border Grid.Column="0" Background="White" CornerRadius="10" Padding="16" Margin="0,0,12,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
+<<<<<<< HEAD
                         <TextBlock Text="📝 Thông tin sản phẩm" FontSize="18" FontWeight="Bold" Foreground="#D6336C" Margin="0,0,0,12"/>
 
                         <TextBlock Text="Tên sản phẩm *" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -84,6 +85,71 @@
                                 <TextBlock Text="Số lượng tồn *" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                 <TextBox x:Name="StockQuantityTextBox"/>
                             </StackPanel>
+=======
+                        <TextBlock Text="Thông Tin Sản Phẩm" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="#1CB5E0" 
+                                   Margin="0,0,0,20"/>
+                        
+                        <!-- Product Name -->
+                        <TextBlock Text="Tên Sản Phẩm *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="ProductNameTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Product Code -->
+                        <TextBlock Text="Mã Sản Phẩm" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="ProductCodeTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Category -->
+                        <TextBlock Text="Danh Mục" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="CategoryComboBox" 
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="Id"
+                                  Margin="0,0,0,15"/>
+                        
+                        <!-- Price -->
+                        <TextBlock Text="Giá *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="PriceTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Stock Quantity -->
+                        <TextBlock Text="Số Lượng Tồn *" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="StockQuantityTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Description -->
+                        <TextBlock Text="Mô Tả" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="DescriptionTextBox" 
+                                 Height="80" 
+                                 TextWrapping="Wrap" 
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Margin="0,0,0,20"/>
+                        
+                        <!-- Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Thêm" 
+                                    Width="80" 
+                                    Background="#4CAF50" 
+                                    Foreground="White" 
+                                    Click="AddButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Cập Nhật" 
+                                    Width="80" 
+                                    Background="#2196F3" 
+                                    Foreground="White" 
+                                    Click="UpdateButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Xóa" 
+                                    Width="80" 
+                                    Background="#F44336" 
+                                    Foreground="White" 
+                                    Click="DeleteButton_Click"
+                                    Margin="0,0,10,0"/>
+                            <Button Content="Xóa Tất Cả" 
+                                    Width="80" 
+                                    Background="#9E9E9E" 
+                                    Foreground="White" 
+                                    Click="ClearButton_Click"/>
+>>>>>>> parent of 97921a3 (Change some layouts)
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -174,36 +240,29 @@
                     CornerRadius="10" 
                     Padding="20">
                 <StackPanel>
-                    <!-- Header with Search -->
                     <Grid Margin="0,0,0,15">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
                         
-                        <TextBlock Grid.Row="0" 
-                                   Text="📦 Danh Sách Sản Phẩm" 
+                        <TextBlock Grid.Column="0" 
+                                   Text="Danh Sách Sản Phẩm" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
-                                   Foreground="#1CB5E0"
-                                   Margin="0,0,0,10"/>
+                                   Foreground="#1CB5E0"/>
                         
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBox x:Name="SearchTextBox" 
-                                     Width="250" 
-                                     Height="32"
+                                     Width="200" 
                                      Margin="0,0,10,0"
                                      TextChanged="SearchTextBox_TextChanged"
-                                     VerticalContentAlignment="Center"
-                                     FontSize="14"
-                                     Padding="8,6"/>
-                            <Button Content="🔍 Tìm Kiếm" 
-                                    Width="100" 
-                                    Height="32"
+                                     VerticalContentAlignment="Center"/>
+                            <Button Content="Tìm Kiếm" 
+                                    Width="80" 
                                     Background="#FF9800" 
                                     Foreground="White"
-                                    Click="SearchButton_Click"
-                                    FontWeight="SemiBold"/>
+                                    Click="SearchButton_Click"/>
                         </StackPanel>
                     </Grid>
                     

@@ -109,39 +109,6 @@ namespace WpfApp1
             LoadInvoices();
         }
 
-        private void OpenSettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            var settings = new SettingsWindow();
-            try
-            {
-                settings.Owner = this;
-                settings.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            }
-            catch (InvalidOperationException)
-            {
-                settings.Owner = null;
-                settings.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            }
-            settings.ShowDialog();
-        }
-
-        private void ShowChartsButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Simply ensure charts reflect current filters
-            LoadCharts();
-        }
-
-        private void ShowReportsButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Refresh data grid and KPIs based on current filters
-            LoadInvoices();
-        }
-
-        private void LoadChartsButton_Click(object sender, RoutedEventArgs e)
-        {
-            LoadCharts();
-        }
-
         private void ExportCsvButton_Click(object sender, RoutedEventArgs e)
         {
             if (_invoices.Count == 0)

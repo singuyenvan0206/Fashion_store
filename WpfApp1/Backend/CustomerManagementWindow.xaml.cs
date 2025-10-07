@@ -27,9 +27,7 @@ namespace WpfApp1
                 Phone = c.Phone,
                 Email = c.Email,
                 Address = c.Address,
-                CustomerType = c.CustomerType,
-                Tier = DatabaseHelper.GetCustomerLoyalty(c.Id).Tier,
-                Points = DatabaseHelper.GetCustomerLoyalty(c.Id).Points
+                CustomerType = c.CustomerType
             });
             CustomerDataGrid.ItemsSource = _customers;
             UpdateStatusText();
@@ -50,20 +48,15 @@ namespace WpfApp1
                 Name = CustomerNameTextBox.Text.Trim(),
                 Phone = PhoneTextBox.Text.Trim(),
                 Email = EmailTextBox.Text.Trim(),
-                CustomerType = "Regular",
+                CustomerType = (CustomerTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Regular",
                 Address = AddressTextBox.Text.Trim()
             };
 
             if (DatabaseHelper.AddCustomer(customer.Name, customer.Phone, customer.Email, customer.CustomerType, customer.Address))
             {
-
-                try
-                {
-                    int id = DatabaseHelper.GetAllCustomers().Last().Id;
-                    var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Regular";
-                    int pts = 0; int.TryParse(PointsTextBox.Text, out pts);
-                    DatabaseHelper.UpdateCustomerLoyalty(id, pts, tier);
-                } catch {}
+                // Update segment if provided
+                var segment = (SegmentComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+                try { DatabaseHelper.UpdateCustomerSegment(DatabaseHelper.GetAllCustomers().Last().Id, segment ?? ""); } catch {}
                 LoadCustomers();
                 ClearForm();
                 MessageBox.Show($"Khách hàng '{customer.Name}' đã được thêm thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -90,20 +83,15 @@ namespace WpfApp1
                 Name = CustomerNameTextBox.Text.Trim(),
                 Phone = PhoneTextBox.Text.Trim(),
                 Email = EmailTextBox.Text.Trim(),
-                CustomerType = _selectedCustomer.CustomerType ?? "Regular",
+                CustomerType = (CustomerTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Regular",
                 Address = AddressTextBox.Text.Trim()
             };
 
             if (DatabaseHelper.UpdateCustomer(customer.Id, customer.Name, customer.Phone, customer.Email, customer.CustomerType, customer.Address))
             {
-                // Segment removed
-                // Update loyalty
-                try
-                {
-                    var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _selectedCustomer.Tier;
-                    int pts = _selectedCustomer.Points; int.TryParse(PointsTextBox.Text, out pts);
-                    DatabaseHelper.UpdateCustomerLoyalty(customer.Id, pts, tier);
-                } catch {}
+                // Update segment
+                var segment = (SegmentComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+                try { DatabaseHelper.UpdateCustomerSegment(customer.Id, segment ?? ""); } catch {}
                 LoadCustomers();
                 ClearForm();
                 MessageBox.Show($"Khách hàng '{customer.Name}' đã được cập nhật thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -156,10 +144,8 @@ namespace WpfApp1
             CustomerNameTextBox.Clear();
             PhoneTextBox.Clear();
             EmailTextBox.Clear();
-            // CustomerType removed: default Regular
+            CustomerTypeComboBox.SelectedIndex = 0;
             AddressTextBox.Clear();
-            TierComboBox.SelectedIndex = 0;
-            PointsTextBox.Text = "0";
             _selectedCustomer = null;
             CustomerDataGrid.SelectedItem = null;
             CustomerNameTextBox.Focus();
@@ -208,23 +194,30 @@ namespace WpfApp1
                 AddressTextBox.Text = _selectedCustomer.Address ?? "";
                 
                 // Set the customer type in combo box
-                // CustomerType removed
+                foreach (ComboBoxItem item in CustomerTypeComboBox.Items)
+                {
+                    if (item.Content.ToString() == (_selectedCustomer.CustomerType ?? ""))
+                    {
+                        CustomerTypeComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
 
-                // Segment removed
-
-                // Set loyalty tier and points
+                // Set segment from database if available
                 try
                 {
-                    var (tier, pts) = DatabaseHelper.GetCustomerLoyalty(_selectedCustomer.Id);
-                    foreach (ComboBoxItem item in TierComboBox.Items)
+                    var seg = DatabaseHelper.GetCustomerSegment(_selectedCustomer.Id);
+                    if (!string.IsNullOrEmpty(seg))
                     {
-                        if (string.Equals(item.Content?.ToString(), tier, System.StringComparison.OrdinalIgnoreCase))
+                        foreach (ComboBoxItem item in SegmentComboBox.Items)
                         {
-                            TierComboBox.SelectedItem = item;
-                            break;
+                            if (string.Equals(item.Content?.ToString(), seg, System.StringComparison.OrdinalIgnoreCase))
+                            {
+                                SegmentComboBox.SelectedItem = item;
+                                break;
+                            }
                         }
                     }
-                    PointsTextBox.Text = pts.ToString();
                 }
                 catch {}
 
@@ -272,32 +265,10 @@ namespace WpfApp1
                 c.Phone.ToLower().Contains(searchTerm) ||
                 c.Email.ToLower().Contains(searchTerm) ||
                 c.CustomerType.ToLower().Contains(searchTerm) ||
-                // segment removed
-                c.Address.ToLower().Contains(searchTerm) ||
-                (c.Tier ?? string.Empty).ToLower().Contains(searchTerm) ||
-                c.Points.ToString().Contains(searchTerm)
+                (DatabaseHelper.GetCustomerSegment(c.Id) ?? string.Empty).ToLower().Contains(searchTerm) ||
+                c.Address.ToLower().Contains(searchTerm)
             ).ToList();
             CustomerDataGrid.ItemsSource = filteredCustomers;
-        }
-
-        private void UpdateLoyaltyButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_selectedCustomer == null)
-            {
-                MessageBox.Show("Vui lòng chọn khách hàng.");
-                return;
-            }
-            var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _selectedCustomer.Tier;
-            int pts = _selectedCustomer.Points; int.TryParse(PointsTextBox.Text, out pts);
-            if (DatabaseHelper.UpdateCustomerLoyalty(_selectedCustomer.Id, pts, tier))
-            {
-                LoadCustomers();
-                MessageBox.Show("Đã cập nhật hạng/điểm.");
-            }
-            else
-            {
-                MessageBox.Show("Cập nhật thất bại.");
-            }
         }
     }
 
@@ -309,8 +280,6 @@ namespace WpfApp1
         public string Email { get; set; } = "";
         public string Address { get; set; } = "";
         public string CustomerType { get; set; } = "Regular";
-        public string Tier { get; set; } = "Regular";
-        public int Points { get; set; }
     }
 
     public class PurchaseHistoryItem

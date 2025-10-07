@@ -28,29 +28,6 @@ namespace WpfApp1
             {
                 CustomerComboBox.SelectedIndex = 0;
             }
-            UpdateLoyaltyHeader();
-        }
-
-        private void CustomerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            UpdateLoyaltyHeader();
-            RecalculateTotals();
-        }
-
-        private void UpdateLoyaltyHeader()
-        {
-            var (tier, points) = GetSelectedCustomerLoyalty();
-            if (LoyaltyTierTextBlock != null) LoyaltyTierTextBlock.Text = tier;
-            if (LoyaltyPointsTextBlock != null) LoyaltyPointsTextBlock.Text = $"{points} điểm";
-        }
-
-        private (string tier, int points) GetSelectedCustomerLoyalty()
-        {
-            if (CustomerComboBox?.SelectedValue is int cid && cid > 0)
-            {
-                return DatabaseHelper.GetCustomerLoyalty(cid);
-            }
-            return ("Regular", 0);
         }
 
         private void LoadProducts()
@@ -127,7 +104,6 @@ namespace WpfApp1
                 UnitPriceTextBox.Text = selected.UnitPrice.ToString("F2");
                 QuantityTextBox.Text = string.IsNullOrWhiteSpace(QuantityTextBox.Text) ? "1" : QuantityTextBox.Text;
             }
-            RecalculateTotals();
         }
 
         private void RemoveItemButton_Click(object sender, RoutedEventArgs e)
@@ -192,34 +168,12 @@ namespace WpfApp1
             SubtotalTextBlock.Text = subtotal.ToString("F2");
 
             decimal taxPercent = TryGetDecimal(GetTextOrEmpty(TaxPercentTextBox));
-            decimal discount = 0m;
-            // New unified discount controls
-            if (DiscountModeComboBox != null && DiscountValueTextBox != null)
+            decimal discount = TryGetDecimal(GetTextOrEmpty(DiscountTextBox));
+            if (UsePercentDiscountCheckBox != null && UsePercentDiscountCheckBox.IsChecked == true)
             {
-                var modeText = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
-                var discountVal = TryGetDecimal(GetTextOrEmpty(DiscountValueTextBox));
-                if (string.Equals(modeText, "%", StringComparison.Ordinal))
-                {
-                    discount = Math.Round(subtotal * (discountVal / 100m), 2);
-                }
-                else
-                {
-                    discount = discountVal;
-                }
+                decimal discPercent = TryGetDecimal(GetTextOrEmpty(DiscountPercentTextBox));
+                discount = Math.Round(subtotal * (discPercent / 100m), 2);
             }
-
-            // Loyalty tier auto-discount
-            var (tier, _) = GetSelectedCustomerLoyalty();
-            decimal tierDiscountPercent = tier.ToLower() switch
-            {
-                "silver" => 1m,
-                "gold" => 2m,
-                "platinum" => 3m,
-                _ => 0m
-            };
-            decimal tierDiscount = Math.Round(subtotal * (tierDiscountPercent / 100m), 2);
-            if (TierDiscountInlineText != null) TierDiscountInlineText.Text = $"(+ Ưu đãi hạng: {tierDiscount:F2})";
-            discount += tierDiscount;
 
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             TaxAmountTextBlock.Text = taxAmount.ToString("F2");
@@ -241,8 +195,8 @@ namespace WpfApp1
         {
             return SubtotalTextBlock != null &&
                    TaxPercentTextBox != null &&
-                   DiscountModeComboBox != null &&
-                   DiscountValueTextBox != null &&
+                   DiscountTextBox != null &&
+                   (DiscountPercentTextBox != null) &&
                    TaxAmountTextBlock != null &&
                    TotalTextBlock != null &&
                    PaidTextBox != null &&
@@ -250,11 +204,6 @@ namespace WpfApp1
         }
 
         private void TotalsInput_Toggle(object sender, RoutedEventArgs e)
-        {
-            RecalculateTotals();
-        }
-
-        private void TotalsSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             RecalculateTotals();
         }
@@ -323,23 +272,7 @@ namespace WpfApp1
 
             decimal subtotal = _items.Sum(i => i.LineTotal);
             decimal taxPercent = TryGetDecimal(TaxPercentTextBox.Text);
-            decimal discount = 0m;
-            if (DiscountModeComboBox != null && DiscountValueTextBox != null)
-            {
-                var modeText = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
-                var discountVal = TryGetDecimal(DiscountValueTextBox.Text);
-                if (string.Equals(modeText, "%", StringComparison.Ordinal))
-                {
-                    discount = Math.Round(subtotal * (discountVal / 100m), 2);
-                }
-                else
-                {
-                    discount = discountVal;
-                }
-            }
-            var (stier, _) = GetSelectedCustomerLoyalty();
-            decimal sTierPercent = stier.ToLower() switch { "silver" => 1m, "gold" => 2m, "platinum" => 3m, _ => 0m };
-            discount += Math.Round(subtotal * (sTierPercent / 100m), 2);
+            decimal discount = TryGetDecimal(DiscountTextBox.Text);
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             decimal total = Math.Max(0, subtotal + taxAmount - discount);
 
@@ -367,23 +300,7 @@ namespace WpfApp1
 
             decimal subtotal = _items.Sum(i => i.LineTotal);
             decimal taxPercent = TryGetDecimal(TaxPercentTextBox.Text);
-            decimal discount = 0m;
-            if (DiscountModeComboBox != null && DiscountValueTextBox != null)
-            {
-                var modeText = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
-                var discountVal = TryGetDecimal(DiscountValueTextBox.Text);
-                if (string.Equals(modeText, "%", StringComparison.Ordinal))
-                {
-                    discount = Math.Round(subtotal * (discountVal / 100m), 2);
-                }
-                else
-                {
-                    discount = discountVal;
-                }
-            }
-            var (saveTier, savePts) = GetSelectedCustomerLoyalty();
-            decimal saveTierPercent = saveTier.ToLower() switch { "silver" => 1m, "gold" => 2m, "platinum" => 3m, _ => 0m };
-            discount += Math.Round(subtotal * (saveTierPercent / 100m), 2);
+            decimal discount = TryGetDecimal(DiscountTextBox.Text);
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             decimal total = Math.Max(0, subtotal + taxAmount - discount);
             decimal paid = TryGetDecimal(PaidTextBox.Text);
@@ -399,35 +316,13 @@ namespace WpfApp1
             {
                 int invoiceId = DatabaseHelper.LastSavedInvoiceId;
                 MessageBox.Show($"Hóa đơn #{invoiceId} đã được lưu.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
-                // Update loyalty points and tier
-                int earned = (int)Math.Floor((double)total / 100000); // 1 point per 100k
-                int newPoints = savePts + earned;
-                string newTier = saveTier;
-                if (newPoints >= 2000) newTier = "Platinum";
-                else if (newPoints >= 1000) newTier = "Gold";
-                else if (newPoints >= 500) newTier = "Silver";
-                DatabaseHelper.UpdateCustomerLoyalty(customerId, newPoints, newTier);
-
+             
                 _items.Clear();
                 RefreshItemsGrid();
                 TaxPercentTextBox.Text = "0";
-                if (DiscountValueTextBox != null) DiscountValueTextBox.Text = "0";
+                DiscountTextBox.Text = "0";
                 PaidTextBox.Text = "0";
                 RecalculateTotals();
-
-                // Mở cửa sổ in hóa đơn với dữ liệu từ database để đảm bảo thông tin chính xác
-                try
-                {
-                    var selectedCustomer = CustomerComboBox.SelectedItem as CustomerListItem;
-                    var printWindow = selectedCustomer != null
-                        ? new InvoicePrintWindow(invoiceId, employeeId, selectedCustomer)
-                        : new InvoicePrintWindow(invoiceId, employeeId);
-                    printWindow.ShowDialog();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Không thể mở cửa sổ in cho hóa đơn #{invoiceId}: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
             }
             else
             {

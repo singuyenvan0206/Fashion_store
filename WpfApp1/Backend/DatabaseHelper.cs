@@ -6,9 +6,12 @@ namespace WpfApp1
     {
         // Connection string is dynamically constructed from SettingsManager
         private static string ConnectionString => SettingsManager.BuildConnectionString();
+        
 
         public static void InitializeDatabase()
         {
+            // MySQL-only initialization
+
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
@@ -137,6 +140,8 @@ namespace WpfApp1
                 insertCmd.ExecuteNonQuery();
             }
         }
+
+        
 
         private static void UpdateProductsTable(MySqlConnection connection)
         {
@@ -326,14 +331,14 @@ namespace WpfApp1
         public static List<(int Id, string Username)> GetAllAccounts()
         {
             var accounts = new List<(int, string)>();
-            using var connection = new MySqlConnection(ConnectionString);
-            connection.Open();
+            using var connection2 = new MySqlConnection(ConnectionString);
+            connection2.Open();
             string selectCmd = "SELECT Id, Username FROM Accounts;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
+            using var cmd2 = new MySqlCommand(selectCmd, connection2);
+            using var reader2 = cmd2.ExecuteReader();
+            while (reader2.Read())
             {
-                accounts.Add((reader.GetInt32(0), reader.GetString(1)));
+                accounts.Add((reader2.GetInt32(0), reader2.GetString(1)));
             }
             return accounts;
         }
@@ -1146,7 +1151,8 @@ namespace WpfApp1
             connection.Open();
 
             // Header
-            string headerSql = @"SELECT i.Id, i.CreatedDate, c.Name, i.Subtotal, i.TaxAmount, i.Discount, i.Total, i.Paid
+            string headerSql = @"SELECT i.Id, i.CreatedDate, c.Name, i.Subtotal, i.TaxAmount, i.Discount, i.Total, i.Paid,
+                                        IFNULL(c.Phone, ''), IFNULL(c.Email, ''), IFNULL(c.Address, '')
                                  FROM Invoices i
                                  LEFT JOIN Customers c ON c.Id = i.CustomerId
                                  WHERE i.Id = @id";
@@ -1165,7 +1171,10 @@ namespace WpfApp1
                     TaxAmount = hr.GetDecimal(4),
                     Discount = hr.GetDecimal(5),
                     Total = hr.GetDecimal(6),
-                    Paid = hr.GetDecimal(7)
+                    Paid = hr.GetDecimal(7),
+                    CustomerPhone = hr.IsDBNull(8) ? string.Empty : hr.GetString(8),
+                    CustomerEmail = hr.IsDBNull(9) ? string.Empty : hr.GetString(9),
+                    CustomerAddress = hr.IsDBNull(10) ? string.Empty : hr.GetString(10)
                 };
             }
             else
@@ -1208,6 +1217,9 @@ namespace WpfApp1
             public decimal Discount { get; set; }
             public decimal Total { get; set; }
             public decimal Paid { get; set; }
+            public string CustomerPhone { get; set; } = string.Empty;
+            public string CustomerEmail { get; set; } = string.Empty;
+            public string CustomerAddress { get; set; } = string.Empty;
         }
 
         public class InvoiceItemDetail

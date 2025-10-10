@@ -36,7 +36,7 @@
         <!-- Invoice Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <Border Background="White" Padding="50" Margin="20">
-                <Grid Width="800">
+                <Grid x:Name="InvoicePreviewRoot" Width="800">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -150,7 +150,7 @@
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Địa chỉ:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock Text="123 Đường ABC, Quận 1, TP.HCM" 
+                                    <TextBlock x:Name="CustomerAddressText" Text="" 
                                                FontSize="12" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                 </StackPanel>
                                 
@@ -160,7 +160,7 @@
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Email:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock Text="customer@email.com" 
+                                    <TextBlock x:Name="CustomerEmailText" Text="" 
                                                FontSize="12" Foreground="#2E7D32"/>
                                 </StackPanel>
                             </Grid>

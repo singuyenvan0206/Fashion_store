@@ -6,6 +6,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Markup;
+using System.Xml;
+using System.IO;
 
 namespace WpfApp1
 {
@@ -97,6 +100,8 @@ namespace WpfApp1
             // Set customer information
             CustomerNameText.Text = _customer?.Name ?? "Khách lẻ";
             CustomerPhoneText.Text = _customer?.Phone ?? string.Empty;
+            CustomerEmailText.Text = string.Empty;
+            CustomerAddressText.Text = string.Empty;
 
             // Load items
             InvoiceItemsList.ItemsSource = _items;
@@ -128,8 +133,9 @@ namespace WpfApp1
 
                 // Customer
                 CustomerNameText.Text = header.CustomerName;
-                // Customer phone not provided by current API; leave blank for now
-                CustomerPhoneText.Text = string.Empty;
+                CustomerPhoneText.Text = header.CustomerPhone;
+                CustomerEmailText.Text = header.CustomerEmail;
+                CustomerAddressText.Text = header.CustomerAddress;
 
                 // Items
                 var vmItems = new List<InvoiceItemViewModel>();
@@ -177,9 +183,30 @@ namespace WpfApp1
 
                 if (printDialog.ShowDialog() == true)
                 {
-                    // Create a visual for printing
-                    var printVisual = CreatePrintVisual();
-                    printDialog.PrintVisual(printVisual, "Invoice #" + _invoiceId);
+                    // Clone the current preview to ensure WYSIWYG printing
+                    FrameworkElement toPrint;
+                    if (InvoicePreviewRoot != null)
+                    {
+                        string xaml = XamlWriter.Save(InvoicePreviewRoot);
+                        using var stringReader = new StringReader(xaml);
+                        using var xmlReader = XmlReader.Create(stringReader);
+                        var cloned = (FrameworkElement)XamlReader.Load(xmlReader);
+
+                        // Measure/arrange to printable area
+                        double pageWidth = printDialog.PrintableAreaWidth > 0 ? printDialog.PrintableAreaWidth : 800;
+                        double pageHeight = printDialog.PrintableAreaHeight > 0 ? printDialog.PrintableAreaHeight : 1120;
+                        cloned.Measure(new Size(pageWidth, pageHeight));
+                        cloned.Arrange(new Rect(new Point(0, 0), new Size(pageWidth, cloned.DesiredSize.Height)));
+                        cloned.UpdateLayout();
+                        toPrint = cloned;
+                    }
+                    else
+                    {
+                        // Fallback to constructed content if preview root is not available
+                        toPrint = CreatePrintVisual();
+                    }
+
+                    printDialog.PrintVisual(toPrint, "Invoice #" + _invoiceId);
                     
                     MessageBox.Show("Invoice printed successfully!", "Print Success", 
                         MessageBoxButton.OK, MessageBoxImage.Information);

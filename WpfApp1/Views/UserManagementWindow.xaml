@@ -27,14 +27,23 @@
                            Foreground="White"
                            VerticalAlignment="Center"/>
                 
-                <Button x:Name="AddUserButton" 
-                        Grid.Column="1" 
-                        Content="➕ Thêm Người Dùng" 
-                        Width="150" 
-                        Height="40" 
-                        Background="#4CAF50" 
-                        Foreground="White" 
-                        Click="AddUserButton_Click"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="AddUserButton" 
+                            Content="➕ Thêm Người Dùng" 
+                            Width="150" 
+                            Height="40" 
+                            Background="#4CAF50" 
+                            Foreground="White" 
+                            Click="AddUserButton_Click"
+                            Margin="0,0,10,0"/>
+                    <Button x:Name="DeleteAllUsersButton"
+                            Content="⚠️ Xóa Tất Cả"
+                            Width="130"
+                            Height="40"
+                            Background="#9E9E9E"
+                            Foreground="White"
+                            Click="DeleteAllUsersButton_Click"/>
+                </StackPanel>
             </Grid>
         </Border>
 

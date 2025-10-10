@@ -12,13 +12,25 @@
         </Grid.RowDefinitions>
 
         <!-- Print Controls -->
-        <Border Grid.Row="0" Background="#F0F0F0" Padding="10">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="PrintButton" Content="🖨️ In" Width="100" Height="35" 
-                        Background="#2196F3" Foreground="White" Click="PrintButton_Click" Margin="5"/>
-                <Button x:Name="CloseButton" Content="❌ Đóng" Width="100" Height="35" 
-                        Background="#F44336" Foreground="White" Click="CloseButton_Click" Margin="5"/>
-            </StackPanel>
+        <Border Grid.Row="0" Background="#1CB5E0" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🖨️ Xem Trước In Hóa Đơn" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text=" - Kiểm tra trước khi in" FontSize="12" Foreground="#E3F2FD" Margin="8,0,0,0"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="PrintButton" Content="🖨️ In Hóa Đơn" Width="120" Height="36" 
+                            Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="PrintButton_Click" Margin="0,0,8,0"/>
+                    <Button x:Name="CloseButton" Content="❌ Đóng" Width="100" Height="36" 
+                            Background="#F44336" Foreground="White" FontWeight="SemiBold" Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Invoice Content -->
@@ -43,39 +55,43 @@
 
                         <!-- Company Info -->
                         <StackPanel Grid.Column="0">
-                            <TextBlock x:Name="CompanyNameText" Text="TÊN CÔNG TY CỦA BẠN" 
-                                       FontSize="24" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="CompanySloganText" Text="Khẩu hiệu công ty của bạn" 
-                                       FontSize="14" Foreground="#7F8C8D" Margin="0,0,0,10"/>
-                            <TextBlock x:Name="CompanyAddressText" Text="123 Đường Kinh Doanh" 
-                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
-                            <TextBlock x:Name="CompanyCityText" Text="Thành phố, Tỉnh 12345" 
-                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
-                            <TextBlock x:Name="CompanyPhoneText" Text="Điện thoại: (555) 123-4567" 
-                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
-                            <TextBlock x:Name="CompanyFaxText" Text="Fax: (555) 123-4568" 
-                                       FontSize="12" Foreground="#34495E" Margin="0,0,0,2"/>
-                            <TextBlock x:Name="CompanyEmailText" Text="Email: info@company.com" 
-                                       FontSize="12" Foreground="#34495E"/>
+                            <TextBlock x:Name="CompanyNameText" Text="🏢 CÔNG TY TNHH ABC" 
+                                       FontSize="26" FontWeight="Bold" Foreground="#1A237E" Margin="0,0,0,8"/>
+                            <TextBlock x:Name="CompanySloganText" Text="💼 Chất lượng - Uy tín - Phục vụ tận tâm" 
+                                       FontSize="14" Foreground="#3949AB" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="📍" FontSize="12" Foreground="#5C6BC0" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="CompanyAddressText" Text="123 Đường Kinh Doanh, Quận 1" 
+                                           FontSize="12" Foreground="#37474F" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="🏙️" FontSize="12" Foreground="#5C6BC0" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="CompanyCityText" Text="TP. Hồ Chí Minh, Việt Nam" 
+                                           FontSize="12" Foreground="#37474F" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="📞" FontSize="12" Foreground="#5C6BC0" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="CompanyPhoneText" Text="(028) 1234-5678" 
+                                           FontSize="12" Foreground="#37474F" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="📧" FontSize="12" Foreground="#5C6BC0" Margin="0,0,4,0"/>
+                                <TextBlock x:Name="CompanyEmailText" Text="info@abc-company.com" 
+                                           FontSize="12" Foreground="#37474F" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🌐" FontSize="12" Foreground="#5C6BC0" Margin="0,0,4,0"/>
+                                <TextBlock Text="www.abc-company.com" 
+                                           FontSize="12" Foreground="#37474F" FontWeight="SemiBold"/>
+                            </StackPanel>
                         </StackPanel>
 
                         <!-- Invoice Info -->
-                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                            <TextBlock Text="HÓA ĐƠN" FontSize="28" FontWeight="Bold" 
-                                       Foreground="#E74C3C" HorizontalAlignment="Right" Margin="0,0,0,10"/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                        <Border Grid.Column="1" Background="#F8F9FA" CornerRadius="8" Padding="16" BorderBrush="#E0E0E0" BorderThickness="1">
+                            <StackPanel HorizontalAlignment="Right">
+                                <TextBlock Text="🧾 HÓA ĐƠN BÁN HÀNG" FontSize="24" FontWeight="Bold" 
+                                           Foreground="#D32F2F" HorizontalAlignment="Center" Margin="0,0,0,16"/>
                                 
-<<<<<<< HEAD
-<<<<<<< HEAD
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -101,34 +117,21 @@
                                                FontWeight="SemiBold" Foreground="#2E7D32"/>
                                     
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="👤 NV:" FontWeight="Bold" Margin="0,0,12,0" Foreground="#37474F"/>
-                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EmployeeNameText" Text="[Chưa có tên nhân viên]" Margin="0,0,0,0" 
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EmployeeNameText" Text="" Margin="0,0,0,0" 
                                                FontWeight="SemiBold" Foreground="#2E7D32"/>
                                 </Grid>
-=======
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Số HD:" FontWeight="Bold" Margin="0,0,10,5"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InvoiceNumberText" Text="#0001" Margin="0,0,0,5"/>
->>>>>>> parent of 97921a3 (Change some layouts)
-=======
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Số HD:" FontWeight="Bold" Margin="0,0,10,5"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="InvoiceNumberText" Text="#0001" Margin="0,0,0,5"/>
->>>>>>> parent of 97921a3 (Change some layouts)
                                 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Ngày:" FontWeight="Bold" Margin="0,0,10,5"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="InvoiceDateText" Text="01/01/2024" Margin="0,0,0,5"/>
-                                
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Giờ:" FontWeight="Bold" Margin="0,0,10,0"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="InvoiceTimeText" Text="10:30 AM"/>
-                            </Grid>
-                            <TextBlock x:Name="InvoiceForText" Text="Giao dịch bán hàng" 
-                                       FontSize="12" Foreground="#7F8C8D" HorizontalAlignment="Right" Margin="0,10,0,0"/>
-                        </StackPanel>
+                                <Border Background="#E3F2FD" CornerRadius="4" Padding="8,4" Margin="0,12,0,0">
+                                    <TextBlock x:Name="InvoiceForText" Text="💼 Giao dịch bán hàng" 
+                                               FontSize="12" Foreground="#1976D2" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                        </Border>
                     </Grid>
 
                     <!-- Customer Section (Simplified) -->
-                    <Border Grid.Row="1" Background="#F8F9FA" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+                    <Border Grid.Row="1" Background="#E8F5E8" CornerRadius="8" Padding="20" Margin="0,0,0,20" BorderBrush="#4CAF50" BorderThickness="2">
                         <StackPanel>
-<<<<<<< HEAD
-<<<<<<< HEAD
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                 <TextBlock Text="👤" FontSize="16" Margin="0,0,8,0"/>
                                 <TextBlock Text="THÔNG TIN KHÁCH HÀNG" FontSize="16" FontWeight="Bold" 
@@ -147,34 +150,20 @@
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Địa chỉ:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerAddressText"  
-                                               FontSize="12" Foreground="#2E7D32" Margin="0,0,0,8"
-                                               Text="[Chưa có địa chỉ]"/>
+                                    <TextBlock Text="123 Đường ABC, Quận 1, TP.HCM" 
+                                               FontSize="12" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerPhoneText"  
+                                    <TextBlock x:Name="CustomerPhoneText" Text="0901 234 567" 
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Email:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerEmailText"  
-                                               FontSize="12" Foreground="#2E7D32" Text="[Chưa có email]"/>
+                                    <TextBlock Text="customer@email.com" 
+                                               FontSize="12" Foreground="#2E7D32"/>
                                 </StackPanel>
                             </Grid>
-=======
-=======
->>>>>>> parent of 97921a3 (Change some layouts)
-                            <TextBlock Text="THÔNG TIN KHÁCH HÀNG" FontSize="16" FontWeight="Bold" 
-                                       Foreground="#2C3E50" Margin="0,0,0,10"/>
-                            <TextBlock x:Name="CustomerNameText" Text="Tên khách hàng" 
-                                       FontSize="14" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBlock x:Name="CustomerPhoneText" Text="Số điện thoại" 
-                                       FontSize="12"/>
-<<<<<<< HEAD
->>>>>>> parent of 97921a3 (Change some layouts)
-=======
->>>>>>> parent of 97921a3 (Change some layouts)
                         </StackPanel>
                     </Border>
 
@@ -188,7 +177,7 @@
                             </Grid.RowDefinitions>
                             
                             <!-- Items Header -->
-                            <Border Grid.Row="0" Background="#34495E" CornerRadius="8,8,0,0" Padding="15,10,15,10">
+                            <Border Grid.Row="0" Background="#1A237E" CornerRadius="8,8,0,0" Padding="16,12,16,12">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="50"/>
@@ -198,11 +187,11 @@
                                         <ColumnDefinition Width="120"/>
                                     </Grid.ColumnDefinitions>
                                     
-                                    <TextBlock Grid.Column="0" Text="#" FontWeight="Bold" Foreground="White"/>
-                                    <TextBlock Grid.Column="1" Text="SẢN PHẨM" FontWeight="Bold" Foreground="White"/>
-                                    <TextBlock Grid.Column="2" Text="ĐƠN GIÁ" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="3" Text="SL" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                    <TextBlock Grid.Column="4" Text="THÀNH TIỀN" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="0" Text="📋" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="🛍️ SẢN PHẨM" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Grid.Column="2" Text="💰 ĐƠN GIÁ" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="📦 SL" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="💵 THÀNH TIỀN" FontWeight="Bold" Foreground="White" HorizontalAlignment="Right"/>
                                 </Grid>
                             </Border>
                             
@@ -289,11 +278,13 @@
                     </Grid>
 
                     <!-- Footer -->
-                    <Border Grid.Row="4" Background="#2C3E50" CornerRadius="8" Padding="20">
+                    <Border Grid.Row="4" Background="#1A237E" CornerRadius="8" Padding="20" BorderBrush="#3949AB" BorderThickness="2">
                         <StackPanel>
-                            <TextBlock Text="CẢM ƠN QUÝ KHÁCH!" FontSize="18" FontWeight="Bold" 
-                                       Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                            <TextBlock Text="Hẹn gặp lại quý khách lần sau!" FontSize="14" 
+                            <TextBlock Text="🙏 CẢM ƠN QUÝ KHÁCH!" FontSize="20" FontWeight="Bold" 
+                                       Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                            <TextBlock Text="💝 Hẹn gặp lại quý khách lần sau!" FontSize="14" 
+                                       Foreground="#E3F2FD" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBlock Text="📞 Hotline: (028) 1234-5678 | 🌐 www.abc-company.com" FontSize="12" 
                                        Foreground="#BDC3C7" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Border>
@@ -302,9 +293,24 @@
         </ScrollViewer>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="#F0F0F0" Padding="10">
-            <TextBlock x:Name="StatusText" Text="Sẵn sàng in hóa đơn" FontSize="12" 
-                       Foreground="#666666" HorizontalAlignment="Center"/>
+        <Border Grid.Row="2" Background="#F8F9FA" Padding="12" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📄" FontSize="14" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Sẵn sàng in hóa đơn" FontSize="12" 
+                               Foreground="#37474F" FontWeight="SemiBold"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🖨️" FontSize="12" Margin="0,0,4,0"/>
+                    <TextBlock Text="Nhấn Ctrl+P để in nhanh" FontSize="10" Foreground="#666666"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

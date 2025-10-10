@@ -167,6 +167,39 @@ namespace WpfApp1
         {
             this.Close();
         }
+
+        private void DeleteAllUsersButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_allUsers.Count <= 1)
+                {
+                    MessageBox.Show("Không có người dùng nào để xóa (ngoại trừ admin).", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                int deletableCount = _allUsers.Count(u => !string.Equals(u.Username, "admin", StringComparison.OrdinalIgnoreCase));
+                var result = MessageBox.Show($"Bạn có chắc chắn muốn xóa TẤT CẢ {deletableCount} người dùng (trừ admin)?\n\nHành động này không thể hoàn tác.",
+                    "Xác nhận xóa tất cả", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    if (DatabaseHelper.DeleteAllAccountsExceptAdmin())
+                    {
+                        LoadUsers();
+                        MessageBox.Show("Đã xóa tất cả người dùng (trừ admin) thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Không thể xóa tất cả người dùng. Vui lòng thử lại hoặc kiểm tra ràng buộc dữ liệu.", "Xóa thất bại", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi xóa tất cả người dùng: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     public class UserManagementItem

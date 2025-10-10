@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -14,6 +15,8 @@ namespace WpfApp1
     public partial class ReportsWindow : Window
     {
         private List<InvoiceListItem> _invoices = new();
+        private int _currentPage = 1;
+        private int _pageSize = 25;
 
         public ReportsWindow()
         {
@@ -21,6 +24,8 @@ namespace WpfApp1
             LoadFilters();
             LoadInvoices();
         }
+
+        
 
         private void LoadFilters()
         {
@@ -54,12 +59,31 @@ namespace WpfApp1
                 Total = i.Total,
                 Paid = i.Paid
             });
-            InvoicesDataGrid.ItemsSource = _invoices;
+            ApplyPaging();
             CountTextBlock.Text = _invoices.Count.ToString();
             RevenueTextBlock.Text = _invoices.Sum(x => x.Total).ToString("F2");
             StatusTextBlock.Text = _invoices.Count == 0 ? "Không tìm thấy hóa đơn nào với bộ lọc đã chọn." : string.Empty;
 
             LoadCharts();
+        }
+
+        private void ApplyPaging()
+        {
+            if (_pageSize <= 0) _pageSize = 25;
+            int total = _invoices.Count;
+            int totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)_pageSize));
+            if (_currentPage > totalPages) _currentPage = totalPages;
+            if (_currentPage < 1) _currentPage = 1;
+
+            var pageData = _invoices
+                .Skip((_currentPage - 1) * _pageSize)
+                .Take(_pageSize)
+                .ToList();
+            InvoicesDataGrid.ItemsSource = pageData;
+            if (PageInfoText != null)
+            {
+                PageInfoText.Text = $"{_currentPage}/{totalPages}";
+            }
         }
 
         private void FilterChanged(object sender, RoutedEventArgs e)
@@ -106,7 +130,41 @@ namespace WpfApp1
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
+            _currentPage = 1;
             LoadInvoices();
+        }
+
+        private void OpenSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var settings = new SettingsWindow();
+            try
+            {
+                settings.Owner = this;
+                settings.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            }
+            catch (InvalidOperationException)
+            {
+                settings.Owner = null;
+                settings.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+            settings.ShowDialog();
+        }
+
+        private void ShowChartsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Simply ensure charts reflect current filters
+            LoadCharts();
+        }
+
+        private void ShowReportsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Refresh data grid and KPIs based on current filters
+            LoadInvoices();
+        }
+
+        private void LoadChartsButton_Click(object sender, RoutedEventArgs e)
+        {
+            LoadCharts();
         }
 
         private void ExportCsvButton_Click(object sender, RoutedEventArgs e)
@@ -129,6 +187,35 @@ namespace WpfApp1
             // Ghi UTF-8 không BOM theo yêu cầu
             File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
             MessageBox.Show($"Đã xuất đến {path}", "Xuất dữ liệu", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void PrevPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentPage > 1)
+            {
+                _currentPage--;
+                ApplyPaging();
+            }
+        }
+
+        private void NextPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            int totalPages = Math.Max(1, (int)Math.Ceiling(_invoices.Count / (double)_pageSize));
+            if (_currentPage < totalPages)
+            {
+                _currentPage++;
+                ApplyPaging();
+            }
+        }
+
+        private void PageSizeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (PageSizeComboBox?.SelectedItem is ComboBoxItem item && int.TryParse(item.Content?.ToString(), out int newSize))
+            {
+                _pageSize = newSize;
+                _currentPage = 1;
+                ApplyPaging();
+            }
         }
 
         private void DetailsButton_Click(object sender, RoutedEventArgs e)

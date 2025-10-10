@@ -18,6 +18,13 @@
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <UseAppHost>true</UseAppHost>
     <AssemblyName>WpfApp1.Debug</AssemblyName>
+    <OutputPath>bin\Debug\net8.0-windows\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <OutputPath>bin\Release\net8.0-windows\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -269,6 +269,8 @@ namespace WpfApp1
                     {
                         MainContentScrollViewer.Visibility = System.Windows.Visibility.Visible;
                     }
+                    // Close the source window instance to avoid hidden open windows
+                    try { contentWindow.Close(); } catch { }
                 }
             }
         }

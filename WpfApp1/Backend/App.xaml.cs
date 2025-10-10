@@ -13,6 +13,25 @@ namespace WpfApp1
         {
             base.OnStartup(e);
             TryInitializeDatabaseWithFallback();
+            DatabaseHelper.InitializeDatabase();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            try
+            {
+                // Close all opened windows just in case
+                foreach (Window w in Current.Windows)
+                {
+                    try { w.Close(); } catch { }
+                }
+            }
+            catch { }
+
+            base.OnExit(e);
+
+            // Hard-exit the process to ensure no background tasks keep it alive
+            try { System.Environment.Exit(0); } catch { }
         }
 
         private void TryInitializeDatabaseWithFallback()
@@ -20,7 +39,6 @@ namespace WpfApp1
             try
             {
                 DatabaseHelper.InitializeDatabase();
-                DatabaseHelper.InitializeDefaultVietnameseData();
             }
             catch (System.Exception ex)
             {
@@ -33,7 +51,6 @@ namespace WpfApp1
                     try
                     {
                         DatabaseHelper.InitializeDatabase();
-                        DatabaseHelper.InitializeDefaultVietnameseData();
                     }
                     catch (System.Exception retryEx)
                     {

@@ -8,7 +8,7 @@ namespace WpfApp1
     public partial class CustomerManagementWindow : Window
     {
         private List<CustomerViewModel> _customers = new();
-        private CustomerViewModel _selectedCustomer;
+        private CustomerViewModel? _selectedCustomer;
 
         public CustomerManagementWindow()
         {
@@ -27,12 +27,57 @@ namespace WpfApp1
                 Phone = c.Phone,
                 Email = c.Email,
                 Address = c.Address,
-                CustomerType = c.CustomerType
+                CustomerType = c.CustomerType,
+                Tier = DatabaseHelper.GetCustomerLoyalty(c.Id).Tier,
+                Points = DatabaseHelper.GetCustomerLoyalty(c.Id).Points
             });
             CustomerDataGrid.ItemsSource = _customers;
             UpdateStatusText();
         }
-
+        private void ImportCsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Chọn tệp CSV để nhập khách hàng"
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                int importedCount = DatabaseHelper.ImportCustomersFromCsv(filePath);
+                if (importedCount >= 0)
+                {
+                    LoadCustomers();
+                    MessageBox.Show($"Đã nhập thành công {importedCount} khách hàng từ tệp CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể nhập khách hàng từ tệp CSV. Vui lòng kiểm tra định dạng tệp.", "Lỗi nhập", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+        private void ExportCsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Lưu khách hàng vào tệp CSV",
+                FileName = "customers.csv"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                string filePath = saveFileDialog.FileName;
+                bool success = DatabaseHelper.ExportCustomersToCsv(filePath);
+                if (success)
+                {
+                    MessageBox.Show("Đã xuất khách hàng thành công sang tệp CSV.", "Xuất thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể xuất khách hàng sang tệp CSV. Vui lòng thử lại.", "Lỗi xuất", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
         private void UpdateStatusText()
         {
             int count = _customers.Count;
@@ -48,15 +93,20 @@ namespace WpfApp1
                 Name = CustomerNameTextBox.Text.Trim(),
                 Phone = PhoneTextBox.Text.Trim(),
                 Email = EmailTextBox.Text.Trim(),
-                CustomerType = (CustomerTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Regular",
+                CustomerType = "Regular",
                 Address = AddressTextBox.Text.Trim()
             };
 
             if (DatabaseHelper.AddCustomer(customer.Name, customer.Phone, customer.Email, customer.CustomerType, customer.Address))
             {
-                // Update segment if provided
-                var segment = (SegmentComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-                try { DatabaseHelper.UpdateCustomerSegment(DatabaseHelper.GetAllCustomers().Last().Id, segment ?? ""); } catch {}
+
+                try
+                {
+                    int id = DatabaseHelper.GetAllCustomers().Last().Id;
+                    var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Regular";
+                    int pts = 0; int.TryParse(PointsTextBox.Text, out pts);
+                    DatabaseHelper.UpdateCustomerLoyalty(id, pts, tier);
+                } catch {}
                 LoadCustomers();
                 ClearForm();
                 MessageBox.Show($"Khách hàng '{customer.Name}' đã được thêm thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -83,15 +133,20 @@ namespace WpfApp1
                 Name = CustomerNameTextBox.Text.Trim(),
                 Phone = PhoneTextBox.Text.Trim(),
                 Email = EmailTextBox.Text.Trim(),
-                CustomerType = (CustomerTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString() ?? "Regular",
+                CustomerType = _selectedCustomer.CustomerType ?? "Regular",
                 Address = AddressTextBox.Text.Trim()
             };
 
             if (DatabaseHelper.UpdateCustomer(customer.Id, customer.Name, customer.Phone, customer.Email, customer.CustomerType, customer.Address))
             {
-                // Update segment
-                var segment = (SegmentComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-                try { DatabaseHelper.UpdateCustomerSegment(customer.Id, segment ?? ""); } catch {}
+                // Segment removed
+                // Update loyalty
+                try
+                {
+                    var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _selectedCustomer.Tier;
+                    int pts = _selectedCustomer.Points; int.TryParse(PointsTextBox.Text, out pts);
+                    DatabaseHelper.UpdateCustomerLoyalty(customer.Id, pts, tier);
+                } catch {}
                 LoadCustomers();
                 ClearForm();
                 MessageBox.Show($"Khách hàng '{customer.Name}' đã được cập nhật thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -139,13 +194,44 @@ namespace WpfApp1
             ClearForm();
         }
 
+        private void DeleteAllCustomersButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_customers.Count == 0)
+            {
+                MessageBox.Show("Không có khách hàng nào để xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa TẤT CẢ {_customers.Count} khách hàng?\n\nHành động này không thể hoàn tác.",
+                "Xác nhận xóa tất cả",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                if (DatabaseHelper.DeleteAllCustomers())
+                {
+                    LoadCustomers();
+                    ClearForm();
+                    MessageBox.Show("Đã xóa tất cả khách hàng thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể xóa tất cả khách hàng. Vui lòng kiểm tra ràng buộc dữ liệu (hóa đơn liên quan).", "Xóa thất bại", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+
         private void ClearForm()
         {
             CustomerNameTextBox.Clear();
             PhoneTextBox.Clear();
             EmailTextBox.Clear();
-            CustomerTypeComboBox.SelectedIndex = 0;
+            // CustomerType removed: default Regular
             AddressTextBox.Clear();
+            TierComboBox.SelectedIndex = 0;
+            PointsTextBox.Text = "0";
             _selectedCustomer = null;
             CustomerDataGrid.SelectedItem = null;
             CustomerNameTextBox.Focus();
@@ -194,30 +280,23 @@ namespace WpfApp1
                 AddressTextBox.Text = _selectedCustomer.Address ?? "";
                 
                 // Set the customer type in combo box
-                foreach (ComboBoxItem item in CustomerTypeComboBox.Items)
-                {
-                    if (item.Content.ToString() == (_selectedCustomer.CustomerType ?? ""))
-                    {
-                        CustomerTypeComboBox.SelectedItem = item;
-                        break;
-                    }
-                }
+                // CustomerType removed
 
-                // Set segment from database if available
+                // Segment removed
+
+                // Set loyalty tier and points
                 try
                 {
-                    var seg = DatabaseHelper.GetCustomerSegment(_selectedCustomer.Id);
-                    if (!string.IsNullOrEmpty(seg))
+                    var (tier, pts) = DatabaseHelper.GetCustomerLoyalty(_selectedCustomer.Id);
+                    foreach (ComboBoxItem item in TierComboBox.Items)
                     {
-                        foreach (ComboBoxItem item in SegmentComboBox.Items)
+                        if (string.Equals(item.Content?.ToString(), tier, System.StringComparison.OrdinalIgnoreCase))
                         {
-                            if (string.Equals(item.Content?.ToString(), seg, System.StringComparison.OrdinalIgnoreCase))
-                            {
-                                SegmentComboBox.SelectedItem = item;
-                                break;
-                            }
+                            TierComboBox.SelectedItem = item;
+                            break;
                         }
                     }
+                    PointsTextBox.Text = pts.ToString();
                 }
                 catch {}
 
@@ -265,10 +344,32 @@ namespace WpfApp1
                 c.Phone.ToLower().Contains(searchTerm) ||
                 c.Email.ToLower().Contains(searchTerm) ||
                 c.CustomerType.ToLower().Contains(searchTerm) ||
-                (DatabaseHelper.GetCustomerSegment(c.Id) ?? string.Empty).ToLower().Contains(searchTerm) ||
-                c.Address.ToLower().Contains(searchTerm)
+                // segment removed
+                c.Address.ToLower().Contains(searchTerm) ||
+                (c.Tier ?? string.Empty).ToLower().Contains(searchTerm) ||
+                c.Points.ToString().Contains(searchTerm)
             ).ToList();
             CustomerDataGrid.ItemsSource = filteredCustomers;
+        }
+        
+        private void UpdateLoyaltyButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedCustomer == null)
+            {
+                MessageBox.Show("Vui lòng chọn khách hàng.");
+                return;
+            }
+            var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _selectedCustomer.Tier;
+            int pts = _selectedCustomer.Points; int.TryParse(PointsTextBox.Text, out pts);
+            if (DatabaseHelper.UpdateCustomerLoyalty(_selectedCustomer.Id, pts, tier))
+            {
+                LoadCustomers();
+                MessageBox.Show("Đã cập nhật hạng/điểm.");
+            }
+            else
+            {
+                MessageBox.Show("Cập nhật thất bại.");
+            }
         }
     }
 
@@ -280,6 +381,8 @@ namespace WpfApp1
         public string Email { get; set; } = "";
         public string Address { get; set; } = "";
         public string CustomerType { get; set; } = "Regular";
+        public string Tier { get; set; } = "Regular";
+        public int Points { get; set; }
     }
 
     public class PurchaseHistoryItem

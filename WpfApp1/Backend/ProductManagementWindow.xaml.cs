@@ -10,7 +10,7 @@ namespace WpfApp1
     {
         private List<ProductViewModel> _products = new();
         private List<CategoryViewModel> _categories = new();
-        private ProductViewModel _selectedProduct;
+        private ProductViewModel? _selectedProduct;
 
         public ProductManagementWindow()
         {
@@ -147,9 +147,80 @@ namespace WpfApp1
             }
         }
 
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
+
+        private void ImportCsvButton_Click(object sender, RoutedEventArgs e)
         {
-            ClearForm();
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Chọn tệp CSV để nhập sản phẩm"
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                int importedCount = DatabaseHelper.ImportProductsFromCsv(filePath);
+                if (importedCount >= 0)
+                {
+                    LoadProducts();
+                    MessageBox.Show($"Đã nhập thành công {importedCount} sản phẩm từ tệp CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể nhập sản phẩm từ tệp CSV. Vui lòng kiểm tra định dạng tệp.", "Lỗi nhập", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportCsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Lưu sản phẩm vào tệp CSV",
+                FileName = "products.csv"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                string filePath = saveFileDialog.FileName;
+                bool success = DatabaseHelper.ExportProductsToCsv(filePath);
+                if (success)
+                {
+                    MessageBox.Show("Đã xuất sản phẩm thành công sang tệp CSV.", "Xuất thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể xuất sản phẩm sang tệp CSV. Vui lòng thử lại.", "Lỗi xuất", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void DeleteAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_products.Count == 0)
+            {
+                MessageBox.Show("Không có sản phẩm nào để xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa TẤT CẢ {_products.Count} sản phẩm?\n\nHành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu sản phẩm.",
+                "Xác nhận xóa tất cả",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                if (DatabaseHelper.DeleteAllProducts())
+                {
+                    LoadProducts();
+                    ClearForm();
+                    MessageBox.Show($"Đã xóa thành công tất cả {_products.Count} sản phẩm!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể xóa tất cả sản phẩm. Một số sản phẩm có thể đang được sử dụng trong hóa đơn.", "Xóa thất bại", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
 
         private void ClearForm()

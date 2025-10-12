@@ -1,0 +1,135 @@
+<Window x:Class="WpfApp1.QRCodeSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="⚙️ Cài Đặt QR Code Thanh Toán" Height="500" Width="600"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="#F5F5F5">
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#9C27B0" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+            <TextBlock Text="⚙️ Cài Đặt QR Code Thanh Toán" FontSize="20" FontWeight="Bold" 
+                       Foreground="White" HorizontalAlignment="Center"/>
+        </Border>
+
+        <!-- Settings Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                
+                <!-- Enable QR Code -->
+                <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="🔧 Bật/Tắt QR Code" FontSize="16" FontWeight="Bold" 
+                                   Foreground="#333" Margin="0,0,0,10"/>
+                        <CheckBox x:Name="EnableQRCodeCheckBox" Content="Hiển thị QR code trên hóa đơn" 
+                                  FontSize="14" IsChecked="True"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Payment Method -->
+                <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="💳 Phương Thức Thanh Toán" FontSize="16" FontWeight="Bold" 
+                                   Foreground="#333" Margin="0,0,0,10"/>
+                        <ComboBox x:Name="PaymentMethodComboBox" Width="200" Height="35" FontSize="14">
+                            <ComboBoxItem Content="MoMo" Tag="momo"/>
+                            <ComboBoxItem Content="ZaloPay" Tag="zalopay"/>
+                            <ComboBoxItem Content="Ngân hàng" Tag="bank"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- MoMo Settings -->
+                <Border x:Name="MoMoSettingsBorder" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20"
+                        BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="📱 Cài Đặt MoMo" FontSize="16" FontWeight="Bold" 
+                                   Foreground="#333" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="Số điện thoại MoMo:" Width="150" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="MoMoPhoneTextBox" Width="200" Height="30" FontSize="14" 
+                                     Text="0901234567" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ZaloPay Settings -->
+                <Border x:Name="ZaloPaySettingsBorder" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20"
+                        BorderBrush="#E0E0E0" BorderThickness="1" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="💙 Cài Đặt ZaloPay" FontSize="16" FontWeight="Bold" 
+                                   Foreground="#333" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="Số điện thoại ZaloPay:" Width="150" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="ZaloPayPhoneTextBox" Width="200" Height="30" FontSize="14" 
+                                     Text="0901234567" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bank Settings -->
+                <Border x:Name="BankSettingsBorder" Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20"
+                        BorderBrush="#E0E0E0" BorderThickness="1" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="🏦 Cài Đặt Ngân Hàng" FontSize="16" FontWeight="Bold" 
+                                   Foreground="#333" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="Số tài khoản:" Width="150" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="BankAccountTextBox" Width="200" Height="30" FontSize="14" 
+                                     Text="1234567890" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="Tên ngân hàng:" Width="150" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="BankNameTextBox" Width="200" Height="30" FontSize="14" 
+                                     Text="Ngân hàng ABC" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="Tên chủ tài khoản:" Width="150" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="AccountNameTextBox" Width="200" Height="30" FontSize="14" 
+                                     Text="Công ty TNHH ABC" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Preview -->
+                <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20" BorderBrush="#E0E0E0" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="👁️ Xem Trước QR Code" FontSize="16" FontWeight="Bold" 
+                                   Foreground="#333" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel>
+                                <TextBlock Text="Số tiền mẫu:" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                <TextBox x:Name="PreviewAmountTextBox" Width="150" Height="30" FontSize="14" 
+                                         Text="500000" TextChanged="PreviewAmountTextBox_TextChanged"/>
+                            </StackPanel>
+                            <Border Background="#F8F9FA" CornerRadius="6" Padding="15" Margin="20,0,0,0" 
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <StackPanel>
+                                    <Image x:Name="PreviewQRCode" Width="100" Height="100" 
+                                           Stretch="Uniform" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Xem trước" FontSize="10" 
+                                               Foreground="#666666" HorizontalAlignment="Center" 
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button x:Name="SaveButton" Content="💾 Lưu Cài Đặt" Width="120" Height="40" 
+                    Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="SaveButton_Click"/>
+            <Button x:Name="CancelButton" Content="❌ Hủy" Width="100" Height="40" 
+                    Background="#9E9E9E" Foreground="White" FontWeight="SemiBold" Click="CancelButton_Click" Margin="10,0,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -176,6 +176,62 @@ namespace WpfApp1
             RecalculateTotals();
         }
 
+        private void UpdateInvoiceQRCode(decimal total)
+        {
+            try
+            {
+                // Load payment settings
+                var paymentSettings = PaymentSettingsManager.Load();
+                
+                if (!paymentSettings.EnableQRCode || InvoiceQRCode == null)
+                {
+                    return;
+                }
+
+                // Generate a temporary invoice ID for preview (use current timestamp)
+                int tempInvoiceId = (int)(DateTime.Now.Ticks % 1000000);
+                
+                // Lấy thông tin thanh toán từ settings
+                string paymentMethod = paymentSettings.PaymentMethod.ToLower();
+                string paymentInfo = paymentMethod switch
+                {
+                    "momo" => paymentSettings.MoMoPhone,
+                    "zalopay" => paymentSettings.ZaloPayPhone,
+                    "bank" => paymentSettings.BankAccount,
+                    _ => paymentSettings.MoMoPhone
+                };
+                
+                // Tạo QR code cho hóa đơn đang tạo
+                var qrCode = QRCodeHelper.GenerateInvoicePaymentQR(tempInvoiceId, total, paymentMethod, paymentInfo);
+                
+                // Hiển thị QR code
+                InvoiceQRCode.Source = qrCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating QR code: {ex.Message}");
+                // Không hiển thị lỗi cho người dùng, chỉ log
+            }
+        }
+
+        private void QRCodeSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var settingsWindow = new QRCodeSettingsWindow();
+                if (settingsWindow.ShowDialog() == true)
+                {
+                    // Refresh QR code after settings change
+                    RecalculateTotals();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Lỗi khi mở cài đặt QR code: {ex.Message}", "Lỗi", 
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void TotalsInput_TextChanged(object sender, TextChangedEventArgs e)
         {
             RecalculateTotals();
@@ -230,6 +286,9 @@ namespace WpfApp1
             decimal paid = TryGetDecimal(GetTextOrEmpty(PaidTextBox));
             decimal change = Math.Max(0, paid - total);
             ChangeTextBlock.Text = change.ToString("F2");
+
+            // Update QR code when totals change
+            UpdateInvoiceQRCode(total);
         }
 
         private static string GetTextOrEmpty(TextBox? textBox)
@@ -347,8 +406,22 @@ namespace WpfApp1
             int tempInvoiceId = new Random().Next(1000, 9999);
             DateTime invoiceDate = DateTime.Now;
 
-            var printWindow = new InvoicePrintWindow(_items, customer, subtotal, taxPercent, taxAmount, discount, total, tempInvoiceId, invoiceDate);
-            printWindow.ShowDialog();
+            // Lưu hóa đơn trước, sau đó mở giao diện in từ database
+            string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
+            var employeeId = GetEmployeeId(currentUser);
+            var itemsForSave = _items.Select(i => (i.ProductId, i.Quantity, i.UnitPrice)).ToList();
+            var success = DatabaseHelper.SaveInvoice(customer.Id, employeeId, subtotal, taxPercent, taxAmount, discount, total, 0, itemsForSave);
+            if (success)
+            {
+                // Get the last saved invoice ID
+                var invoiceId = DatabaseHelper.LastSavedInvoiceId;
+                var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
+                printWindow.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Không thể lưu hóa đơn để in.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void SaveInvoiceButton_Click(object sender, RoutedEventArgs e)
@@ -419,9 +492,7 @@ namespace WpfApp1
                 try
                 {
                     var selectedCustomer = CustomerComboBox.SelectedItem as CustomerListItem;
-                    var printWindow = selectedCustomer != null
-                        ? new InvoicePrintWindow(invoiceId, employeeId, selectedCustomer)
-                        : new InvoicePrintWindow(invoiceId, employeeId);
+                    var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
                     printWindow.ShowDialog();
                 }
                 catch (Exception ex)

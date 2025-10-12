@@ -28,7 +28,7 @@ namespace WpfApp1
                 {
                     Id = a.Id,
                     Username = a.Username,
-                    EmployeeName = "", // No EmployeeName available from GetAllAccounts
+                    EmployeeName = a.EmployeeName, // Will be fixed when GetAllAccounts is updated
                     Role = DatabaseHelper.GetUserRoleEnum(a.Username)
                 }).ToList();
 

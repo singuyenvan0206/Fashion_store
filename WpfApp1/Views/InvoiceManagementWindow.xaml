@@ -176,6 +176,7 @@
 								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
 							</Grid.RowDefinitions>
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*"/>
@@ -224,14 +225,57 @@
 								<TextBlock x:Name="ChangeTextBlock" Text="0₫" Width="80" TextAlignment="Left" Margin="6,0,0,0" FontWeight="Bold" Foreground="#388E3C"/>
 							</StackPanel>
 
-							<StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left">
-								<Button x:Name="SaveInvoiceButton" Content="💾 Lưu Hóa Đơn" Width="140" Height="40" 
-										Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="SaveInvoiceButton_Click"/>
-								<Button x:Name="PrintInvoiceButton" Content="🖨️ In Hóa Đơn" Width="140" Height="40" 
-										Background="#FF9800" Foreground="White" FontWeight="SemiBold" Click="PrintInvoiceButton_Click" Margin="8,0,0,0"/>
-								<Button x:Name="ClearInvoiceButton" Content="🧹 Xóa Hóa Đơn" Width="140" Height="40"
-										Background="#9E9E9E" Foreground="White" FontWeight="SemiBold" Click="ClearInvoiceButton_Click" Margin="8,0,0,0"/>
-							</StackPanel>
+							<!-- QR Code Section -->
+							<Border Grid.Row="7" Grid.ColumnSpan="2" Background="#F8F9FA" CornerRadius="8" Padding="15" Margin="0,8,0,8" BorderBrush="#E0E0E0" BorderThickness="1">
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="*"/>
+										<ColumnDefinition Width="Auto"/>
+									</Grid.ColumnDefinitions>
+									
+									<!-- QR Info -->
+									<StackPanel Grid.Column="0" VerticalAlignment="Center">
+										<TextBlock Text="💳 QR CODE THANH TOÁN" FontSize="14" FontWeight="Bold" 
+												   Foreground="#2E7D32" Margin="0,0,0,4"/>
+										<TextBlock Text="Quét mã QR để thanh toán nhanh" FontSize="11" 
+												   Foreground="#666666" Margin="0,0,0,2"/>
+										<TextBlock Text="Hỗ trợ: MoMo, ZaloPay, Ngân hàng" FontSize="10" 
+												   Foreground="#888888"/>
+									</StackPanel>
+									
+									<!-- QR Code -->
+									<Border Grid.Column="1" Background="White" CornerRadius="6" Padding="8" 
+											BorderBrush="#E0E0E0" BorderThickness="1">
+										<StackPanel>
+											<Image x:Name="InvoiceQRCode" Width="80" Height="80" 
+												   Stretch="Uniform" HorizontalAlignment="Center"/>
+											<TextBlock Text="Quét để thanh toán" FontSize="9" 
+													   Foreground="#666666" HorizontalAlignment="Center" 
+													   Margin="0,2,0,0"/>
+										</StackPanel>
+									</Border>
+								</Grid>
+							</Border>
+							
+							<Grid Grid.Row="8" Grid.ColumnSpan="2">
+	<Grid.RowDefinitions>
+		<RowDefinition Height="Auto"/>
+		<RowDefinition Height="Auto"/>
+	</Grid.RowDefinitions>
+	<Grid.ColumnDefinitions>
+		<ColumnDefinition Width="Auto"/>
+		<ColumnDefinition Width="Auto"/>
+	</Grid.ColumnDefinitions>
+
+	<Button x:Name="SaveInvoiceButton" Grid.Row="0" Grid.Column="0" Content="💾 Lưu Hóa Đơn" Width="140" Height="40" 
+			Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="SaveInvoiceButton_Click" Margin="0,0,8,8"/>
+	<Button x:Name="PrintInvoiceButton" Grid.Row="0" Grid.Column="1" Content="🖨️ In Hóa Đơn" Width="140" Height="40" 
+			Background="#FF9800" Foreground="White" FontWeight="SemiBold" Click="PrintInvoiceButton_Click" Margin="0,0,0,8"/>
+	<Button x:Name="ClearInvoiceButton" Grid.Row="1" Grid.Column="0" Content="🧹 Xóa Hóa Đơn" Width="140" Height="40"
+			Background="#9E9E9E" Foreground="White" FontWeight="SemiBold" Click="ClearInvoiceButton_Click" Margin="0,0,8,0"/>
+	<Button x:Name="QRCodeSettingsButton" Grid.Row="1" Grid.Column="1" Content="⚙️ Cài Đặt QR" Width="120" Height="40"
+			Background="#9C27B0" Foreground="White" FontWeight="SemiBold" Click="QRCodeSettingsButton_Click"/>
+</Grid>
 						</Grid>
 					</Border>
 				</Grid>

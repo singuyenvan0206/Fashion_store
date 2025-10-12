@@ -266,42 +266,23 @@ namespace WpfApp1
             {
                 var detail = DatabaseHelper.GetInvoiceDetails(row.Id);
                 
-                // Convert invoice details to InvoiceItemViewModel list
-                var items = detail.Items.Select(item => new InvoiceItemViewModel
+                // Get employee ID for printing
+                var employeeId = 1; // Default to admin or first employee
+                try
                 {
-                    ProductId = item.ProductId,
-                    ProductName = item.ProductName,
-                    UnitPrice = item.UnitPrice,
-                    Quantity = item.Quantity,
-                    LineTotal = item.LineTotal
-                }).ToList();
-
-                // Create customer info
-                var customer = new CustomerListItem
-                {
-                    Id = 0, // We don't have customer ID in the detail
-                    Name = detail.Header.CustomerName
-                };
-
-                // Calculate tax percentage
-                decimal taxPercent = 0;
-                if (detail.Header.Subtotal > 0)
-                {
-                    taxPercent = (detail.Header.TaxAmount / detail.Header.Subtotal) * 100;
+                    var accounts = DatabaseHelper.GetAllAccounts();
+                    var firstEmployee = accounts.FirstOrDefault();
+                    if (firstEmployee != default)
+                    {
+                        employeeId = firstEmployee.Id;
+                    }
                 }
-
-                // Open the professional invoice print window
-                var printWindow = new InvoicePrintWindow(
-                    items, 
-                    customer, 
-                    detail.Header.Subtotal, 
-                    taxPercent, 
-                    detail.Header.TaxAmount, 
-                    detail.Header.Discount, 
-                    detail.Header.Total, 
-                    detail.Header.Id, 
-                    detail.Header.CreatedDate
-                );
+                catch
+                {
+                    // Use default employee ID if error
+                }
+                
+                var printWindow = new InvoicePrintWindow(detail.Header.Id, employeeId);
                 printWindow.ShowDialog();
             }
         }

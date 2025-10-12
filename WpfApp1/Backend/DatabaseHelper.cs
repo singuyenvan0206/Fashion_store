@@ -328,17 +328,17 @@ namespace WpfApp1
             return update.ExecuteNonQuery() > 0;
         }
 
-        public static List<(int Id, string Username)> GetAllAccounts()
+        public static List<(int Id, string Username, string EmployeeName)> GetAllAccounts()
         {
-            var accounts = new List<(int, string)>();
+            var accounts = new List<(int, string, string)>();
             using var connection2 = new MySqlConnection(ConnectionString);
             connection2.Open();
-            string selectCmd = "SELECT Id, Username FROM Accounts;";
+            string selectCmd = "SELECT Id, Username, COALESCE(EmployeeName, '') FROM Accounts;";
             using var cmd2 = new MySqlCommand(selectCmd, connection2);
             using var reader2 = cmd2.ExecuteReader();
             while (reader2.Read())
             {
-                accounts.Add((reader2.GetInt32(0), reader2.GetString(1)));
+                accounts.Add((reader2.GetInt32(0), reader2.GetString(1), reader2.IsDBNull(2) ? "" : reader2.GetString(2)));
             }
             return accounts;
         }

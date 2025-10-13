@@ -21,51 +21,178 @@
         </Border>
 
         <!-- Main Content -->
-        <Border Grid.Row="1" Margin="24,24,24,5" Background="White" CornerRadius="14" Padding="24">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24,24,24,5">
+                <!-- Database Settings -->
+                <Border Background="White" CornerRadius="14" Padding="24" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                <TextBlock Text="Cấu Hình Cơ Sở Dữ Liệu"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           Foreground="#1CB5E0"
-                           Margin="0,0,0,12"/>
+                        <TextBlock Text="Cấu Hình Cơ Sở Dữ Liệu"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1CB5E0"
+                                   Margin="0,0,0,12"/>
 
-                <Grid Grid.Row="1" >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="180"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                        <Grid Grid.Row="1" >
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Máy chủ MySQL:" VerticalAlignment="Center"/>
-                    <TextBox x:Name="ServerTextBox" Grid.Row="0" Grid.Column="1" Height="32"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Máy chủ MySQL:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="ServerTextBox" Grid.Row="0" Grid.Column="1" Height="32"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Cơ sở dữ liệu:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                    <TextBox x:Name="DatabaseTextBox" Grid.Row="1" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Cơ sở dữ liệu:" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBox x:Name="DatabaseTextBox" Grid.Row="1" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Tên đăng nhập:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                    <TextBox x:Name="UserIdTextBox" Grid.Row="2" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Tên đăng nhập:" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBox x:Name="UserIdTextBox" Grid.Row="2" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Mật khẩu:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                    <PasswordBox x:Name="PasswordBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Mật khẩu:" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <PasswordBox x:Name="PasswordBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
 
-                    <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                        <Button x:Name="TestConnectionButton" Content="Kiểm Tra Kết Nối" Width="140" Height="34" Margin="0,0,8,0" Click="TestConnectionButton_Click"/>
-                        <Button x:Name="SaveSettingsButton" Content="Lưu" Width="100" Height="34" Background="#4CAF50" Foreground="White" Click="SaveSettingsButton_Click"/>
-                    </StackPanel>
-                </Grid>
-            </Grid>
-        </Border>
+                            <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                                <Button x:Name="TestConnectionButton" Content="Kiểm Tra Kết Nối" Width="140" Height="34" Margin="0,0,8,0" Click="TestConnectionButton_Click"/>
+                                <Button x:Name="SaveSettingsButton" Content="Lưu" Width="100" Height="34" Background="#4CAF50" Foreground="White" Click="SaveSettingsButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- QR Code Settings -->
+                <Border Background="White" CornerRadius="14" Padding="24">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Cài Đặt QR Code Thanh Toán"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1CB5E0"
+                                   Margin="0,0,0,12"/>
+
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- QR Code Toggle -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Bật QR Code:" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <ToggleButton x:Name="QRCodeToggleButton" Width="60" Height="30" 
+                                              Checked="QRCodeToggleButton_Checked" 
+                                              Unchecked="QRCodeToggleButton_Unchecked">
+                                    <ToggleButton.Style>
+                                        <Style TargetType="ToggleButton">
+                                            <Setter Property="Background" Value="#E0E0E0"/>
+                                            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ToggleButton">
+                                                        <Border Background="{TemplateBinding Background}" 
+                                                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="15">
+                                                            <Grid>
+                                                                <Ellipse x:Name="ToggleThumb" 
+                                                                         Width="24" Height="24" 
+                                                                         Fill="White" 
+                                                                         HorizontalAlignment="Left" 
+                                                                         VerticalAlignment="Center" 
+                                                                         Margin="3"/>
+                                                                <TextBlock x:Name="ToggleText" 
+                                                                           Text="TẮT" 
+                                                                           HorizontalAlignment="Right" 
+                                                                           VerticalAlignment="Center" 
+                                                                           Margin="0,0,8,0" 
+                                                                           FontSize="10" 
+                                                                           FontWeight="Bold" 
+                                                                           Foreground="White"/>
+                                                            </Grid>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsChecked" Value="True">
+                                                                <Setter TargetName="ToggleThumb" Property="HorizontalAlignment" Value="Right"/>
+                                                                <Setter TargetName="ToggleThumb" Property="Margin" Value="0,0,3,0"/>
+                                                                <Setter TargetName="ToggleText" Property="Text" Value="BẬT"/>
+                                                                <Setter TargetName="ToggleText" Property="HorizontalAlignment" Value="Left"/>
+                                                                <Setter TargetName="ToggleText" Property="Margin" Value="8,0,0,0"/>
+                                                                <Setter Property="Background" Value="#4CAF50"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ToggleButton.Style>
+                                </ToggleButton>
+                                <TextBlock x:Name="QRCodeStatusText" Text="QR Code đã được bật" 
+                                           Margin="12,0,0,0" VerticalAlignment="Center" 
+                                           FontSize="12" Foreground="#666666"/>
+                            </StackPanel>
+
+                            <!-- Payment Method -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Phương thức:" VerticalAlignment="Center" Margin="0,16,0,0"/>
+                            <ComboBox x:Name="PaymentMethodComboBox" Grid.Row="1" Grid.Column="1" Height="32" Margin="0,16,0,0">
+                                <ComboBoxItem Content="MoMo" Tag="momo"/>
+                                <ComboBoxItem Content="ZaloPay" Tag="zalopay"/>
+                                <ComboBoxItem Content="TPBank" Tag="tpbank"/>
+                                <ComboBoxItem Content="Ngân hàng khác" Tag="bank"/>
+                            </ComboBox>
+
+                            <!-- MoMo Phone -->
+                            <TextBlock x:Name="PaymentInfoLabel" Grid.Row="2" Grid.Column="0" Text="Số điện thoại MoMo:" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBox x:Name="PaymentInfoTextBox" Grid.Row="2" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
+
+                            <!-- Bank Account (hidden by default) -->
+                            <TextBlock x:Name="BankAccountLabel" Grid.Row="3" Grid.Column="0" Text="Số tài khoản:" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <TextBox x:Name="BankAccountTextBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed"/>
+
+                            <!-- Bank Name (hidden by default) -->
+                            <TextBlock x:Name="BankNameLabel" Grid.Row="4" Grid.Column="0" Text="Tên ngân hàng:" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <TextBox x:Name="BankNameTextBox" Grid.Row="4" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed"/>
+
+                            <!-- Bank BIN (hidden by default) -->
+                            <TextBlock x:Name="BankBINLabel" Grid.Row="5" Grid.Column="0" Text="Mã ngân hàng (BIN):" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <TextBox x:Name="BankBINTextBox" Grid.Row="5" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed" ToolTip="Mã NAPAS của ngân hàng (ví dụ: 970415 cho Vietinbank)"/>
+
+                            <!-- Account Name (hidden by default) -->
+                            <TextBlock x:Name="AccountNameLabel" Grid.Row="6" Grid.Column="0" Text="Tên chủ tài khoản:" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <TextBox x:Name="AccountNameTextBox" Grid.Row="6" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed"/>
+
+                            <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                                <Button x:Name="SaveQRCodeSettingsButton" Content="Lưu QR Code" Width="120" Height="34" Background="#9C27B0" Foreground="White" Click="SaveQRCodeSettingsButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
 
         <TextBlock x:Name="StatusTextBlock" Grid.Row="2" Text="" Foreground="#666" HorizontalAlignment="Center" Margin="0,0,0,12"/>
         

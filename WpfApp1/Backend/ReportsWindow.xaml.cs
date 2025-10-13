@@ -264,45 +264,20 @@ namespace WpfApp1
         {
             if (sender is Button btn && btn.DataContext is InvoiceListItem row)
             {
-                var detail = DatabaseHelper.GetInvoiceDetails(row.Id);
-                
-                // Convert invoice details to InvoiceItemViewModel list
-                var items = detail.Items.Select(item => new InvoiceItemViewModel
+                try
                 {
-                    ProductId = item.ProductId,
-                    ProductName = item.ProductName,
-                    UnitPrice = item.UnitPrice,
-                    Quantity = item.Quantity,
-                    LineTotal = item.LineTotal
-                }).ToList();
-
-                // Create customer info
-                var customer = new CustomerListItem
-                {
-                    Id = 0, // We don't have customer ID in the detail
-                    Name = detail.Header.CustomerName
-                };
-
-                // Calculate tax percentage
-                decimal taxPercent = 0;
-                if (detail.Header.Subtotal > 0)
-                {
-                    taxPercent = (detail.Header.TaxAmount / detail.Header.Subtotal) * 100;
+                    // Lấy EmployeeId của người đang đăng nhập (hoặc sử dụng ID mặc định)
+                    string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
+                    var employeeId = DatabaseHelper.GetEmployeeIdByUsername(currentUser);
+                    
+                    // Sử dụng constructor từ database để đảm bảo dữ liệu chính xác
+                    var printWindow = new InvoicePrintWindow(row.Id, employeeId);
+                    printWindow.ShowDialog();
                 }
-
-                // Open the professional invoice print window
-                var printWindow = new InvoicePrintWindow(
-                    items, 
-                    customer, 
-                    detail.Header.Subtotal, 
-                    taxPercent, 
-                    detail.Header.TaxAmount, 
-                    detail.Header.Discount, 
-                    detail.Header.Total, 
-                    detail.Header.Id, 
-                    detail.Header.CreatedDate
-                );
-                printWindow.ShowDialog();
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Không thể mở cửa sổ in cho hóa đơn #{row.Id}: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
     }

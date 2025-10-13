@@ -25,17 +25,7 @@ namespace WpfApp1
             using var cmd = new MySqlCommand(tableCmd, connection);
             cmd.ExecuteNonQuery();
 
-            // Create default admin account if not exists
-            string checkAdminCmd2 = "SELECT COUNT(*) FROM Accounts WHERE Username = 'admin';";
-            using var checkAdmin2 = new MySqlCommand(checkAdminCmd2, connection);
-            int adminExists2 = Convert.ToInt32(checkAdmin2.ExecuteScalar());
-
-            if (adminExists2 == 0)
-            {
-                string createAdminCmd = "INSERT INTO Accounts (Username, Password, Role) VALUES ('admin', 'admin123', 'Admin');";
-                using var createAdmin = new MySqlCommand(createAdminCmd, connection);
-                createAdmin.ExecuteNonQuery();
-            }
+            // Ensure default admin account exists (handled once below)
 
             // Categories table
             string categoryCmd = @"CREATE TABLE IF NOT EXISTS Categories (
@@ -129,7 +119,7 @@ namespace WpfApp1
             // Fix any existing data issues
             FixExistingProductData(connection);
 
-            // Default admin account (already present)
+            // Ensure default admin account exists
             string checkAdminCmd = "SELECT COUNT(*) FROM Accounts WHERE Username='admin';";
             using var checkCmd = new MySqlCommand(checkAdminCmd, connection);
             long adminExists = (long)checkCmd.ExecuteScalar();
@@ -328,17 +318,17 @@ namespace WpfApp1
             return update.ExecuteNonQuery() > 0;
         }
 
-        public static List<(int Id, string Username)> GetAllAccounts()
+        public static List<(int Id, string Username, string EmployeeName)> GetAllAccounts()
         {
-            var accounts = new List<(int, string)>();
+            var accounts = new List<(int, string, string)>();
             using var connection2 = new MySqlConnection(ConnectionString);
             connection2.Open();
-            string selectCmd = "SELECT Id, Username FROM Accounts;";
+            string selectCmd = "SELECT Id, Username, COALESCE(EmployeeName, '') FROM Accounts;";
             using var cmd2 = new MySqlCommand(selectCmd, connection2);
             using var reader2 = cmd2.ExecuteReader();
             while (reader2.Read())
             {
-                accounts.Add((reader2.GetInt32(0), reader2.GetString(1)));
+                accounts.Add((reader2.GetInt32(0), reader2.GetString(1), reader2.IsDBNull(2) ? "" : reader2.GetString(2)));
             }
             return accounts;
         }
@@ -501,7 +491,7 @@ namespace WpfApp1
                 result.AppendLine($"✅ Mã sản phẩm '{code}' chưa tồn tại");
 
                 // Thử thêm sản phẩm
-                string insertCmd = "INSERT INTO Products (Name, Code, CategoryId, SalePrice, StockQuantity, Description) VALUES (@name, @code, @categoryId, @price, @stockQuantity, @description);";
+                string insertCmd = "INSERT INTO Products (Name, Code, CategoryId, SalePrice, StockQuantity, Description) VALUES (@name, @code, @categoryId, @saleprice, @stockQuantity, @description);";
                 using var cmd = new MySqlCommand(insertCmd, connection);
                 cmd.Parameters.AddWithValue("@name", name);
                 cmd.Parameters.AddWithValue("@code", code);
@@ -597,7 +587,7 @@ namespace WpfApp1
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-            string cmdText = "UPDATE Products SET Name=@name, Code=@code, CategoryId=@categoryId, salePrice=@saleprice, StockQuantity=@stockQuantity, Description=@description WHERE Id=@id;";
+            string cmdText = "UPDATE Products SET Name=@name, Code=@code, CategoryId=@categoryId, SalePrice=@saleprice, StockQuantity=@stockQuantity, Description=@description WHERE Id=@id;";
             using var cmd = new MySqlCommand(cmdText, connection);
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@name", name);

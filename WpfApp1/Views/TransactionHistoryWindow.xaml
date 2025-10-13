@@ -33,7 +33,12 @@
             <!-- Invoice items -->
             <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="8" Margin="8,0,0,0">
                 <StackPanel>
-                    <TextBlock Text="Chi tiết hóa đơn" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="Chi tiết hóa đơn" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Button x:Name="PrintInvoiceButton" Content="🖨️ In Hóa Đơn" Width="120" Height="32" 
+                                Background="#FF9800" Foreground="White" FontWeight="SemiBold" 
+                                Click="PrintInvoiceButton_Click" HorizontalAlignment="Right"/>
+                    </Grid>
                     <DataGrid x:Name="InvoiceItemsGrid" AutoGenerateColumns="False" IsReadOnly="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Sản phẩm" Binding="{Binding ProductName}" Width="*"/>

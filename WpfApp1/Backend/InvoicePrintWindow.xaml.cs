@@ -6,9 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Windows.Markup;
-using System.Xml;
-using System.IO;
 
 namespace WpfApp1
 {
@@ -43,7 +40,7 @@ namespace WpfApp1
             LoadInvoiceData();
         }
 
-        // New: Load from database by saved invoice id
+
         public InvoicePrintWindow(int invoiceId, int employeeId)
         {
             InitializeComponent();
@@ -61,49 +58,19 @@ namespace WpfApp1
             LoadFromDatabase(invoiceId, employeeId);
         }
 
-        // Overload: allow passing selected customer to show phone/name accurately
-        public InvoicePrintWindow(int invoiceId, int employeeId, CustomerListItem customer)
-        {
-            InitializeComponent();
-
-            _items = new List<InvoiceItemViewModel>();
-            _customer = customer;
-            _subtotal = 0m;
-            _taxPercent = 0m;
-            _taxAmount = 0m;
-            _discount = 0m;
-            _total = 0m;
-            _invoiceId = invoiceId;
-            _invoiceDate = DateTime.Now;
-
-            LoadFromDatabase(invoiceId, employeeId);
-
-            // After loading header, override with precise customer fields from selection (phone, name)
-            CustomerNameText.Text = _customer?.Name ?? CustomerNameText.Text;
-            CustomerPhoneText.Text = _customer?.Phone ?? CustomerPhoneText.Text;
-        }
-
         private void LoadInvoiceData()
         {
-            // Set company information
-            CompanyNameText.Text = "HỆ THỐNG QUẢN LÝ BÁN HÀNG";
-            CompanySloganText.Text = "Giải pháp bán hàng chuyên nghiệp";
-            CompanyAddressText.Text = ""; // Ẩn để đơn giản
-            CompanyCityText.Text = "";    // Ẩn để đơn giản
-            CompanyPhoneText.Text = "";   // Ẩn để đơn giản
-
             // Set invoice information
             InvoiceDateText.Text = _invoiceDate.ToString("dd/MM/yyyy");
             InvoiceNumberText.Text = _invoiceId.ToString();
             InvoiceForText.Text = "Giao dịch bán hàng";
 
             // Set customer information
-            CustomerNameText.Text = _customer?.Name ?? "Khách lẻ";
-            CustomerPhoneText.Text = _customer?.Phone ?? string.Empty;
-            CustomerEmailText.Text = string.Empty;
-            CustomerAddressText.Text = string.Empty;
+            CustomerNameText.Text = string.IsNullOrWhiteSpace(_customer?.Name) ? "Khách lẻ" : _customer.Name;
+            CustomerPhoneText.Text = string.IsNullOrWhiteSpace(_customer?.Phone) ? "Không có" : _customer.Phone;
+            CustomerEmailText.Text = string.IsNullOrWhiteSpace(_customer?.Email) ? "Không có" : _customer.Email;
+            CustomerAddressText.Text = string.IsNullOrWhiteSpace(_customer?.Address) ? "Không có" : _customer.Address;
 
-            // Load items
             InvoiceItemsList.ItemsSource = _items;
 
             // Set totals
@@ -112,13 +79,22 @@ namespace WpfApp1
             SalesTaxText.Text = _taxAmount.ToString("C");
             OtherText.Text = _discount.ToString("C");
             TotalText.Text = _total.ToString("C");
+
+            GeneratePaymentQRCode(_invoiceId, _total);
         }
 
         private void LoadFromDatabase(int invoiceId, int employeeId)
         {
             try
             {
+                // Debug: Log thông tin invoice
+                System.Diagnostics.Debug.WriteLine($"Loading invoice {invoiceId} for employee {employeeId}");
+                
                 var (header, items) = DatabaseHelper.GetInvoiceDetails(invoiceId);
+                
+                // Debug: Log thông tin header và items
+                System.Diagnostics.Debug.WriteLine($"Header loaded: ID={header.Id}, Customer={header.CustomerName}, Total={header.Total}");
+                System.Diagnostics.Debug.WriteLine($"Items count: {items.Count}");
 
                 // Header
                 InvoiceDateText.Text = header.CreatedDate.ToString("dd/MM/yyyy");
@@ -126,16 +102,25 @@ namespace WpfApp1
                 InvoiceNumberText.Text = header.Id.ToString();
                 InvoiceForText.Text = "Giao dịch bán hàng";
 
-                // Employee display: resolve username by id
-                var accounts = DatabaseHelper.GetAllAccounts();
-                var employee = accounts.FirstOrDefault(a => a.Id == employeeId);
-                EmployeeNameText.Text = string.IsNullOrWhiteSpace(employee.Username) ? "" : employee.Username;
+                // Employee display
+                try
+                {
+                    var accounts = DatabaseHelper.GetAllAccounts();
+                    var employee = accounts.FirstOrDefault(a => a.Id == employeeId);
+                    EmployeeNameText.Text = employee != default 
+                        ? (string.IsNullOrWhiteSpace(employee.EmployeeName) ? employee.Username : employee.EmployeeName)
+                        : "Không xác định";
+                }
+                catch
+                {
+                    EmployeeNameText.Text = "Không xác định";
+                }
 
                 // Customer
-                CustomerNameText.Text = header.CustomerName;
-                CustomerPhoneText.Text = header.CustomerPhone;
-                CustomerEmailText.Text = header.CustomerEmail;
-                CustomerAddressText.Text = header.CustomerAddress;
+                CustomerNameText.Text = string.IsNullOrWhiteSpace(header.CustomerName) ? "Khách lẻ" : header.CustomerName;
+                CustomerPhoneText.Text = string.IsNullOrWhiteSpace(header.CustomerPhone) ? "Không có" : header.CustomerPhone;
+                CustomerEmailText.Text = string.IsNullOrWhiteSpace(header.CustomerEmail) ? "Không có" : header.CustomerEmail;
+                CustomerAddressText.Text = string.IsNullOrWhiteSpace(header.CustomerAddress) ? "Không có" : header.CustomerAddress;
 
                 // Items
                 var vmItems = new List<InvoiceItemViewModel>();
@@ -152,6 +137,14 @@ namespace WpfApp1
                         LineTotal = it.LineTotal
                     });
                 }
+                
+                // Debug: Log số lượng items
+                System.Diagnostics.Debug.WriteLine($"Loaded {vmItems.Count} items for invoice {invoiceId}");
+                foreach (var item in vmItems)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Item: {item.ProductName}, Qty: {item.Quantity}, Price: {item.UnitPrice}");
+                }
+                
                 InvoiceItemsList.ItemsSource = vmItems;
 
                 // Totals
@@ -162,6 +155,8 @@ namespace WpfApp1
                 OtherText.Text = header.Discount.ToString("C");
                 TotalText.Text = header.Total.ToString("C");
                 PaidText.Text = header.Paid.ToString("C");
+
+                GeneratePaymentQRCode(invoiceId, header.Total);
             }
             catch (Exception ex)
             {
@@ -183,28 +178,7 @@ namespace WpfApp1
 
                 if (printDialog.ShowDialog() == true)
                 {
-                    // Clone the current preview to ensure WYSIWYG printing
-                    FrameworkElement toPrint;
-                    if (InvoicePreviewRoot != null)
-                    {
-                        string xaml = XamlWriter.Save(InvoicePreviewRoot);
-                        using var stringReader = new StringReader(xaml);
-                        using var xmlReader = XmlReader.Create(stringReader);
-                        var cloned = (FrameworkElement)XamlReader.Load(xmlReader);
-
-                        // Measure/arrange to printable area
-                        double pageWidth = printDialog.PrintableAreaWidth > 0 ? printDialog.PrintableAreaWidth : 800;
-                        double pageHeight = printDialog.PrintableAreaHeight > 0 ? printDialog.PrintableAreaHeight : 1120;
-                        cloned.Measure(new Size(pageWidth, pageHeight));
-                        cloned.Arrange(new Rect(new Point(0, 0), new Size(pageWidth, cloned.DesiredSize.Height)));
-                        cloned.UpdateLayout();
-                        toPrint = cloned;
-                    }
-                    else
-                    {
-                        // Fallback to constructed content if preview root is not available
-                        toPrint = CreatePrintVisual();
-                    }
+                    var toPrint = CreatePrintVisual();
 
                     printDialog.PrintVisual(toPrint, "Invoice #" + _invoiceId);
                     
@@ -221,15 +195,8 @@ namespace WpfApp1
 
         private FrameworkElement CreatePrintVisual()
         {
-            // Create a new Grid for printing
-            var printGrid = new Grid();
-            printGrid.Width = 800;
-            printGrid.Background = Brushes.White;
-
-            // Add the invoice content to the print grid
-            var invoiceContent = CreateInvoiceContent();
-            printGrid.Children.Add(invoiceContent);
-
+            var printGrid = new Grid { Width = 800, Background = Brushes.White };
+            printGrid.Children.Add(CreateInvoiceContent());
             return printGrid;
         }
 
@@ -253,110 +220,30 @@ namespace WpfApp1
 
             // Company Info
             var companyStack = new StackPanel();
-            companyStack.Children.Add(new TextBlock
-            {
-                Text = "POS MANAGEMENT SYSTEM",
-                FontSize = 24,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(44, 62, 80)),
-                Margin = new Thickness(0, 0, 0, 5)
-            });
-            companyStack.Children.Add(new TextBlock
-            {
-                Text = "Professional Point of Sale Solutions",
-                FontSize = 14,
-                Foreground = new SolidColorBrush(Color.FromRgb(127, 140, 141)),
-                Margin = new Thickness(0, 0, 0, 10)
-            });
-            companyStack.Children.Add(new TextBlock
-            {
-                Text = "123 Business Street",
-                FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(52, 73, 94)),
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            companyStack.Children.Add(new TextBlock
-            {
-                Text = "Ho Chi Minh City, 700000",
-                FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(52, 73, 94)),
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            companyStack.Children.Add(new TextBlock
-            {
-                Text = "Phone: (028) 1234-5678",
-                FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(52, 73, 94)),
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            companyStack.Children.Add(new TextBlock
-            {
-                Text = "Fax: (028) 1234-5679",
-                FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(52, 73, 94))
-            });
+            companyStack.Children.Add(new TextBlock { Text = "HỆ THỐNG QUẢN LÝ BÁN HÀNG", FontSize = 24, FontWeight = FontWeights.Bold });
 
             Grid.SetColumn(companyStack, 0);
             headerGrid.Children.Add(companyStack);
 
             // Invoice Title
-            var invoiceStack = new StackPanel();
-            invoiceStack.HorizontalAlignment = HorizontalAlignment.Right;
-            invoiceStack.Children.Add(new TextBlock
-            {
-                Text = "INVOICE",
-                FontSize = 36,
-                FontWeight = FontWeights.Bold,
-                Foreground = new SolidColorBrush(Color.FromRgb(30, 136, 229)),
-                Margin = new Thickness(0, 0, 0, 20)
-            });
-
-            var invoiceInfoStack = new StackPanel();
-            invoiceInfoStack.Children.Add(CreateInfoRow("DATE:", _invoiceDate.ToString("MMMM dd, yyyy")));
-            invoiceInfoStack.Children.Add(CreateInfoRow("INVOICE #", _invoiceId.ToString()));
-            invoiceInfoStack.Children.Add(CreateInfoRow("FOR:", "Sales Transaction"));
-
-            invoiceStack.Children.Add(invoiceInfoStack);
+            var invoiceStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Right };
+            invoiceStack.Children.Add(new TextBlock { Text = "HÓA ĐƠN", FontSize = 28, FontWeight = FontWeights.Bold });
+            invoiceStack.Children.Add(CreateInfoRow("Ngày:", _invoiceDate.ToString("dd/MM/yyyy")));
+            invoiceStack.Children.Add(CreateInfoRow("Số HĐ:", _invoiceId.ToString()));
             Grid.SetColumn(invoiceStack, 1);
             headerGrid.Children.Add(invoiceStack);
 
             Grid.SetRow(headerGrid, 0);
             mainGrid.Children.Add(headerGrid);
 
-            // Billing Information (simplified: Name + Phone)
-            var billingBorder = new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(248, 249, 250)),
-                Padding = new Thickness(15),
-                Margin = new Thickness(0, 0, 0, 20),
-                CornerRadius = new CornerRadius(5)
-            };
-
-            var billingStack = new StackPanel();
-            billingStack.Children.Add(new TextBlock
-            {
-                Text = "BILL TO:",
-                FontWeight = FontWeights.Bold,
-                FontSize = 14,
-                Foreground = new SolidColorBrush(Color.FromRgb(44, 62, 80)),
-                Margin = new Thickness(0, 0, 0, 10)
-            });
-            billingStack.Children.Add(new TextBlock
-            {
-                Text = _customer?.Name ?? "Walk-in Customer",
-                FontSize = 12,
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(0, 0, 0, 2)
-            });
-            billingStack.Children.Add(new TextBlock
-            {
-                Text = string.IsNullOrWhiteSpace(_customer?.Phone) ? "" : _customer!.Phone,
-                FontSize = 12
-            });
-
-            billingBorder.Child = billingStack;
-            Grid.SetRow(billingBorder, 1);
-            mainGrid.Children.Add(billingBorder);
+            // Customer Info
+            var customerStack = new StackPanel();
+            customerStack.Children.Add(new TextBlock { Text = "KHÁCH HÀNG:", FontWeight = FontWeights.Bold });
+            customerStack.Children.Add(new TextBlock { Text = _customer?.Name ?? "Khách lẻ" });
+            if (!string.IsNullOrWhiteSpace(_customer?.Phone))
+                customerStack.Children.Add(new TextBlock { Text = _customer.Phone });
+            Grid.SetRow(customerStack, 1);
+            mainGrid.Children.Add(customerStack);
 
             // Items Table
             var itemsTable = CreateItemsTable();
@@ -386,137 +273,60 @@ namespace WpfApp1
 
         private StackPanel CreateInfoRow(string label, string value)
         {
-            var stack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 5) };
-            stack.Children.Add(new TextBlock
-            {
-                Text = label,
-                FontWeight = FontWeights.Bold,
-                Width = 80
-            });
+            var stack = new StackPanel { Orientation = Orientation.Horizontal };
+            stack.Children.Add(new TextBlock { Text = label, FontWeight = FontWeights.Bold, Width = 60 });
             stack.Children.Add(new TextBlock { Text = value });
             return stack;
         }
 
         private FrameworkElement CreateItemsTable()
         {
-            var tableBorder = new Border
-            {
-                BorderBrush = new SolidColorBrush(Color.FromRgb(224, 224, 224)),
-                BorderThickness = new Thickness(1),
-                Margin = new Thickness(0, 0, 0, 20)
-            };
-
-            var tableGrid = new Grid();
-
-            // Table Header
-            var headerBorder = new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(30, 136, 229)),
-                Padding = new Thickness(15, 10, 15, 10)
-            };
-
-            var headerGrid = new Grid();
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "DESCRIPTION",
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                FontSize = 12
-            });
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "QTY",
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                FontSize = 12,
-                HorizontalAlignment = HorizontalAlignment.Center
-            });
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "UNIT PRICE",
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                FontSize = 12,
-                HorizontalAlignment = HorizontalAlignment.Center
-            });
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "AMOUNT",
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                FontSize = 12,
-                HorizontalAlignment = HorizontalAlignment.Right
-            });
-
-            Grid.SetColumn(headerGrid.Children[1], 1);
-            Grid.SetColumn(headerGrid.Children[2], 2);
-            Grid.SetColumn(headerGrid.Children[3], 3);
-
-            headerBorder.Child = headerGrid;
-
+            var table = new StackPanel();
+            
+            // Header
+            var header = new Grid { Background = Brushes.LightGray };
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            
+            header.Children.Add(new TextBlock { Text = "Sản phẩm", FontWeight = FontWeights.Bold, Margin = new Thickness(5) });
+            var qty = new TextBlock { Text = "SL", FontWeight = FontWeights.Bold, Margin = new Thickness(5) };
+            Grid.SetColumn(qty, 1);
+            header.Children.Add(qty);
+            var price = new TextBlock { Text = "Đơn giá", FontWeight = FontWeights.Bold, Margin = new Thickness(5) };
+            Grid.SetColumn(price, 2);
+            header.Children.Add(price);
+            var total = new TextBlock { Text = "Thành tiền", FontWeight = FontWeights.Bold, Margin = new Thickness(5) };
+            Grid.SetColumn(total, 3);
+            header.Children.Add(total);
+            
+            table.Children.Add(header);
+            
             // Items
-            var itemsStack = new StackPanel();
             foreach (var item in _items)
             {
-                var itemBorder = new Border
-                {
-                    BorderBrush = new SolidColorBrush(Color.FromRgb(224, 224, 224)),
-                    BorderThickness = new Thickness(0, 0, 0, 1),
-                    Padding = new Thickness(15, 10, 15, 10)
-                };
-
-                var itemGrid = new Grid();
-                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
-                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
-                itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = item.ProductName,
-                    FontSize = 12,
-                    VerticalAlignment = VerticalAlignment.Center
-                });
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = item.Quantity.ToString(),
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                });
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = item.UnitPrice.ToString("F2"),
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                });
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = item.LineTotal.ToString("F2"),
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Center
-                });
-
-                Grid.SetColumn(itemGrid.Children[1], 1);
-                Grid.SetColumn(itemGrid.Children[2], 2);
-                Grid.SetColumn(itemGrid.Children[3], 3);
-
-                itemBorder.Child = itemGrid;
-                itemsStack.Children.Add(itemBorder);
+                var row = new Grid();
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                
+                row.Children.Add(new TextBlock { Text = item.ProductName, Margin = new Thickness(5) });
+                var itemQty = new TextBlock { Text = item.Quantity.ToString(), Margin = new Thickness(5) };
+                Grid.SetColumn(itemQty, 1);
+                row.Children.Add(itemQty);
+                var itemPrice = new TextBlock { Text = item.UnitPrice.ToString("C"), Margin = new Thickness(5) };
+                Grid.SetColumn(itemPrice, 2);
+                row.Children.Add(itemPrice);
+                var itemTotal = new TextBlock { Text = item.LineTotal.ToString("C"), Margin = new Thickness(5) };
+                Grid.SetColumn(itemTotal, 3);
+                row.Children.Add(itemTotal);
+                
+                table.Children.Add(row);
             }
-
-            tableGrid.Children.Add(headerBorder);
-            tableGrid.Children.Add(itemsStack);
-            tableBorder.Child = tableGrid;
-
-            return tableBorder;
+            
+            return table;
         }
 
         private Grid CreateTotalsSection()
@@ -527,14 +337,7 @@ namespace WpfApp1
 
             // Left side - Notes
             var notesStack = new StackPanel { VerticalAlignment = VerticalAlignment.Top };
-            notesStack.Children.Add(new TextBlock
-            {
-                Text = "Make all checks payable to POS Management System",
-                FontSize = 12,
-                Foreground = new SolidColorBrush(Color.FromRgb(127, 140, 141)),
-                Margin = new Thickness(0, 0, 0, 20)
-            });
-
+            notesStack.Children.Add(new TextBlock { Text = "Cảm ơn quý khách đã sử dụng dịch vụ!", FontSize = 12 });
             Grid.SetColumn(notesStack, 0);
             totalsGrid.Children.Add(notesStack);
 
@@ -543,78 +346,11 @@ namespace WpfApp1
             var totalsTable = new Grid();
             totalsTable.Width = 280;
 
-            // Add rows for totals
-            var rows = new[]
-            {
-                ("SUBTOTAL:", _subtotal.ToString("C")),
-                ("TAX RATE:", _taxPercent.ToString("F2") + "%"),
-                ("SALES TAX:", _taxAmount.ToString("C")),
-                ("OTHER:", _discount.ToString("C"))
-            };
-
-            for (int i = 0; i < rows.Length; i++)
-            {
-                totalsTable.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-                var rowGrid = new Grid();
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-
-                rowGrid.Children.Add(new TextBlock
-                {
-                    Text = rows[i].Item1,
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Margin = new Thickness(0, 0, 10, 8)
-                });
-                rowGrid.Children.Add(new TextBlock
-                {
-                    Text = rows[i].Item2,
-                    FontSize = 12,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Margin = new Thickness(0, 0, 0, 8)
-                });
-
-                Grid.SetColumn(rowGrid.Children[1], 1);
-                Grid.SetRow(rowGrid, i);
-                totalsTable.Children.Add(rowGrid);
-            }
-
-            // Total row with special styling
-            totalsTable.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            var totalBorder = new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(30, 136, 229)),
-                Padding = new Thickness(10, 8, 10, 8),
-                Margin = new Thickness(0, 0, 0, 20),
-                CornerRadius = new CornerRadius(3)
-            };
-
-            var totalGrid = new Grid();
-            totalGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            totalGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-
-            totalGrid.Children.Add(new TextBlock
-            {
-                Text = "TOTAL:",
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 0, 10, 0)
-            });
-            totalGrid.Children.Add(new TextBlock
-            {
-                Text = _total.ToString("C"),
-                FontSize = 14,
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Right
-            });
-
-            Grid.SetColumn(totalGrid.Children[1], 1);
-            totalBorder.Child = totalGrid;
-            Grid.SetRow(totalBorder, rows.Length);
-            totalsTable.Children.Add(totalBorder);
+            // Simple totals
+            totalsTable.Children.Add(new TextBlock { Text = $"Tạm tính: {_subtotal:C}", HorizontalAlignment = HorizontalAlignment.Right });
+            totalsTable.Children.Add(new TextBlock { Text = $"Thuế: {_taxAmount:C}", HorizontalAlignment = HorizontalAlignment.Right });
+            totalsTable.Children.Add(new TextBlock { Text = $"Giảm giá: {_discount:C}", HorizontalAlignment = HorizontalAlignment.Right });
+            totalsTable.Children.Add(new TextBlock { Text = $"Tổng cộng: {_total:C}", FontWeight = FontWeights.Bold, FontSize = 16, HorizontalAlignment = HorizontalAlignment.Right });
 
             totalsStack.Children.Add(totalsTable);
             Grid.SetColumn(totalsStack, 1);
@@ -623,6 +359,45 @@ namespace WpfApp1
             return totalsGrid;
         }
 
+
+        private void GeneratePaymentQRCode(int invoiceId, decimal total)
+        {
+            try
+            {
+                var paymentSettings = PaymentSettingsManager.Load();
+                
+                if (!paymentSettings.EnableQRCode)
+                {
+                    // Ẩn QR code nếu bị tắt
+                    var paymentQRCode = FindName("PaymentQRCode") as Image;
+                    if (paymentQRCode?.Parent is Border qrBorder)
+                    {
+                        qrBorder.Visibility = Visibility.Collapsed;
+                    }
+                    return;
+                }
+
+                // Sử dụng method mới từ QRCodeHelper để tạo QR theo phương thức thanh toán
+                var qrCodeImage = FindName("PaymentQRCode") as Image;
+                if (qrCodeImage != null)
+                {
+                    // Tạo QR code theo phương thức thanh toán
+                    qrCodeImage.Source = QRCodeHelper.GenerateQRByMethod(paymentSettings.PaymentMethod);
+                    
+                    // Hiển thị QR code container nếu bị ẩn
+                    if (qrCodeImage.Parent is Border qrBorder)
+                    {
+                        qrBorder.Visibility = Visibility.Visible;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error generating payment QR code: {ex.Message}");
+            }
+        }
+
+        // Đã chuyển sang sử dụng QRCodeHelper.GenerateQRByMethod() thay vì các method riêng lẻ
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();

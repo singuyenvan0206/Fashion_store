@@ -68,6 +68,31 @@ namespace WpfApp1
                 MessageBox.Show($"Lỗi tải chi tiết hóa đơn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void PrintInvoiceButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (InvoicesGrid.SelectedItem is InvoiceSummaryItem selectedInvoice)
+            {
+                try
+                {
+                    // Lấy EmployeeId của người đang đăng nhập (hoặc sử dụng ID mặc định)
+                    string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
+                    var employeeId = DatabaseHelper.GetEmployeeIdByUsername(currentUser);
+                    
+                    // Sử dụng constructor từ database để đảm bảo dữ liệu chính xác
+                    var printWindow = new InvoicePrintWindow(selectedInvoice.InvoiceId, employeeId);
+                    printWindow.ShowDialog();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Không thể mở cửa sổ in cho hóa đơn #{selectedInvoice.InvoiceId}: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng chọn hóa đơn để in.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
     }
 
     public class InvoiceSummaryItem

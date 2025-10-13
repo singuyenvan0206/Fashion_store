@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 
 namespace WpfApp1
 {
@@ -17,7 +19,50 @@ namespace WpfApp1
             LoadProducts();
             RefreshItemsGrid();
             RecalculateTotals();
+            InitializeQRCodeState();
         }
+
+        private void InitializeQRCodeState()
+        {
+            try
+            {
+                var paymentSettings = PaymentSettingsManager.Load();
+                if (InvoiceQRCode != null)
+                {
+                    if (!paymentSettings.EnableQRCode)
+                    {
+                        InvoiceQRCode.Source = null;
+                        InvoiceQRCode.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        InvoiceQRCode.Visibility = Visibility.Visible;
+                        LoadStaticQRCode(paymentSettings);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing QR code state: {ex.Message}");
+            }
+        }
+
+        private void LoadStaticQRCode(PaymentSettings paymentSettings)
+        {
+            try
+            {
+                // Sử dụng QR code chuyển khoản cố định theo phương thức thanh toán
+                InvoiceQRCode.Source = QRCodeHelper.GenerateQRByMethod(paymentSettings.PaymentMethod);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading static QR code: {ex.Message}");
+                // Fallback: sử dụng TPBank QR mặc định
+                InvoiceQRCode.Source = QRCodeHelper.GenerateTPBankQR();
+            }
+        }
+
+        // Đã chuyển sang sử dụng QRCodeHelper.GenerateQRByMethod() thay vì các method riêng lẻ
 
         private void LoadCustomers()
         {
@@ -176,6 +221,37 @@ namespace WpfApp1
             RecalculateTotals();
         }
 
+        private void UpdateInvoiceQRCode(decimal total)
+        {
+            try
+            {
+                var paymentSettings = PaymentSettingsManager.Load();
+                
+                if (InvoiceQRCode == null)
+                {
+                    return;
+                }
+
+                if (!paymentSettings.EnableQRCode)
+                {
+                    // Ẩn QR code nếu bị tắt
+                    InvoiceQRCode.Source = null;
+                    InvoiceQRCode.Visibility = Visibility.Collapsed;
+                    return;
+                }
+
+                InvoiceQRCode.Visibility = Visibility.Visible;
+                
+                // Sử dụng QR code chuyển khoản cố định theo phương thức thanh toán
+                var qrCode = QRCodeHelper.GenerateQRByMethod(paymentSettings.PaymentMethod);
+                InvoiceQRCode.Source = qrCode;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating QR code: {ex.Message}");
+            }
+        }
+
         private void TotalsInput_TextChanged(object sender, TextChangedEventArgs e)
         {
             RecalculateTotals();
@@ -212,9 +288,9 @@ namespace WpfApp1
             var (tier, _) = GetSelectedCustomerLoyalty();
             decimal tierDiscountPercent = tier.ToLower() switch
             {
-                "silver" => 1m,
-                "gold" => 2m,
-                "platinum" => 3m,
+                "silver" => 3m,
+                "gold" => 7m,
+                "platinum" => 10m,
                 _ => 0m
             };
             decimal tierDiscount = Math.Round(subtotal * (tierDiscountPercent / 100m), 2);
@@ -230,6 +306,9 @@ namespace WpfApp1
             decimal paid = TryGetDecimal(GetTextOrEmpty(PaidTextBox));
             decimal change = Math.Max(0, paid - total);
             ChangeTextBlock.Text = change.ToString("F2");
+
+            // Update QR code when totals change
+            UpdateInvoiceQRCode(total);
         }
 
         private static string GetTextOrEmpty(TextBox? textBox)
@@ -338,17 +417,28 @@ namespace WpfApp1
                 }
             }
             var (stier, _) = GetSelectedCustomerLoyalty();
-            decimal sTierPercent = stier.ToLower() switch { "silver" => 1m, "gold" => 2m, "platinum" => 3m, _ => 0m };
+            decimal sTierPercent = stier.ToLower() switch { "silver" => 3m, "gold" => 7m, "platinum" => 10m, _ => 0m };
             discount += Math.Round(subtotal * (sTierPercent / 100m), 2);
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             decimal total = Math.Max(0, subtotal + taxAmount - discount);
 
-            // Generate a temporary invoice ID for preview
             int tempInvoiceId = new Random().Next(1000, 9999);
             DateTime invoiceDate = DateTime.Now;
+            string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
+            var employeeId = GetEmployeeId(currentUser);
+            var itemsForSave = _items.Select(i => (i.ProductId, i.Quantity, i.UnitPrice)).ToList();
+            var success = DatabaseHelper.SaveInvoice(customer.Id, employeeId, subtotal, taxPercent, taxAmount, discount, total, 0, itemsForSave);
+            if (success)
+            {
 
-            var printWindow = new InvoicePrintWindow(_items, customer, subtotal, taxPercent, taxAmount, discount, total, tempInvoiceId, invoiceDate);
-            printWindow.ShowDialog();
+                var invoiceId = DatabaseHelper.LastSavedInvoiceId;
+                var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
+                printWindow.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Không thể lưu hóa đơn để in.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void SaveInvoiceButton_Click(object sender, RoutedEventArgs e)
@@ -382,7 +472,7 @@ namespace WpfApp1
                 }
             }
             var (saveTier, savePts) = GetSelectedCustomerLoyalty();
-            decimal saveTierPercent = saveTier.ToLower() switch { "silver" => 1m, "gold" => 2m, "platinum" => 3m, _ => 0m };
+            decimal saveTierPercent = saveTier.ToLower() switch { "silver" => 3m, "gold" => 7m, "platinum" => 10m, _ => 0m };
             discount += Math.Round(subtotal * (saveTierPercent / 100m), 2);
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             decimal total = Math.Max(0, subtotal + taxAmount - discount);
@@ -419,9 +509,7 @@ namespace WpfApp1
                 try
                 {
                     var selectedCustomer = CustomerComboBox.SelectedItem as CustomerListItem;
-                    var printWindow = selectedCustomer != null
-                        ? new InvoicePrintWindow(invoiceId, employeeId, selectedCustomer)
-                        : new InvoicePrintWindow(invoiceId, employeeId);
+                    var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
                     printWindow.ShowDialog();
                 }
                 catch (Exception ex)
@@ -481,5 +569,8 @@ namespace WpfApp1
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
     }
 }
+

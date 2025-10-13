@@ -44,6 +44,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Header Section -->
@@ -146,21 +147,21 @@
                                 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Tên khách hàng:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerNameText"  
+                                    <TextBlock x:Name="CustomerNameText" Text="Khách lẻ"
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Địa chỉ:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerAddressText" Text="" 
+                                    <TextBlock x:Name="CustomerAddressText" Text="Không có" 
                                                FontSize="12" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                 </StackPanel>
                                 
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerPhoneText" Text="0901 234 567" 
+                                    <TextBlock x:Name="CustomerPhoneText" Text="Không có" 
                                                FontSize="14" FontWeight="SemiBold" Foreground="#2E7D32" Margin="0,0,0,8"/>
                                     
                                     <TextBlock Text="Email:" FontSize="12" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,4"/>
-                                    <TextBlock x:Name="CustomerEmailText" Text="" 
+                                    <TextBlock x:Name="CustomerEmailText" Text="Không có" 
                                                FontSize="12" Foreground="#2E7D32"/>
                                 </StackPanel>
                             </Grid>
@@ -196,29 +197,17 @@
                             </Border>
                             
                             <!-- Items List -->
-                            <ItemsControl Grid.Row="1" x:Name="InvoiceItemsList" Margin="0">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="15,10,15,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="50"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="100"/>
-                                                    <ColumnDefinition Width="80"/>
-                                                    <ColumnDefinition Width="120"/>
-                                                </Grid.ColumnDefinitions>
-                                                
-                                                <TextBlock Grid.Column="0" Text="{Binding RowNumber}" FontSize="12"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding ProductName}" FontSize="12"/>
-                                                <TextBlock Grid.Column="2" Text="{Binding UnitPrice, StringFormat=F2}" FontSize="12" HorizontalAlignment="Right"/>
-                                                <TextBlock Grid.Column="3" Text="{Binding Quantity}" FontSize="12" HorizontalAlignment="Center"/>
-                                                <TextBlock Grid.Column="4" Text="{Binding LineTotal, StringFormat=F2}" FontSize="12" HorizontalAlignment="Right"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <DataGrid Grid.Row="1" x:Name="InvoiceItemsList" Margin="0" Background="White" BorderThickness="0" 
+                                      AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" 
+                                      GridLinesVisibility="Horizontal" RowHeaderWidth="0">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="#" Binding="{Binding RowNumber}" Width="50"/>
+                                    <DataGridTextColumn Header="Sản phẩm" Binding="{Binding ProductName}" Width="*"/>
+                                    <DataGridTextColumn Header="Đơn giá" Binding="{Binding UnitPrice, StringFormat=F2}" Width="100"/>
+                                    <DataGridTextColumn Header="SL" Binding="{Binding Quantity}" Width="80"/>
+                                    <DataGridTextColumn Header="Thành tiền" Binding="{Binding LineTotal, StringFormat=F2}" Width="120"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
                         </Grid>
                     </Border>
 
@@ -277,8 +266,40 @@
                         </Border>
                     </Grid>
 
+                    <!-- Payment QR Code Section -->
+                    <Border Grid.Row="4" Background="#F8F9FA" CornerRadius="8" Padding="20" Margin="0,0,0,20" BorderBrush="#E0E0E0" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Payment Info -->
+                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                <TextBlock Text="💳 THANH TOÁN QUA QR CODE" FontSize="16" FontWeight="Bold" 
+                                           Foreground="#2E7D32" Margin="0,0,0,8"/>
+                                <TextBlock Text="Quét mã QR để thanh toán nhanh chóng" FontSize="12" 
+                                           Foreground="#666666" Margin="0,0,0,4"/>
+                                <TextBlock Text="Hỗ trợ: MoMo, ZaloPay, TPBank, Ngân hàng khác" FontSize="11" 
+                                           Foreground="#888888"/>
+                            </StackPanel>
+                            
+                            <!-- QR Code -->
+                            <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="10" 
+                                    BorderBrush="#E0E0E0" BorderThickness="1">
+                                <StackPanel>
+                                    <Image x:Name="PaymentQRCode" Width="120" Height="120" 
+                                           Stretch="Uniform" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="Quét để thanh toán" FontSize="10" 
+                                               Foreground="#666666" HorizontalAlignment="Center" 
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
                     <!-- Footer -->
-                    <Border Grid.Row="4" Background="#1A237E" CornerRadius="8" Padding="20" BorderBrush="#3949AB" BorderThickness="2">
+                    <Border Grid.Row="5" Background="#1A237E" CornerRadius="8" Padding="20" BorderBrush="#3949AB" BorderThickness="2">
                         <StackPanel>
                             <TextBlock Text="🙏 CẢM ƠN QUÝ KHÁCH!" FontSize="20" FontWeight="Bold" 
                                        Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,12"/>

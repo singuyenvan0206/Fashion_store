@@ -227,14 +227,28 @@ namespace WpfApp1
             {
                 var paymentSettings = PaymentSettingsManager.Load();
                 
-                if (InvoiceQRCode == null)
+                if (InvoiceQRCode == null || PaymentMethodComboBox == null)
                 {
+                    return;
+                }
+
+                // Lấy phương thức thanh toán từ ComboBox
+                string selectedPayment = "";
+                if (PaymentMethodComboBox.SelectedItem is ComboBoxItem selectedItem)
+                {
+                    selectedPayment = selectedItem.Content?.ToString() ?? "";
+                }
+
+                // Chỉ hiển thị QR code cho chuyển khoản và ví điện tử
+                if (!selectedPayment.Contains("Chuyển khoản") && !selectedPayment.Contains("Ví điện tử"))
+                {
+                    InvoiceQRCode.Source = null;
+                    InvoiceQRCode.Visibility = Visibility.Collapsed;
                     return;
                 }
 
                 if (!paymentSettings.EnableQRCode)
                 {
-                    // Ẩn QR code nếu bị tắt
                     InvoiceQRCode.Source = null;
                     InvoiceQRCode.Visibility = Visibility.Collapsed;
                     return;
@@ -242,8 +256,14 @@ namespace WpfApp1
 
                 InvoiceQRCode.Visibility = Visibility.Visible;
                 
-                // Sử dụng QR code chuyển khoản cố định theo phương thức thanh toán
-                var qrCode = QRCodeHelper.GenerateQRByMethod(paymentSettings.PaymentMethod);
+                // Quyết định loại QR code dựa trên lựa chọn
+                string qrMethod = paymentSettings.PaymentMethod; // Mặc định từ settings
+                if (selectedPayment.Contains("Ví điện tử"))
+                {
+                    qrMethod = "momo"; // Sử dụng MoMo cho ví điện tử
+                }
+                
+                var qrCode = QRCodeHelper.GenerateQRByMethod(qrMethod);
                 InvoiceQRCode.Source = qrCode;
             }
             catch (Exception ex)
@@ -251,6 +271,7 @@ namespace WpfApp1
                 System.Diagnostics.Debug.WriteLine($"Error updating QR code: {ex.Message}");
             }
         }
+
 
         private void TotalsInput_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -286,13 +307,7 @@ namespace WpfApp1
 
             // Loyalty tier auto-discount
             var (tier, _) = GetSelectedCustomerLoyalty();
-            decimal tierDiscountPercent = tier.ToLower() switch
-            {
-                "silver" => 3m,
-                "gold" => 7m,
-                "platinum" => 10m,
-                _ => 0m
-            };
+            decimal tierDiscountPercent = TierSettingsManager.GetTierDiscount(tier);
             decimal tierDiscount = Math.Round(subtotal * (tierDiscountPercent / 100m), 2);
             if (TierDiscountInlineText != null) TierDiscountInlineText.Text = $"(+ Ưu đãi hạng: {tierDiscount:F2})";
             discount += tierDiscount;
@@ -337,6 +352,14 @@ namespace WpfApp1
         {
             RecalculateTotals();
         }
+
+        private void PaymentMethodComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Cập nhật QR code khi thay đổi phương thức thanh toán
+            decimal total = _items.Sum(i => i.LineTotal);
+            UpdateInvoiceQRCode(total);
+        }
+
 
         protected override void OnContentRendered(EventArgs e)
         {
@@ -417,7 +440,7 @@ namespace WpfApp1
                 }
             }
             var (stier, _) = GetSelectedCustomerLoyalty();
-            decimal sTierPercent = stier.ToLower() switch { "silver" => 3m, "gold" => 7m, "platinum" => 10m, _ => 0m };
+            decimal sTierPercent = TierSettingsManager.GetTierDiscount(stier);
             discount += Math.Round(subtotal * (sTierPercent / 100m), 2);
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             decimal total = Math.Max(0, subtotal + taxAmount - discount);
@@ -472,7 +495,7 @@ namespace WpfApp1
                 }
             }
             var (saveTier, savePts) = GetSelectedCustomerLoyalty();
-            decimal saveTierPercent = saveTier.ToLower() switch { "silver" => 3m, "gold" => 7m, "platinum" => 10m, _ => 0m };
+            decimal saveTierPercent = TierSettingsManager.GetTierDiscount(saveTier);
             discount += Math.Round(subtotal * (saveTierPercent / 100m), 2);
             decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
             decimal total = Math.Max(0, subtotal + taxAmount - discount);
@@ -484,6 +507,10 @@ namespace WpfApp1
             string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
             var employeeId = GetEmployeeId(currentUser);
             
+            // Debug: Log thông tin để kiểm tra
+            System.Diagnostics.Debug.WriteLine($"Current user: {currentUser}");
+            System.Diagnostics.Debug.WriteLine($"Employee ID: {employeeId}");
+            
             bool ok = DatabaseHelper.SaveInvoice(customerId, employeeId, subtotal, taxPercent, taxAmount, discount, total, paid, itemsToSave);
             if (ok)
             {
@@ -492,10 +519,7 @@ namespace WpfApp1
                 // Update loyalty points and tier
                 int earned = (int)Math.Floor((double)total / 100000); // 1 point per 100k
                 int newPoints = savePts + earned;
-                string newTier = saveTier;
-                if (newPoints >= 2000) newTier = "Platinum";
-                else if (newPoints >= 1000) newTier = "Gold";
-                else if (newPoints >= 500) newTier = "Silver";
+                string newTier = TierSettingsManager.DetermineTierByPoints(newPoints);
                 DatabaseHelper.UpdateCustomerLoyalty(customerId, newPoints, newTier);
 
                 _items.Clear();
@@ -505,7 +529,7 @@ namespace WpfApp1
                 PaidTextBox.Text = "0";
                 RecalculateTotals();
 
-                // Mở cửa sổ in hóa đơn với dữ liệu từ database để đảm bảo thông tin chính xác
+           
                 try
                 {
                     var selectedCustomer = CustomerComboBox.SelectedItem as CustomerListItem;

@@ -177,6 +177,7 @@
 								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
+								<RowDefinition Height="Auto"/>
 							</Grid.RowDefinitions>
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*"/>
@@ -212,7 +213,7 @@
 
 							<StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,8,0,8">
 								<TextBlock Text="💳 PTTT:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-								<ComboBox x:Name="PaymentMethodComboBox" Width="100" Height="28" Margin="6,0,12,0" SelectedIndex="0" FontSize="12">
+								<ComboBox x:Name="PaymentMethodComboBox" Width="100" Height="28" Margin="6,0,12,0" SelectedIndex="0" FontSize="12" SelectionChanged="PaymentMethodComboBox_SelectionChanged">
 									<ComboBoxItem Content="💵 Tiền mặt"/>
 									<ComboBoxItem Content="💳 Thẻ"/>
 									<ComboBoxItem Content="🏦 Chuyển khoản"/>
@@ -228,7 +229,7 @@
 							</StackPanel>
 
 							<!-- QR Code Section -->
-							<Border Grid.Row="7" Grid.ColumnSpan="2" Background="#F8F9FA" CornerRadius="8" Padding="15" Margin="0,8,0,8" BorderBrush="#E0E0E0" BorderThickness="1" Width="auto">
+                            <Border Grid.Row="7" Grid.ColumnSpan="2" Background="#F8F9FA" CornerRadius="8" Padding="15" Margin="0,8,0,8" BorderBrush="#E0E0E0" BorderThickness="1">
 								<Grid>
 									<Grid.ColumnDefinitions>
 										<ColumnDefinition Width="*"/>

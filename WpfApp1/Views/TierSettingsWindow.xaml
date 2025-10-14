@@ -1,0 +1,208 @@
+<Window x:Class="WpfApp1.TierSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cài Đặt Hạng Thành Viên" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize">
+    
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Background="#F5F5F5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#673AB7" Padding="20">
+            <TextBlock Text="⚙️ Cài Đặt Hạng Thành Viên" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="White" 
+                       HorizontalAlignment="Center"/>
+        </Border>
+        
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+                <!-- Regular Tier -->
+                <Border Background="White" CornerRadius="10" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="🥉 REGULAR (Thường)" FontSize="18" FontWeight="Bold" Foreground="#795548" Margin="0,0,0,15"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Điểm tối thiểu:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="RegularMinPointsTextBox" Text="0" IsReadOnly="True" Background="#F0F0F0" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Giảm giá (%):" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="RegularDiscountTextBox" Text="0" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ưu đãi đặc biệt:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="RegularBenefitsTextBox" Text="Không có ưu đãi đặc biệt" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Mô tả:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="RegularDescriptionTextBox" Text="Hạng thành viên cơ bản" Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Silver Tier -->
+                <Border Background="White" CornerRadius="10" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="🥈 SILVER (Bạc)" FontSize="18" FontWeight="Bold" Foreground="#9E9E9E" Margin="0,0,0,15"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Điểm tối thiểu:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="SilverMinPointsTextBox" Text="500" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Giảm giá (%):" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="SilverDiscountTextBox" Text="3" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ưu đãi đặc biệt:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="SilverBenefitsTextBox" Text="Ưu tiên hỗ trợ khách hàng" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Mô tả:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="SilverDescriptionTextBox" Text="Hạng thành viên bạc với ưu đãi cơ bản" Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Gold Tier -->
+                <Border Background="White" CornerRadius="10" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="🥇 GOLD (Vàng)" FontSize="18" FontWeight="Bold" Foreground="#FFC107" Margin="0,0,0,15"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Điểm tối thiểu:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="GoldMinPointsTextBox" Text="1000" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Giảm giá (%):" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="GoldDiscountTextBox" Text="7" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ưu đãi đặc biệt:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="GoldBenefitsTextBox" Text="Miễn phí giao hàng, ưu tiên đặt hàng" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Mô tả:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="GoldDescriptionTextBox" Text="Hạng thành viên vàng với nhiều ưu đãi" Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Platinum Tier -->
+                <Border Background="White" CornerRadius="10" Padding="20" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="💎 PLATINUM (Bạch kim)" FontSize="18" FontWeight="Bold" Foreground="#E91E63" Margin="0,0,0,15"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Điểm tối thiểu:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="PlatinumMinPointsTextBox" Text="2000" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Giảm giá (%):" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="PlatinumDiscountTextBox" Text="10" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ưu đãi đặc biệt:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" x:Name="PlatinumBenefitsTextBox" Text="Tư vấn cá nhân, quà tặng sinh nhật, sự kiện VIP" Margin="10,0,0,10"/>
+                            
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Mô tả:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" x:Name="PlatinumDescriptionTextBox" Text="Hạng thành viên cao cấp nhất với đầy đủ ưu đãi" Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Footer Buttons -->
+        <Border Grid.Row="2" Background="White" Padding="20" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="💾 Lưu Cài Đặt" 
+                        Width="120" 
+                        Background="#4CAF50" 
+                        Foreground="White" 
+                        Click="SaveButton_Click"
+                        Margin="0,0,10,0"/>
+                <Button Content="🔄 Khôi Phục Mặc Định" 
+                        Width="150" 
+                        Background="#FF9800" 
+                        Foreground="White" 
+                        Click="ResetButton_Click"
+                        Margin="0,0,10,0"/>
+                <Button Content="❌ Đóng" 
+                        Width="80" 
+                        Background="#9E9E9E" 
+                        Foreground="White" 
+                        Click="CloseButton_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

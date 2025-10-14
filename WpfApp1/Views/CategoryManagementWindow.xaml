@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
-        Title="Quản Lý Danh Mục" Height="500" Width="600"
+        Title="Quản Lý Danh Mục" Height="600" Width="700"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -50,7 +50,7 @@
         <Border CornerRadius="24" Padding="20" Margin="0,10,22,30"
                 Background="{StaticResource {x:Static SystemColors.ControlLightBrushKey}}">
             <StackPanel>
-                <TextBlock Text="Quản Lý Danh Mục" FontSize="24" FontWeight="Bold" Foreground="#1CB5E0" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+                <TextBlock Text="📂 Quản Lý Danh Mục" FontSize="24" FontWeight="Bold" Foreground="#1CB5E0" Margin="0,0,0,20" HorizontalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                     <TextBox x:Name="CategoryNameTextBox" Width="220" Height="32" Margin="0,0,12,0">
                         <TextBox.Style>
@@ -78,12 +78,12 @@
                             </Style>
                         </TextBox.Style>
                     </TextBox>
-                    <Button Content="Thêm" Width="80" Height="32" Background="#1CB5E0" Foreground="White" Click="AddButton_Click"/>
-                    <Button Content="Cập Nhật" Width="80" Height="32" Background="#FF6A82FB" Foreground="White" Margin="8,0,0,0" Click="UpdateButton_Click"/>
-                    <Button Content="Xóa" Width="80" Height="32" Background="#FC5C7D" Foreground="White" Margin="8,0,0,0" Click="DeleteButton_Click"/>
-                    <Button Content="Xóa Tất Cả" Width="80" Height="32" Background="#9E9E9E" Foreground="White" Margin="8,0,0,0" Click="ClearButton_Click"/>
+                    <Button Content="➕ Thêm" Width="90" Height="32" Background="#4CAF50" Foreground="White" Click="AddButton_Click" FontWeight="SemiBold"/>
+                    <Button Content="✏️ Cập Nhật" Width="100" Height="32" Background="#2196F3" Foreground="White" Margin="8,0,0,0" Click="UpdateButton_Click" FontWeight="SemiBold"/>
+                    <Button Content="🗑️ Xóa" Width="80" Height="32" Background="#F44336" Foreground="White" Margin="8,0,0,0" Click="DeleteButton_Click" FontWeight="SemiBold"/>
+                    <Button Content="⚠️ Xóa Tất Cả" Width="110" Height="32" Background="#9E9E9E" Foreground="White" Margin="8,0,0,0" Click="ClearButton_Click" FontWeight="SemiBold"/>
                 </StackPanel>
-                <ListBox x:Name="CategoryListBox" Height="280" DisplayMemberPath="Name" SelectionChanged="CategoryListBox_SelectionChanged">
+                <ListBox x:Name="CategoryListBox" Height="320" DisplayMemberPath="Name" SelectionChanged="CategoryListBox_SelectionChanged">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="8,4"/>

@@ -11,12 +11,17 @@ namespace WpfApp1
         private List<ProductViewModel> _products = new();
         private List<CategoryViewModel> _categories = new();
         private ProductViewModel? _selectedProduct;
+        private PaginationHelper<ProductViewModel> _paginationHelper = new();
 
         public ProductManagementWindow()
         {
             InitializeComponent();
             _selectedProduct = new ProductViewModel();
+            _paginationHelper.PageChanged += OnPageChanged;
             LoadData();
+            
+            // Enable sorting for DataGrid
+            ProductDataGrid.Sorting += ProductDataGrid_Sorting;
         }
 
         private void LoadData()
@@ -46,14 +51,45 @@ namespace WpfApp1
                 StockQuantity = p.StockQuantity,
                 Description = p.Description
             });
-            ProductDataGrid.ItemsSource = _products;
-            UpdateStatusText();
+            _paginationHelper.SetData(_products);
+            UpdateDisplayAndPagination();
         }
 
         private void UpdateStatusText()
         {
-            int count = _products.Count;
+            int count = _paginationHelper.TotalItems;
             StatusTextBlock.Text = count == 1 ? "Tìm thấy 1 sản phẩm" : $"Tìm thấy {count} sản phẩm";
+        }
+
+        private void OnPageChanged()
+        {
+            UpdateDisplayAndPagination();
+        }
+
+        private void UpdateDisplayAndPagination()
+        {
+            // Update DataGrid with current page items
+            ProductDataGrid.ItemsSource = _paginationHelper.GetCurrentPageItems();
+            
+            // Update pagination info
+            if (PageInfoTextBlock != null)
+            {
+                PageInfoTextBlock.Text = $"📄 Trang: {_paginationHelper.GetPageInfo()} • 📊 Tổng: {_paginationHelper.TotalItems} sản phẩm";
+            }
+            
+            // Update current page textbox
+            if (CurrentPageTextBox != null)
+            {
+                CurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+            }
+            
+            // Update button states
+            if (FirstPageButton != null) FirstPageButton.IsEnabled = _paginationHelper.CanGoFirst;
+            if (PrevPageButton != null) PrevPageButton.IsEnabled = _paginationHelper.CanGoPrevious;
+            if (NextPageButton != null) NextPageButton.IsEnabled = _paginationHelper.CanGoNext;
+            if (LastPageButton != null) LastPageButton.IsEnabled = _paginationHelper.CanGoLast;
+            
+            UpdateStatusText();
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -289,13 +325,132 @@ namespace WpfApp1
         private void FilterProducts()
         {
             string searchTerm = SearchTextBox.Text.ToLower();
-            var filteredProducts = _products.Where(p =>
-                p.Name.ToLower().Contains(searchTerm) ||
-                p.Code.ToLower().Contains(searchTerm) ||
-                p.CategoryName.ToLower().Contains(searchTerm) ||
-                p.Description.ToLower().Contains(searchTerm)
-            ).ToList();
-            ProductDataGrid.ItemsSource = filteredProducts;
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                _paginationHelper.SetFilter(null!);
+            }
+            else
+            {
+                _paginationHelper.SetFilter(p =>
+                    p.Name.ToLower().Contains(searchTerm) ||
+                    p.Code.ToLower().Contains(searchTerm) ||
+                    p.CategoryName.ToLower().Contains(searchTerm) ||
+                    p.Description.ToLower().Contains(searchTerm)
+                );
+            }
+        }
+
+        // Pagination event handlers
+        private void FirstPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.FirstPage();
+        }
+
+        private void PrevPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.PreviousPage();
+        }
+
+        private void NextPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.NextPage();
+        }
+
+        private void LastPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.LastPage();
+        }
+
+        private void CurrentPageTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (int.TryParse(CurrentPageTextBox.Text, out int pageNumber))
+                {
+                    if (!_paginationHelper.GoToPage(pageNumber))
+                    {
+                        // Reset to current page if invalid
+                        CurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+                        MessageBox.Show($"Trang không hợp lệ. Vui lòng nhập từ 1 đến {_paginationHelper.TotalPages}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                else
+                {
+                    CurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+                }
+            }
+        }
+        
+        private void ProductDataGrid_Sorting(object sender, System.Windows.Controls.DataGridSortingEventArgs e)
+        {
+            e.Handled = true; // Prevent default sorting
+            
+            var column = e.Column;
+            var propertyName = column.SortMemberPath;
+            
+            if (string.IsNullOrEmpty(propertyName)) return;
+            
+            // Determine sort direction
+            var direction = column.SortDirection != System.ComponentModel.ListSortDirection.Ascending 
+                ? System.ComponentModel.ListSortDirection.Ascending 
+                : System.ComponentModel.ListSortDirection.Descending;
+            
+            // Apply sort to all data through PaginationHelper
+            Func<IEnumerable<ProductViewModel>, IOrderedEnumerable<ProductViewModel>>? sortFunc = null;
+            
+            switch (propertyName.ToLower())
+            {
+                case "id":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.Id)
+                        : items => items.OrderByDescending(p => p.Id);
+                    break;
+                case "name":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.Name)
+                        : items => items.OrderByDescending(p => p.Name);
+                    break;
+                case "code":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.Code)
+                        : items => items.OrderByDescending(p => p.Code);
+                    break;
+                case "categoryname":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.CategoryName)
+                        : items => items.OrderByDescending(p => p.CategoryName);
+                    break;
+                case "price":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.Price)
+                        : items => items.OrderByDescending(p => p.Price);
+                    break;
+                case "stockquantity":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.StockQuantity)
+                        : items => items.OrderByDescending(p => p.StockQuantity);
+                    break;
+                case "description":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(p => p.Description)
+                        : items => items.OrderByDescending(p => p.Description);
+                    break;
+            }
+            
+            if (sortFunc != null)
+            {
+                _paginationHelper.SetSort(sortFunc);
+                
+                // Update column sort direction
+                column.SortDirection = direction;
+                
+                // Clear other columns' sort direction
+                foreach (var col in ProductDataGrid.Columns)
+                {
+                    if (col != column)
+                        col.SortDirection = null;
+                }
+            }
         }
     }
 

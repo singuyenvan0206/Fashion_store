@@ -6,13 +6,11 @@ namespace WpfApp1
 {
     public class PaymentSettings
     {
-        public string PaymentMethod { get; set; } = "momo";
-        public string MoMoPhone { get; set; } = "0395658900";
-        public string ZaloPayPhone { get; set; } = "0395658900";
-        public string BankAccount { get; set; } = "0000003137";
+        public string PaymentMethod { get; set; } = "tpbank";
+        public string MoMoPhone { get; set; } = "0123456789";
+        public string BankAccount { get; set; } = "000003137";
         public string BankName { get; set; } = "Ngân Hàng Tiên Phong";
         public string BankBIN { get; set; } = "970423";
-        public string AccountName { get; set; } = "NGUYEN VAN SI";
         public bool EnableQRCode { get; set; } = true;
     }
 

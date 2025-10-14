@@ -47,7 +47,6 @@ namespace WpfApp1
             PaymentInfoTextBox.Text = paymentSettings.PaymentMethod.ToLower() switch
             {
                 "momo" => paymentSettings.MoMoPhone,
-                "zalopay" => paymentSettings.ZaloPayPhone,
                 "tpbank" => paymentSettings.BankAccount,
                 "bank" => paymentSettings.BankAccount,
                 _ => paymentSettings.MoMoPhone
@@ -56,7 +55,6 @@ namespace WpfApp1
             BankAccountTextBox.Text = paymentSettings.BankAccount;
             BankNameTextBox.Text = paymentSettings.BankName;
             BankBINTextBox.Text = paymentSettings.BankBIN;
-            AccountNameTextBox.Text = paymentSettings.AccountName;
         }
 
         private void SetupEventHandlers()
@@ -92,21 +90,6 @@ namespace WpfApp1
                     BankNameTextBox.Visibility = Visibility.Collapsed;
                     BankBINLabel.Visibility = Visibility.Collapsed;
                     BankBINTextBox.Visibility = Visibility.Collapsed;
-                    AccountNameLabel.Visibility = Visibility.Collapsed;
-                    AccountNameTextBox.Visibility = Visibility.Collapsed;
-                    break;
-                case "zalopay":
-                    PaymentInfoLabel.Text = "Số điện thoại ZaloPay:";
-                    PaymentInfoLabel.Visibility = Visibility.Visible;
-                    PaymentInfoTextBox.Visibility = Visibility.Visible;
-                    BankAccountLabel.Visibility = Visibility.Collapsed;
-                    BankAccountTextBox.Visibility = Visibility.Collapsed;
-                    BankNameLabel.Visibility = Visibility.Collapsed;
-                    BankNameTextBox.Visibility = Visibility.Collapsed;
-                    BankBINLabel.Visibility = Visibility.Collapsed;
-                    BankBINTextBox.Visibility = Visibility.Collapsed;
-                    AccountNameLabel.Visibility = Visibility.Collapsed;
-                    AccountNameTextBox.Visibility = Visibility.Collapsed;
                     break;
                 case "tpbank":
                     PaymentInfoLabel.Text = "Số tài khoản TPBank:";
@@ -118,9 +101,6 @@ namespace WpfApp1
                     BankNameTextBox.Visibility = Visibility.Collapsed;
                     BankBINLabel.Visibility = Visibility.Collapsed;
                     BankBINTextBox.Visibility = Visibility.Collapsed;
-                    AccountNameLabel.Text = "Tên chủ tài khoản TPBank:";
-                    AccountNameLabel.Visibility = Visibility.Visible;
-                    AccountNameTextBox.Visibility = Visibility.Visible;
                     break;
                 case "bank":
                     PaymentInfoLabel.Visibility = Visibility.Collapsed;
@@ -131,8 +111,6 @@ namespace WpfApp1
                     BankNameTextBox.Visibility = Visibility.Visible;
                     BankBINLabel.Visibility = Visibility.Visible;
                     BankBINTextBox.Visibility = Visibility.Visible;
-                    AccountNameLabel.Visibility = Visibility.Visible;
-                    AccountNameTextBox.Visibility = Visibility.Visible;
                     break;
             }
         }
@@ -208,12 +186,8 @@ namespace WpfApp1
                     case "momo":
                         paymentSettings.MoMoPhone = PaymentInfoTextBox.Text.Trim();
                         break;
-                    case "zalopay":
-                        paymentSettings.ZaloPayPhone = PaymentInfoTextBox.Text.Trim();
-                        break;
                     case "tpbank":
                         paymentSettings.BankAccount = PaymentInfoTextBox.Text.Trim();
-                        paymentSettings.AccountName = AccountNameTextBox.Text.Trim();
                         paymentSettings.BankBIN = "970423"; // TPBank BIN
                         paymentSettings.BankName = "TPBank";
                         break;
@@ -221,7 +195,6 @@ namespace WpfApp1
                         paymentSettings.BankAccount = BankAccountTextBox.Text.Trim();
                         paymentSettings.BankName = BankNameTextBox.Text.Trim();
                         paymentSettings.BankBIN = BankBINTextBox.Text.Trim();
-                        paymentSettings.AccountName = AccountNameTextBox.Text.Trim();
                         break;
                 }
 

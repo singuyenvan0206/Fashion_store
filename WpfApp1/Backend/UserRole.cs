@@ -1,5 +1,3 @@
-using System;
-
 namespace WpfApp1
 {
     /// <summary>

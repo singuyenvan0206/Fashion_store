@@ -29,8 +29,10 @@ namespace WpfApp1
                 // Use a single DashboardWindow for all roles; features are hidden based on role inside the dashboard
                 Window dashboard = new DashboardWindow(username, userRole.ToString());
                 
+                // Set the dashboard as the new main window
+                Application.Current.MainWindow = dashboard;
                 dashboard.Show();
-                this.Hide();
+                this.Close();
             }
             else
             {

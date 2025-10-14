@@ -21,8 +21,8 @@
 
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <UseAppHost>true</UseAppHost>
-    <AssemblyName>SaleManagement</AssemblyName>
-    <OutputPath>bin\Debug\net8.0-windows\</OutputPath>
+    <AssemblyName>WpfApp1</AssemblyName>
+    <OutputPath>bin\Release\net8.0-windows\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
@@ -36,6 +36,17 @@
   <ItemGroup>
     <Page Remove="Views/App.xaml" />
     <ApplicationDefinition Include="Views/App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Backend/TierSettingsWindow.xaml.cs" />
+    <Compile Include="Backend/TierSettingsWindow.xaml.cs">
+      <DependentUpon>Views/TierSettingsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Remove="Backend/ReportsSettingsWindow.xaml.cs" />
+    <Compile Include="Backend/ReportsSettingsWindow.xaml.cs">
+      <DependentUpon>Views/ReportsSettingsWindow.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

@@ -9,12 +9,17 @@ namespace WpfApp1
     {
         private List<CustomerViewModel> _customers = new();
         private CustomerViewModel? _selectedCustomer;
+        private PaginationHelper<CustomerViewModel> _paginationHelper = new();
 
         public CustomerManagementWindow()
         {
             InitializeComponent();
             _selectedCustomer = new CustomerViewModel();
+            _paginationHelper.PageChanged += OnPageChanged;
             LoadCustomers();
+            
+            // Enable sorting for DataGrid
+            CustomerDataGrid.Sorting += CustomerDataGrid_Sorting;
         }
 
         private void LoadCustomers()
@@ -31,8 +36,8 @@ namespace WpfApp1
                 Tier = DatabaseHelper.GetCustomerLoyalty(c.Id).Tier,
                 Points = DatabaseHelper.GetCustomerLoyalty(c.Id).Points
             });
-            CustomerDataGrid.ItemsSource = _customers;
-            UpdateStatusText();
+            _paginationHelper.SetData(_customers);
+            UpdateDisplayAndPagination();
         }
         private void ImportCsvButton_Click(object sender, RoutedEventArgs e)
         {
@@ -80,8 +85,39 @@ namespace WpfApp1
         }
         private void UpdateStatusText()
         {
-            int count = _customers.Count;
+            int count = _paginationHelper.TotalItems;
             StatusTextBlock.Text = count == 1 ? "Tìm thấy 1 khách hàng" : $"Tìm thấy {count} khách hàng";
+        }
+
+        private void OnPageChanged()
+        {
+            UpdateDisplayAndPagination();
+        }
+
+        private void UpdateDisplayAndPagination()
+        {
+            // Update DataGrid with current page items
+            CustomerDataGrid.ItemsSource = _paginationHelper.GetCurrentPageItems();
+            
+            // Update pagination info
+            if (CustomerPageInfoTextBlock != null)
+            {
+                CustomerPageInfoTextBlock.Text = $"📄 Trang: {_paginationHelper.GetPageInfo()} • 👥 Tổng: {_paginationHelper.TotalItems} khách hàng";
+            }
+            
+            // Update current page textbox
+            if (CustomerCurrentPageTextBox != null)
+            {
+                CustomerCurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+            }
+            
+            // Update button states
+            if (CustomerFirstPageButton != null) CustomerFirstPageButton.IsEnabled = _paginationHelper.CanGoFirst;
+            if (CustomerPrevPageButton != null) CustomerPrevPageButton.IsEnabled = _paginationHelper.CanGoPrevious;
+            if (CustomerNextPageButton != null) CustomerNextPageButton.IsEnabled = _paginationHelper.CanGoNext;
+            if (CustomerLastPageButton != null) CustomerLastPageButton.IsEnabled = _paginationHelper.CanGoLast;
+            
+            UpdateStatusText();
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -339,17 +375,22 @@ namespace WpfApp1
         private void FilterCustomers()
         {
             string searchTerm = SearchTextBox.Text.ToLower();
-            var filteredCustomers = _customers.Where(c =>
-                c.Name.ToLower().Contains(searchTerm) ||
-                c.Phone.ToLower().Contains(searchTerm) ||
-                c.Email.ToLower().Contains(searchTerm) ||
-                c.CustomerType.ToLower().Contains(searchTerm) ||
-                // segment removed
-                c.Address.ToLower().Contains(searchTerm) ||
-                (c.Tier ?? string.Empty).ToLower().Contains(searchTerm) ||
-                c.Points.ToString().Contains(searchTerm)
-            ).ToList();
-            CustomerDataGrid.ItemsSource = filteredCustomers;
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                _paginationHelper.SetFilter(null!);
+            }
+            else
+            {
+                _paginationHelper.SetFilter(c =>
+                    c.Name.ToLower().Contains(searchTerm) ||
+                    c.Phone.ToLower().Contains(searchTerm) ||
+                    c.Email.ToLower().Contains(searchTerm) ||
+                    c.CustomerType.ToLower().Contains(searchTerm) ||
+                    c.Address.ToLower().Contains(searchTerm) ||
+                    (c.Tier ?? string.Empty).ToLower().Contains(searchTerm) ||
+                    c.Points.ToString().Contains(searchTerm)
+                );
+            }
         }
         
         private void UpdateLoyaltyButton_Click(object sender, RoutedEventArgs e)
@@ -369,6 +410,135 @@ namespace WpfApp1
             else
             {
                 MessageBox.Show("Cập nhật thất bại.");
+            }
+        }
+
+        private void TierSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var tierSettingsWindow = new TierSettingsWindow();
+            try
+            {
+                tierSettingsWindow.Owner = this;
+                tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            }
+            catch
+            {
+                tierSettingsWindow.Owner = null;
+                tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+            tierSettingsWindow.ShowDialog();
+        }
+
+        // Pagination event handlers
+        private void CustomerFirstPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.FirstPage();
+        }
+
+        private void CustomerPrevPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.PreviousPage();
+        }
+
+        private void CustomerNextPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.NextPage();
+        }
+
+        private void CustomerLastPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.LastPage();
+        }
+
+        private void CustomerCurrentPageTextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                if (int.TryParse(CustomerCurrentPageTextBox.Text, out int pageNumber))
+                {
+                    if (!_paginationHelper.GoToPage(pageNumber))
+                    {
+                        // Reset to current page if invalid
+                        CustomerCurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+                        MessageBox.Show($"Trang không hợp lệ. Vui lòng nhập từ 1 đến {_paginationHelper.TotalPages}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                else
+                {
+                    CustomerCurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+                }
+            }
+        }
+        
+        private void CustomerDataGrid_Sorting(object sender, System.Windows.Controls.DataGridSortingEventArgs e)
+        {
+            e.Handled = true; // Prevent default sorting
+            
+            var column = e.Column;
+            var propertyName = column.SortMemberPath;
+            
+            if (string.IsNullOrEmpty(propertyName)) return;
+            
+            // Determine sort direction
+            var direction = column.SortDirection != System.ComponentModel.ListSortDirection.Ascending 
+                ? System.ComponentModel.ListSortDirection.Ascending 
+                : System.ComponentModel.ListSortDirection.Descending;
+            
+            // Apply sort to all data through PaginationHelper
+            Func<IEnumerable<CustomerViewModel>, IOrderedEnumerable<CustomerViewModel>>? sortFunc = null;
+            
+            switch (propertyName.ToLower())
+            {
+                case "id":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Id)
+                        : items => items.OrderByDescending(c => c.Id);
+                    break;
+                case "name":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Name)
+                        : items => items.OrderByDescending(c => c.Name);
+                    break;
+                case "phone":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Phone)
+                        : items => items.OrderByDescending(c => c.Phone);
+                    break;
+                case "email":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Email)
+                        : items => items.OrderByDescending(c => c.Email);
+                    break;
+                case "address":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Address)
+                        : items => items.OrderByDescending(c => c.Address);
+                    break;
+                case "tier":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Tier)
+                        : items => items.OrderByDescending(c => c.Tier);
+                    break;
+                case "points":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(c => c.Points)
+                        : items => items.OrderByDescending(c => c.Points);
+                    break;
+            }
+            
+            if (sortFunc != null)
+            {
+                _paginationHelper.SetSort(sortFunc);
+                
+                // Update column sort direction
+                column.SortDirection = direction;
+                
+                // Clear other columns' sort direction
+                foreach (var col in CustomerDataGrid.Columns)
+                {
+                    if (col != column)
+                        col.SortDirection = null;
+                }
             }
         }
     }

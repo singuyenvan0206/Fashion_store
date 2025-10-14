@@ -20,6 +20,8 @@ namespace WpfApp1
         private readonly decimal _total;
         private readonly int _invoiceId;
         private readonly DateTime _invoiceDate;
+        private readonly int _employeeId;
+        private DatabaseHelper.InvoiceHeader? _invoiceHeader;
 
         public InvoicePrintWindow(List<InvoiceItemViewModel> items, CustomerListItem customer, 
             decimal subtotal, decimal taxPercent, decimal taxAmount, decimal discount, 
@@ -36,6 +38,7 @@ namespace WpfApp1
             _total = total;
             _invoiceId = invoiceId;
             _invoiceDate = invoiceDate;
+            _employeeId = 1; // Giá trị mặc định cho constructor cũ
 
             LoadInvoiceData();
         }
@@ -53,32 +56,48 @@ namespace WpfApp1
             _discount = 0m;
             _total = 0m;
             _invoiceId = invoiceId;
+            _employeeId = employeeId;
             _invoiceDate = DateTime.Now;
 
             LoadFromDatabase(invoiceId, employeeId);
         }
 
+        private void SetText(string elementName, string text)
+        {
+            if (FindName(elementName) is TextBlock tb)
+            {
+                tb.Text = text;
+            }
+        }
+
+        private void SetItemsSource(string elementName, object items)
+        {
+            if (FindName(elementName) is ItemsControl ic)
+            {
+                ic.ItemsSource = items as System.Collections.IEnumerable;
+            }
+        }
+
         private void LoadInvoiceData()
         {
-            // Set invoice information
-            InvoiceDateText.Text = _invoiceDate.ToString("dd/MM/yyyy");
-            InvoiceNumberText.Text = _invoiceId.ToString();
-            InvoiceForText.Text = "Giao dịch bán hàng";
+            SetText("InvoiceDateText", _invoiceDate.ToString("dd/MM/yyyy"));
+            SetText("InvoiceNumberText", _invoiceId.ToString());
+            SetText("InvoiceForText", "Giao dịch bán hàng");
 
             // Set customer information
-            CustomerNameText.Text = string.IsNullOrWhiteSpace(_customer?.Name) ? "Khách lẻ" : _customer.Name;
-            CustomerPhoneText.Text = string.IsNullOrWhiteSpace(_customer?.Phone) ? "Không có" : _customer.Phone;
-            CustomerEmailText.Text = string.IsNullOrWhiteSpace(_customer?.Email) ? "Không có" : _customer.Email;
-            CustomerAddressText.Text = string.IsNullOrWhiteSpace(_customer?.Address) ? "Không có" : _customer.Address;
+            SetText("CustomerNameText", string.IsNullOrWhiteSpace(_customer?.Name) ? "Khách lẻ" : _customer!.Name);
+            SetText("CustomerPhoneText", string.IsNullOrWhiteSpace(_customer?.Phone) ? "Không có" : _customer!.Phone);
+            SetText("CustomerEmailText", string.IsNullOrWhiteSpace(_customer?.Email) ? "Không có" : _customer!.Email);
+            SetText("CustomerAddressText", string.IsNullOrWhiteSpace(_customer?.Address) ? "Không có" : _customer!.Address);
 
-            InvoiceItemsList.ItemsSource = _items;
+            SetItemsSource("InvoiceItemsList", _items);
 
             // Set totals
-            SubtotalText.Text = _subtotal.ToString("C");
-            TaxRateText.Text = _taxPercent.ToString("F2") + "%";
-            SalesTaxText.Text = _taxAmount.ToString("C");
-            OtherText.Text = _discount.ToString("C");
-            TotalText.Text = _total.ToString("C");
+            SetText("SubtotalText", _subtotal.ToString("C"));
+            SetText("TaxRateText", _taxPercent.ToString("F2") + "%");
+            SetText("SalesTaxText", _taxAmount.ToString("C"));
+            SetText("OtherText", _discount.ToString("C"));
+            SetText("TotalText", _total.ToString("C"));
 
             GeneratePaymentQRCode(_invoiceId, _total);
         }
@@ -91,36 +110,37 @@ namespace WpfApp1
                 System.Diagnostics.Debug.WriteLine($"Loading invoice {invoiceId} for employee {employeeId}");
                 
                 var (header, items) = DatabaseHelper.GetInvoiceDetails(invoiceId);
+                _invoiceHeader = header; // Lưu header để sử dụng trong CreateInvoiceContent
                 
                 // Debug: Log thông tin header và items
                 System.Diagnostics.Debug.WriteLine($"Header loaded: ID={header.Id}, Customer={header.CustomerName}, Total={header.Total}");
                 System.Diagnostics.Debug.WriteLine($"Items count: {items.Count}");
 
                 // Header
-                InvoiceDateText.Text = header.CreatedDate.ToString("dd/MM/yyyy");
-                InvoiceTimeText.Text = header.CreatedDate.ToString("HH:mm");
-                InvoiceNumberText.Text = header.Id.ToString();
-                InvoiceForText.Text = "Giao dịch bán hàng";
+                SetText("InvoiceDateText", header.CreatedDate.ToString("dd/MM/yyyy"));
+                SetText("InvoiceTimeText", header.CreatedDate.ToString("HH:mm"));
+                SetText("InvoiceNumberText", header.Id.ToString());
+                SetText("InvoiceForText", "Giao dịch bán hàng");
 
-                // Employee display
                 try
                 {
                     var accounts = DatabaseHelper.GetAllAccounts();
-                    var employee = accounts.FirstOrDefault(a => a.Id == employeeId);
-                    EmployeeNameText.Text = employee != default 
+                    // Sử dụng EmployeeId từ header thay vì từ tham số
+                    var employee = accounts.FirstOrDefault(a => a.Id == header.EmployeeId);
+                    SetText("EmployeeNameText", employee != default 
                         ? (string.IsNullOrWhiteSpace(employee.EmployeeName) ? employee.Username : employee.EmployeeName)
-                        : "Không xác định";
+                        : "Không xác định");
                 }
                 catch
                 {
-                    EmployeeNameText.Text = "Không xác định";
+                    SetText("EmployeeNameText", "Không xác định");
                 }
 
                 // Customer
-                CustomerNameText.Text = string.IsNullOrWhiteSpace(header.CustomerName) ? "Khách lẻ" : header.CustomerName;
-                CustomerPhoneText.Text = string.IsNullOrWhiteSpace(header.CustomerPhone) ? "Không có" : header.CustomerPhone;
-                CustomerEmailText.Text = string.IsNullOrWhiteSpace(header.CustomerEmail) ? "Không có" : header.CustomerEmail;
-                CustomerAddressText.Text = string.IsNullOrWhiteSpace(header.CustomerAddress) ? "Không có" : header.CustomerAddress;
+                SetText("CustomerNameText", string.IsNullOrWhiteSpace(header.CustomerName) ? "Khách lẻ" : header.CustomerName);
+                SetText("CustomerPhoneText", string.IsNullOrWhiteSpace(header.CustomerPhone) ? "Không có" : header.CustomerPhone);
+                SetText("CustomerEmailText", string.IsNullOrWhiteSpace(header.CustomerEmail) ? "Không có" : header.CustomerEmail);
+                SetText("CustomerAddressText", string.IsNullOrWhiteSpace(header.CustomerAddress) ? "Không có" : header.CustomerAddress);
 
                 // Items
                 var vmItems = new List<InvoiceItemViewModel>();
@@ -145,16 +165,16 @@ namespace WpfApp1
                     System.Diagnostics.Debug.WriteLine($"Item: {item.ProductName}, Qty: {item.Quantity}, Price: {item.UnitPrice}");
                 }
                 
-                InvoiceItemsList.ItemsSource = vmItems;
+                SetItemsSource("InvoiceItemsList", vmItems);
 
                 // Totals
-                SubtotalText.Text = header.Subtotal.ToString("C");
+                SetText("SubtotalText", header.Subtotal.ToString("C"));
                 var taxPercent = header.Subtotal == 0 ? 0m : (header.TaxAmount / header.Subtotal * 100m);
-                TaxRateText.Text = taxPercent.ToString("F2") + "%";
-                SalesTaxText.Text = header.TaxAmount.ToString("C");
-                OtherText.Text = header.Discount.ToString("C");
-                TotalText.Text = header.Total.ToString("C");
-                PaidText.Text = header.Paid.ToString("C");
+                SetText("TaxRateText", taxPercent.ToString("F2") + "%");
+                SetText("SalesTaxText", header.TaxAmount.ToString("C"));
+                SetText("OtherText", header.Discount.ToString("C"));
+                SetText("TotalText", header.Total.ToString("C"));
+                SetText("PaidText", header.Paid.ToString("C"));
 
                 GeneratePaymentQRCode(invoiceId, header.Total);
             }
@@ -178,10 +198,11 @@ namespace WpfApp1
 
                 if (printDialog.ShowDialog() == true)
                 {
-                    var toPrint = CreatePrintVisual();
+                    var preview = FindName("InvoicePreviewRoot") as FrameworkElement;
+                    var toPrint = preview ?? CreatePrintVisual();
 
                     printDialog.PrintVisual(toPrint, "Invoice #" + _invoiceId);
-                    
+
                     MessageBox.Show("Invoice printed successfully!", "Print Success", 
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -195,7 +216,7 @@ namespace WpfApp1
 
         private FrameworkElement CreatePrintVisual()
         {
-            var printGrid = new Grid { Width = 800, Background = Brushes.White };
+            var printGrid = new Grid { Width = 1000, Height = 1400, Background = Brushes.White };
             printGrid.Children.Add(CreateInvoiceContent());
             return printGrid;
         }
@@ -203,8 +224,8 @@ namespace WpfApp1
         private FrameworkElement CreateInvoiceContent()
         {
             var mainGrid = new Grid();
-            mainGrid.Width = 800;
-            mainGrid.Margin = new Thickness(50);
+            mainGrid.Width = 1000;
+            mainGrid.Margin = new Thickness(60);
 
             // Define rows
             mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -220,14 +241,33 @@ namespace WpfApp1
 
             // Company Info
             var companyStack = new StackPanel();
-            companyStack.Children.Add(new TextBlock { Text = "HỆ THỐNG QUẢN LÝ BÁN HÀNG", FontSize = 24, FontWeight = FontWeights.Bold });
+            companyStack.Children.Add(new TextBlock { Text = "HỆ THỐNG QUẢN LÝ BÁN HÀNG", FontSize = 26, FontWeight = FontWeights.Bold });
+            
+            // Thêm thông tin nhân viên
+            try
+            {
+                var accounts = DatabaseHelper.GetAllAccounts();
+                // Sử dụng EmployeeId từ header nếu có, nếu không thì dùng _employeeId
+                int employeeIdToUse = _invoiceHeader?.EmployeeId ?? _employeeId;
+                var employee = accounts.FirstOrDefault(a => a.Id == employeeIdToUse);
+                string employeeName = "Không xác định";
+                if (employee != default)
+                {
+                    employeeName = string.IsNullOrWhiteSpace(employee.EmployeeName) ? employee.Username : employee.EmployeeName;
+                }
+                companyStack.Children.Add(new TextBlock { Text = $"Nhân viên: {employeeName}", FontSize = 14, Margin = new Thickness(0, 5, 0, 0) });
+            }
+            catch
+            {
+                companyStack.Children.Add(new TextBlock { Text = "Nhân viên: Không xác định", FontSize = 14, Margin = new Thickness(0, 5, 0, 0) });
+            }
 
             Grid.SetColumn(companyStack, 0);
             headerGrid.Children.Add(companyStack);
 
             // Invoice Title
             var invoiceStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Right };
-            invoiceStack.Children.Add(new TextBlock { Text = "HÓA ĐƠN", FontSize = 28, FontWeight = FontWeights.Bold });
+            invoiceStack.Children.Add(new TextBlock { Text = "HÓA ĐƠN", FontSize = 32, FontWeight = FontWeights.Bold });
             invoiceStack.Children.Add(CreateInfoRow("Ngày:", _invoiceDate.ToString("dd/MM/yyyy")));
             invoiceStack.Children.Add(CreateInfoRow("Số HĐ:", _invoiceId.ToString()));
             Grid.SetColumn(invoiceStack, 1);
@@ -237,11 +277,11 @@ namespace WpfApp1
             mainGrid.Children.Add(headerGrid);
 
             // Customer Info
-            var customerStack = new StackPanel();
-            customerStack.Children.Add(new TextBlock { Text = "KHÁCH HÀNG:", FontWeight = FontWeights.Bold });
-            customerStack.Children.Add(new TextBlock { Text = _customer?.Name ?? "Khách lẻ" });
+            var customerStack = new StackPanel { Margin = new Thickness(0, 20, 0, 20) };
+            customerStack.Children.Add(new TextBlock { Text = "KHÁCH HÀNG:", FontWeight = FontWeights.Bold, FontSize = 16 });
+            customerStack.Children.Add(new TextBlock { Text = _customer?.Name ?? "Khách lẻ", FontSize = 14, Margin = new Thickness(0, 5, 0, 0) });
             if (!string.IsNullOrWhiteSpace(_customer?.Phone))
-                customerStack.Children.Add(new TextBlock { Text = _customer.Phone });
+                customerStack.Children.Add(new TextBlock { Text = _customer.Phone, FontSize = 14 });
             Grid.SetRow(customerStack, 1);
             mainGrid.Children.Add(customerStack);
 
@@ -274,8 +314,8 @@ namespace WpfApp1
         private StackPanel CreateInfoRow(string label, string value)
         {
             var stack = new StackPanel { Orientation = Orientation.Horizontal };
-            stack.Children.Add(new TextBlock { Text = label, FontWeight = FontWeights.Bold, Width = 60 });
-            stack.Children.Add(new TextBlock { Text = value });
+            stack.Children.Add(new TextBlock { Text = label, FontWeight = FontWeights.Bold, Width = 80, FontSize = 16 });
+            stack.Children.Add(new TextBlock { Text = value, FontSize = 16 });
             return stack;
         }
 
@@ -290,14 +330,14 @@ namespace WpfApp1
             header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             
-            header.Children.Add(new TextBlock { Text = "Sản phẩm", FontWeight = FontWeights.Bold, Margin = new Thickness(5) });
-            var qty = new TextBlock { Text = "SL", FontWeight = FontWeights.Bold, Margin = new Thickness(5) };
+            header.Children.Add(new TextBlock { Text = "Sản phẩm", FontWeight = FontWeights.Bold, Margin = new Thickness(8), FontSize = 14 });
+            var qty = new TextBlock { Text = "SL", FontWeight = FontWeights.Bold, Margin = new Thickness(8), FontSize = 14 };
             Grid.SetColumn(qty, 1);
             header.Children.Add(qty);
-            var price = new TextBlock { Text = "Đơn giá", FontWeight = FontWeights.Bold, Margin = new Thickness(5) };
+            var price = new TextBlock { Text = "Đơn giá", FontWeight = FontWeights.Bold, Margin = new Thickness(8), FontSize = 14 };
             Grid.SetColumn(price, 2);
             header.Children.Add(price);
-            var total = new TextBlock { Text = "Thành tiền", FontWeight = FontWeights.Bold, Margin = new Thickness(5) };
+            var total = new TextBlock { Text = "Thành tiền", FontWeight = FontWeights.Bold, Margin = new Thickness(8), FontSize = 14 };
             Grid.SetColumn(total, 3);
             header.Children.Add(total);
             
@@ -312,14 +352,14 @@ namespace WpfApp1
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                 
-                row.Children.Add(new TextBlock { Text = item.ProductName, Margin = new Thickness(5) });
-                var itemQty = new TextBlock { Text = item.Quantity.ToString(), Margin = new Thickness(5) };
+                row.Children.Add(new TextBlock { Text = item.ProductName, Margin = new Thickness(8), FontSize = 13 });
+                var itemQty = new TextBlock { Text = item.Quantity.ToString(), Margin = new Thickness(8), FontSize = 13 };
                 Grid.SetColumn(itemQty, 1);
                 row.Children.Add(itemQty);
-                var itemPrice = new TextBlock { Text = item.UnitPrice.ToString("C"), Margin = new Thickness(5) };
+                var itemPrice = new TextBlock { Text = item.UnitPrice.ToString("C"), Margin = new Thickness(8), FontSize = 13 };
                 Grid.SetColumn(itemPrice, 2);
                 row.Children.Add(itemPrice);
-                var itemTotal = new TextBlock { Text = item.LineTotal.ToString("C"), Margin = new Thickness(5) };
+                var itemTotal = new TextBlock { Text = item.LineTotal.ToString("C"), Margin = new Thickness(8), FontSize = 13 };
                 Grid.SetColumn(itemTotal, 3);
                 row.Children.Add(itemTotal);
                 
@@ -331,26 +371,24 @@ namespace WpfApp1
 
         private Grid CreateTotalsSection()
         {
-            var totalsGrid = new Grid();
+            var totalsGrid = new Grid { Margin = new Thickness(0, 20, 0, 0) };
             totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(300) });
+            totalsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(350) });
 
-            // Left side - Notes
             var notesStack = new StackPanel { VerticalAlignment = VerticalAlignment.Top };
-            notesStack.Children.Add(new TextBlock { Text = "Cảm ơn quý khách đã sử dụng dịch vụ!", FontSize = 12 });
+            notesStack.Children.Add(new TextBlock { Text = "Cảm ơn quý khách đã sử dụng dịch vụ!", FontSize = 14 });
             Grid.SetColumn(notesStack, 0);
             totalsGrid.Children.Add(notesStack);
 
             // Right side - Totals
             var totalsStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Right };
-            var totalsTable = new Grid();
-            totalsTable.Width = 280;
-
-            // Simple totals
-            totalsTable.Children.Add(new TextBlock { Text = $"Tạm tính: {_subtotal:C}", HorizontalAlignment = HorizontalAlignment.Right });
-            totalsTable.Children.Add(new TextBlock { Text = $"Thuế: {_taxAmount:C}", HorizontalAlignment = HorizontalAlignment.Right });
-            totalsTable.Children.Add(new TextBlock { Text = $"Giảm giá: {_discount:C}", HorizontalAlignment = HorizontalAlignment.Right });
-            totalsTable.Children.Add(new TextBlock { Text = $"Tổng cộng: {_total:C}", FontWeight = FontWeights.Bold, FontSize = 16, HorizontalAlignment = HorizontalAlignment.Right });
+            var totalsTable = new StackPanel();
+            
+            totalsTable.Children.Add(new TextBlock { Text = $"Tạm tính: {_subtotal:C}", HorizontalAlignment = HorizontalAlignment.Right, FontSize = 14, Margin = new Thickness(0, 2, 0, 2) });
+            totalsTable.Children.Add(new TextBlock { Text = $"Thuế: {_taxAmount:C}", HorizontalAlignment = HorizontalAlignment.Right, FontSize = 14, Margin = new Thickness(0, 2, 0, 2) });
+            totalsTable.Children.Add(new TextBlock { Text = $"Giảm giá: {_discount:C}", HorizontalAlignment = HorizontalAlignment.Right, FontSize = 14, Margin = new Thickness(0, 2, 0, 2) });
+            totalsTable.Children.Add(new Border { BorderBrush = Brushes.Black, BorderThickness = new Thickness(0, 1, 0, 0), Margin = new Thickness(0, 5, 0, 5) });
+            totalsTable.Children.Add(new TextBlock { Text = $"Tổng cộng: {_total:C}", FontWeight = FontWeights.Bold, FontSize = 18, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 5, 0, 0) });
 
             totalsStack.Children.Add(totalsTable);
             Grid.SetColumn(totalsStack, 1);

@@ -12,10 +12,9 @@ namespace WpfApp1
 
         public static readonly string MOMO_QR = "00020101021138620010A00000072701320006970454011899MM23363M811532870208QRIBFTTA53037045802VN62190515MOMOW2W8115328763042872 ";
 
-     
-        public static readonly string ZALOPAY_QR_URL = "https://social.zalopay.vn/qr/0395658900";
 
-        
+
+
         public static BitmapSource GeneratePaymentQR(string qrCodeString)
         {
             try
@@ -27,7 +26,7 @@ namespace WpfApp1
                 }
 
                 System.Diagnostics.Debug.WriteLine($"Generating payment QR from string: {qrCodeString}");
-                
+
                 using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
                 using (QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrCodeString, QRCodeGenerator.ECCLevel.Q))
                 using (QRCode qrCode = new QRCode(qrCodeData))
@@ -38,7 +37,7 @@ namespace WpfApp1
                         System.Diagnostics.Debug.WriteLine("QR code image is null");
                         return CreateErrorQRCode();
                     }
-                    
+
                     return ConvertToBitmapSource(qrCodeImage);
                 }
             }
@@ -80,24 +79,18 @@ namespace WpfApp1
         {
             return GeneratePaymentQR(TPBANK_QR);
         }
-        
+
         public static BitmapSource GenerateMoMoQR()
         {
             return GeneratePaymentQR(MOMO_QR);
         }
 
-        public static BitmapSource GenerateZaloPayQR()
-        {
-            return GeneratePaymentQR(ZALOPAY_QR_URL);
-        }
-      
         public static BitmapSource GenerateQRByMethod(string paymentMethod)
         {
             return paymentMethod?.ToLower() switch
             {
                 "tpbank" or "bank" => GenerateTPBankQR(),
                 "momo" => GenerateMoMoQR(),
-                "zalopay" => GenerateZaloPayQR(),
                 _ => GenerateTPBankQR()
             };
         }

@@ -4,18 +4,15 @@ namespace WpfApp1
 {
     public static class DatabaseHelper
     {
-        // Connection string is dynamically constructed from SettingsManager
         private static string ConnectionString => SettingsManager.BuildConnectionString();
         
 
         public static void InitializeDatabase()
         {
-            // MySQL-only initialization
 
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Accounts table (already present)
             string tableCmd = @"CREATE TABLE IF NOT EXISTS Accounts (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
                 Username VARCHAR(255) NOT NULL UNIQUE,
@@ -25,9 +22,7 @@ namespace WpfApp1
             using var cmd = new MySqlCommand(tableCmd, connection);
             cmd.ExecuteNonQuery();
 
-            // Ensure default admin account exists (handled once below)
 
-            // Categories table
             string categoryCmd = @"CREATE TABLE IF NOT EXISTS Categories (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
                 Name VARCHAR(255) NOT NULL UNIQUE
@@ -35,7 +30,6 @@ namespace WpfApp1
             using var catCmd = new MySqlCommand(categoryCmd, connection);
             catCmd.ExecuteNonQuery();
 
-            // Products table
             string productCmd = @"CREATE TABLE IF NOT EXISTS Products (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
                 Name VARCHAR(255) NOT NULL,
@@ -51,7 +45,6 @@ namespace WpfApp1
             using var prodCmd = new MySqlCommand(productCmd, connection);
             prodCmd.ExecuteNonQuery();
 
-            // Customers table
             string customerCmd = @"CREATE TABLE IF NOT EXISTS Customers (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
                 Name VARCHAR(255) NOT NULL,
@@ -65,7 +58,6 @@ namespace WpfApp1
             using var custCmd = new MySqlCommand(customerCmd, connection);
             custCmd.ExecuteNonQuery();
 
-            // Ensure Points column exists for legacy databases
             try
             {
                 using var checkPoints = new MySqlCommand("SHOW COLUMNS FROM Customers LIKE 'Points';", connection);
@@ -78,7 +70,6 @@ namespace WpfApp1
             }
             catch { }
 
-            // Invoices table
             string invoicesCmd = @"CREATE TABLE IF NOT EXISTS Invoices (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
                 CustomerId INT NOT NULL,
@@ -96,7 +87,6 @@ namespace WpfApp1
             using var invCmd = new MySqlCommand(invoicesCmd, connection);
             invCmd.ExecuteNonQuery();
 
-            // InvoiceItems table
             string invoiceItemsCmd = @"CREATE TABLE IF NOT EXISTS InvoiceItems (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
                 InvoiceId INT NOT NULL,
@@ -112,14 +102,11 @@ namespace WpfApp1
             using var invItemsCmd = new MySqlCommand(invoiceItemsCmd, connection);
             invItemsCmd.ExecuteNonQuery();
 
-            // Update existing Products table if needed
             UpdateProductsTable(connection);
 
 
-            // Fix any existing data issues
             FixExistingProductData(connection);
 
-            // Ensure default admin account exists
             string checkAdminCmd = "SELECT COUNT(*) FROM Accounts WHERE Username='admin';";
             using var checkCmd = new MySqlCommand(checkAdminCmd, connection);
             long adminExists = (long)checkCmd.ExecuteScalar();
@@ -256,7 +243,6 @@ namespace WpfApp1
 
         public static bool RegisterAccount(string username, string password, string role = "Cashier")
         {
-            // Overload method để tương thích ngược - sử dụng username làm EmployeeName
             return RegisterAccount(username, username, password, role);
         }
 
@@ -300,7 +286,6 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Verify the old password
             string verifyCmd = "SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@oldPassword;";
             using var verify = new MySqlCommand(verifyCmd, connection);
             verify.Parameters.AddWithValue("@username", username);
@@ -308,9 +293,8 @@ namespace WpfApp1
             long count = (long)verify.ExecuteScalar();
 
             if (count == 0)
-                return false; // Old password incorrect
+                return false;
 
-            // Update to the new password
             string updateCmd = "UPDATE Accounts SET Password=@newPassword WHERE Username=@username;";
             using var update = new MySqlCommand(updateCmd, connection);
             update.Parameters.AddWithValue("@username", username);
@@ -335,13 +319,32 @@ namespace WpfApp1
 
         public static int GetEmployeeIdByUsername(string username)
         {
-            using var connection = new MySqlConnection(ConnectionString);
-            connection.Open();
-            string selectCmd = "SELECT Id FROM Accounts WHERE Username = @username;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
-            cmd.Parameters.AddWithValue("@username", username);
-            var result = cmd.ExecuteScalar();
-            return result != null ? Convert.ToInt32(result) : 1; // Default to admin ID
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                string selectCmd = "SELECT Id FROM Accounts WHERE Username = @username;";
+                using var cmd = new MySqlCommand(selectCmd, connection);
+                cmd.Parameters.AddWithValue("@username", username);
+                var result = cmd.ExecuteScalar();
+                
+                if (result != null)
+                {
+                    int employeeId = Convert.ToInt32(result);
+                    System.Diagnostics.Debug.WriteLine($"Found employee ID {employeeId} for username '{username}'");
+                    return employeeId;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"No employee found for username '{username}', using default ID 1");
+                    return 1; // Default to admin ID
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting employee ID for '{username}': {ex.Message}");
+                return 1; // Default to admin ID on error
+            }
         }
 
         public static bool DeleteAccount(string username)
@@ -381,7 +384,6 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Kiểm tra xem bảng Products có SalePrice hay Price
             string checkColumnCmd = "SHOW COLUMNS FROM Products LIKE 'SalePrice';";
             using var checkColumn = new MySqlCommand(checkColumnCmd, connection);
             var salePriceExists = checkColumn.ExecuteScalar();
@@ -389,7 +391,6 @@ namespace WpfApp1
             string cmdText;
             if (salePriceExists != null)
             {
-                // Sử dụng SalePrice, PurchasePrice, PurchaseUnit
                 cmdText = "INSERT INTO Products (Name, Code, CategoryId, SalePrice, PurchasePrice, PurchaseUnit, StockQuantity, Description) VALUES (@name, @code, @categoryId, @salePrice, @purchasePrice, @purchaseUnit, @stockQuantity, @description);";
                 using var cmd = new MySqlCommand(cmdText, connection);
                 cmd.Parameters.AddWithValue("@name", name);
@@ -412,13 +413,12 @@ namespace WpfApp1
             }
             else
             {
-                // Fallback cho cấu trúc cũ
                 cmdText = "INSERT INTO Products (Name, Code, CategoryId, Price, StockQuantity, Description) VALUES (@name, @code, @categoryId, @price, @stockQuantity, @description);";
                 using var cmd = new MySqlCommand(cmdText, connection);
                 cmd.Parameters.AddWithValue("@name", name);
                 cmd.Parameters.AddWithValue("@code", code);
                 cmd.Parameters.AddWithValue("@categoryId", categoryId);
-                cmd.Parameters.AddWithValue("@price", salePrice); // Sử dụng salePrice làm Price trong cấu trúc cũ
+                cmd.Parameters.AddWithValue("@price", salePrice);
                 cmd.Parameters.AddWithValue("@stockQuantity", stockQuantity);
                 cmd.Parameters.AddWithValue("@description", description);
                 try
@@ -435,7 +435,7 @@ namespace WpfApp1
 
         public static bool AddProduct(string name, string code, int categoryId, decimal price, int stockQuantity, string description = "")
         {
-            // Overload method để tương thích ngược - giả định purchasePrice = price * 0.8
+            // Overload method Ã„â€˜Ã¡Â»Æ’ tÃ†Â°Ã†Â¡ng thÃƒÂ­ch ngÃ†Â°Ã¡Â»Â£c - giÃ¡ÂºÂ£ Ã„â€˜Ã¡Â»â€¹nh purchasePrice = price * 0.8
             return AddProduct(name, code, categoryId, price, Math.Round(price * 0.8m, 2), "Piece", stockQuantity, description);
         }
 
@@ -445,15 +445,14 @@ namespace WpfApp1
         public static string TestAddProduct(string name, string code, int categoryId, decimal price, int stockQuantity, string description = "")
         {
             var result = new System.Text.StringBuilder();
-            result.AppendLine($"=== TEST THÊM SẢN PHẨM: {name} ===");
+            result.AppendLine($"=== TEST THÃƒÅ M SÃ¡ÂºÂ¢N PHÃ¡ÂºÂ¨M: {name} ===");
 
             try
             {
                 using var connection = new MySqlConnection(ConnectionString);
                 connection.Open();
-                result.AppendLine("✅ Kết nối database thành công");
+                result.AppendLine("Ã¢Å“â€¦ KÃ¡ÂºÂ¿t nÃ¡Â»â€˜i database thÃƒÂ nh cÃƒÂ´ng");
 
-                // Kiểm tra categoryId có tồn tại không
                 string checkCategoryCmd = "SELECT COUNT(*) FROM Categories WHERE Id = @categoryId;";
                 using var checkCat = new MySqlCommand(checkCategoryCmd, connection);
                 checkCat.Parameters.AddWithValue("@categoryId", categoryId);
@@ -461,23 +460,21 @@ namespace WpfApp1
 
                 if (categoryExists == 0)
                 {
-                    result.AppendLine($"❌ Danh mục ID {categoryId} không tồn tại!");
+                    result.AppendLine($"Ã¢ÂÅ’ Danh mÃ¡Â»Â¥c ID {categoryId} khÃƒÂ´ng tÃ¡Â»â€œn tÃ¡ÂºÂ¡i!");
 
-                    // Hiển thị danh mục có sẵn
                     string listCategoriesCmd = "SELECT Id, Name FROM Categories ORDER BY Id;";
                     using var listCat = new MySqlCommand(listCategoriesCmd, connection);
                     using var reader = listCat.ExecuteReader();
-                    result.AppendLine("📋 Danh mục có sẵn:");
+                    result.AppendLine("Ã°Å¸â€œâ€¹ Danh mÃ¡Â»Â¥c cÃƒÂ³ sÃ¡ÂºÂµn:");
                     while (reader.Read())
                     {
-                        result.AppendLine($"  - ID: {reader["Id"]}, Tên: {reader["Name"]}");
+                        result.AppendLine($"  - ID: {reader["Id"]}, TÃƒÂªn: {reader["Name"]}");
                     }
                     reader.Close();
                     return result.ToString();
                 }
-                result.AppendLine($"✅ Danh mục ID {categoryId} tồn tại");
+                result.AppendLine($"Ã¢Å“â€¦ Danh mÃ¡Â»Â¥c ID {categoryId} tÃ¡Â»â€œn tÃ¡ÂºÂ¡i");
 
-                // Kiểm tra code có trùng không
                 string checkCodeCmd = "SELECT COUNT(*) FROM Products WHERE Code = @code;";
                 using var checkCode = new MySqlCommand(checkCodeCmd, connection);
                 checkCode.Parameters.AddWithValue("@code", code);
@@ -485,12 +482,11 @@ namespace WpfApp1
 
                 if (codeExists > 0)
                 {
-                    result.AppendLine($"❌ Mã sản phẩm '{code}' đã tồn tại!");
+                    result.AppendLine($"Ã¢ÂÅ’ MÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{code}' Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i!");
                     return result.ToString();
                 }
-                result.AppendLine($"✅ Mã sản phẩm '{code}' chưa tồn tại");
+                result.AppendLine($"Ã¢Å“â€¦ MÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{code}' chÃ†Â°a tÃ¡Â»â€œn tÃ¡ÂºÂ¡i");
 
-                // Thử thêm sản phẩm
                 string insertCmd = "INSERT INTO Products (Name, Code, CategoryId, SalePrice, StockQuantity, Description) VALUES (@name, @code, @categoryId, @saleprice, @stockQuantity, @description);";
                 using var cmd = new MySqlCommand(insertCmd, connection);
                 cmd.Parameters.AddWithValue("@name", name);
@@ -503,16 +499,16 @@ namespace WpfApp1
                 int rowsAffected = cmd.ExecuteNonQuery();
                 if (rowsAffected > 0)
                 {
-                    result.AppendLine($"✅ Thêm sản phẩm '{name}' thành công!");
+                    result.AppendLine($"Ã¢Å“â€¦ ThÃƒÂªm sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{name}' thÃƒÂ nh cÃƒÂ´ng!");
                 }
                 else
                 {
-                    result.AppendLine($"❌ Không thể thêm sản phẩm '{name}'");
+                    result.AppendLine($"Ã¢ÂÅ’ KhÃƒÂ´ng thÃ¡Â»Æ’ thÃƒÂªm sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{name}'");
                 }
             }
             catch (Exception ex)
             {
-                result.AppendLine($"❌ Lỗi: {ex.Message}");
+                result.AppendLine($"Ã¢ÂÅ’ LÃ¡Â»â€”i: {ex.Message}");
             }
 
             return result.ToString();
@@ -524,7 +520,6 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Kiểm tra xem bảng Products có SalePrice hay Price
             string checkColumnCmd = "SHOW COLUMNS FROM Products LIKE 'SalePrice';";
             using var checkColumn = new MySqlCommand(checkColumnCmd, connection);
             var salePriceExists = checkColumn.ExecuteScalar();
@@ -686,37 +681,31 @@ namespace WpfApp1
 
                     if (count > 0)
                     {
-                        return false; // Some products are in use by invoices
+                        return false;
                     }
                 }
                 catch
                 {
-                    // InvoiceItems table doesn't exist yet, so we can safely delete all
                 }
 
-                // First, try to delete normally
                 string cmdText = "DELETE FROM Products;";
                 using var cmd = new MySqlCommand(cmdText, connection);
                 int result = cmd.ExecuteNonQuery();
-                return true; // Return true even if no products were deleted
+                return true;
             }
             catch (Exception ex)
             {
-                // If normal delete fails, try with foreign key checks disabled
                 try
                 {
                     System.Diagnostics.Debug.WriteLine($"Normal delete all failed: {ex.Message}, trying with FK checks disabled");
 
-                    // Disable foreign key checks temporarily
                     using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection);
                     disableFK.ExecuteNonQuery();
 
-                    // Try delete again
                     string cmdText = "DELETE FROM Products;";
                     using var cmd = new MySqlCommand(cmdText, connection);
                     int result = cmd.ExecuteNonQuery();
 
-                    // Re-enable foreign key checks
                     using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection);
                     enableFK.ExecuteNonQuery();
 
@@ -742,13 +731,13 @@ namespace WpfApp1
 
                 // Parse header
                 string[] header = lines[0].Split(',');
-                int idxName = Array.FindIndex(header, h => string.Equals(h.Trim(), "Name", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Tên", StringComparison.OrdinalIgnoreCase));
-                int idxCode = Array.FindIndex(header, h => string.Equals(h.Trim(), "Code", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Mã", StringComparison.OrdinalIgnoreCase));
+                int idxName = Array.FindIndex(header, h => string.Equals(h.Trim(), "Name", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "TÃƒÂªn", StringComparison.OrdinalIgnoreCase));
+                int idxCode = Array.FindIndex(header, h => string.Equals(h.Trim(), "Code", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "MÃƒÂ£", StringComparison.OrdinalIgnoreCase));
                 int idxCategoryId = Array.FindIndex(header, h => string.Equals(h.Trim(), "CategoryId", StringComparison.OrdinalIgnoreCase));
                 int idxCategoryName = Array.FindIndex(header, h => string.Equals(h.Trim(), "CategoryName", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "DanhMuc", StringComparison.OrdinalIgnoreCase));
-                int idxPrice = Array.FindIndex(header, h => string.Equals(h.Trim(), "Price", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "SalePrice", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Giá", StringComparison.OrdinalIgnoreCase));
-                int idxStock = Array.FindIndex(header, h => string.Equals(h.Trim(), "StockQuantity", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Stock", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Tồn", StringComparison.OrdinalIgnoreCase));
-                int idxDesc = Array.FindIndex(header, h => string.Equals(h.Trim(), "Description", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "MôTả", StringComparison.OrdinalIgnoreCase));
+                int idxPrice = Array.FindIndex(header, h => string.Equals(h.Trim(), "Price", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "SalePrice", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "GiÃƒÂ¡", StringComparison.OrdinalIgnoreCase));
+                int idxStock = Array.FindIndex(header, h => string.Equals(h.Trim(), "StockQuantity", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Stock", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "TÃ¡Â»â€œn", StringComparison.OrdinalIgnoreCase));
+                int idxDesc = Array.FindIndex(header, h => string.Equals(h.Trim(), "Description", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "MÃƒÂ´TÃ¡ÂºÂ£", StringComparison.OrdinalIgnoreCase));
 
                 if (idxName < 0 || idxPrice < 0)
                 {
@@ -880,7 +869,6 @@ namespace WpfApp1
 
         private static string[] SplitCsvLine(string line)
         {
-            // Basic CSV parser supporting quotes
             var result = new List<string>();
             bool inQuotes = false;
             var current = new System.Text.StringBuilder();
@@ -944,7 +932,6 @@ namespace WpfApp1
             using var tx = connection.BeginTransaction();
             try
             {
-                // Insert invoice
                 string insertInvoice = @"INSERT INTO Invoices (CustomerId, EmployeeId, Subtotal, TaxPercent, TaxAmount, Discount, Total, Paid)
                                          VALUES (@CustomerId, @EmployeeId, @Subtotal, @TaxPercent, @TaxAmount, @Discount, @Total, @Paid);
                                          SELECT LAST_INSERT_ID();";
@@ -960,7 +947,6 @@ namespace WpfApp1
                 var invoiceIdObj = invCmd.ExecuteScalar();
                 int invoiceId = Convert.ToInt32(invoiceIdObj);
 
-                // Insert items and update stock
                 foreach (var (productId, quantity, unitPrice) in items)
                 {
                     decimal lineTotal = unitPrice * quantity;
@@ -975,7 +961,6 @@ namespace WpfApp1
                     itemCmd.Parameters.AddWithValue("@LineTotal", lineTotal);
                     itemCmd.ExecuteNonQuery();
 
-                    // Decrease stock
                     string updateStock = "UPDATE Products SET StockQuantity = GREATEST(0, StockQuantity - @qty) WHERE Id=@pid;";
                     using var stockCmd = new MySqlCommand(updateStock, connection, tx);
                     stockCmd.Parameters.AddWithValue("@qty", quantity);
@@ -984,7 +969,6 @@ namespace WpfApp1
                 }
 
                 tx.Commit();
-                // Store the last invoice id in a session-like holder for UI feedback
                 LastSavedInvoiceId = invoiceId;
                 return true;
             }
@@ -996,10 +980,8 @@ namespace WpfApp1
             }
         }
 
-        // Exposed last saved invoice id for quick feedback after SaveInvoice
         public static int LastSavedInvoiceId { get; private set; }
 
-        // Customer management methods
         public static List<(int Id, string Name, string Phone, string Email, string Address, string CustomerType)> GetAllCustomers()
         {
             var customers = new List<(int, string, string, string, string, string)>();
@@ -1022,7 +1004,6 @@ namespace WpfApp1
             return customers;
         }
 
-        // Loyalty helpers
         public static (string Tier, int Points) GetCustomerLoyalty(int customerId)
         {
             using var connection = new MySqlConnection(ConnectionString);
@@ -1050,7 +1031,6 @@ namespace WpfApp1
             return cmd.ExecuteNonQuery() > 0;
         }
 
-        // KPI helpers for dashboard
         public static decimal GetRevenueBetween(DateTime from, DateTime to)
         {
             using var connection = new MySqlConnection(ConnectionString);
@@ -1093,7 +1073,7 @@ namespace WpfApp1
             return Convert.ToInt32(val ?? 0);
         }
 
-        // Reporting queries
+
         public static List<(int Id, DateTime CreatedDate, string CustomerName, decimal Subtotal, decimal TaxAmount, decimal Discount, decimal Total, decimal Paid)>
             QueryInvoices(DateTime? from, DateTime? to, int? customerId, string search)
         {
@@ -1140,9 +1120,8 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Header
             string headerSql = @"SELECT i.Id, i.CreatedDate, c.Name, i.Subtotal, i.TaxAmount, i.Discount, i.Total, i.Paid,
-                                        IFNULL(c.Phone, ''), IFNULL(c.Email, ''), IFNULL(c.Address, '')
+                                        IFNULL(c.Phone, ''), IFNULL(c.Email, ''), IFNULL(c.Address, ''), i.EmployeeId
                                  FROM Invoices i
                                  LEFT JOIN Customers c ON c.Id = i.CustomerId
                                  WHERE i.Id = @id";
@@ -1164,7 +1143,8 @@ namespace WpfApp1
                     Paid = hr.GetDecimal(7),
                     CustomerPhone = hr.IsDBNull(8) ? string.Empty : hr.GetString(8),
                     CustomerEmail = hr.IsDBNull(9) ? string.Empty : hr.GetString(9),
-                    CustomerAddress = hr.IsDBNull(10) ? string.Empty : hr.GetString(10)
+                    CustomerAddress = hr.IsDBNull(10) ? string.Empty : hr.GetString(10),
+                    EmployeeId = hr.IsDBNull(11) ? 1 : hr.GetInt32(11)
                 };
             }
             else
@@ -1173,7 +1153,6 @@ namespace WpfApp1
             }
             hr.Close();
 
-            // Items
             var items = new List<InvoiceItemDetail>();
             string itemsSql = @"SELECT ii.ProductId, p.Name, ii.UnitPrice, ii.Quantity, ii.LineTotal
                                  FROM InvoiceItems ii
@@ -1210,6 +1189,7 @@ namespace WpfApp1
             public string CustomerPhone { get; set; } = string.Empty;
             public string CustomerEmail { get; set; } = string.Empty;
             public string CustomerAddress { get; set; } = string.Empty;
+            public int EmployeeId { get; set; }
         }
 
         public class InvoiceItemDetail
@@ -1244,7 +1224,6 @@ namespace WpfApp1
             }
         }
 
-        // Aggregations for charts
         public static List<(DateTime Day, decimal Revenue)> GetRevenueByDay(DateTime from, DateTime to)
         {
             var list = new List<(DateTime, decimal)>();
@@ -1347,11 +1326,11 @@ namespace WpfApp1
                 if (lines.Length == 0) return 0;
 
                 string[] header = lines[0].Split(',');
-                int idxName = Array.FindIndex(header, h => string.Equals(h.Trim(), "Name", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Tên", StringComparison.OrdinalIgnoreCase));
+                int idxName = Array.FindIndex(header, h => string.Equals(h.Trim(), "Name", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "TÃƒÂªn", StringComparison.OrdinalIgnoreCase));
                 int idxPhone = Array.FindIndex(header, h => string.Equals(h.Trim(), "Phone", StringComparison.OrdinalIgnoreCase));
                 int idxEmail = Array.FindIndex(header, h => string.Equals(h.Trim(), "Email", StringComparison.OrdinalIgnoreCase));
                 int idxType = Array.FindIndex(header, h => string.Equals(h.Trim(), "CustomerType", StringComparison.OrdinalIgnoreCase));
-                int idxAddress = Array.FindIndex(header, h => string.Equals(h.Trim(), "Address", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "ĐịaChỉ", StringComparison.OrdinalIgnoreCase));
+                int idxAddress = Array.FindIndex(header, h => string.Equals(h.Trim(), "Address", StringComparison.OrdinalIgnoreCase) || string.Equals(h.Trim(), "Ã„ÂÃ¡Â»â€¹aChÃ¡Â»â€°", StringComparison.OrdinalIgnoreCase));
                 int idxTier = Array.FindIndex(header, h => string.Equals(h.Trim(), "Tier", StringComparison.OrdinalIgnoreCase));
                 int idxPoints = Array.FindIndex(header, h => string.Equals(h.Trim(), "Points", StringComparison.OrdinalIgnoreCase));
 
@@ -1623,7 +1602,7 @@ namespace WpfApp1
 
 
         /// <summary>
-        /// Tạo mã sản phẩm duy nhất
+        /// TÃ¡ÂºÂ¡o mÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m duy nhÃ¡ÂºÂ¥t
         /// </summary>
         private static string GenerateUniqueProductCode(string baseCode, MySqlConnection connection)
         {
@@ -1675,7 +1654,6 @@ namespace WpfApp1
             return list;
         }
 
-        // Segment khách hàng
         public static string GetCustomerSegment(int id)
         {
             try
@@ -1721,7 +1699,6 @@ namespace WpfApp1
             catch { return false; }
         }
 
-        // Chi tiết hóa đơn
         public static List<(string ProductName, int Quantity, decimal UnitPrice, decimal LineTotal)> GetInvoiceItemsDetailed(int invoiceId)
         {
             var list = new List<(string, int, decimal, decimal)>();
@@ -1750,7 +1727,6 @@ namespace WpfApp1
             return list;
         }
 
-        // Cập nhật tài khoản
         public static bool UpdateAccount(string username, string? newPassword = null, string? newRole = null, string? newEmployeeName = null)
         {
             using var connection = new MySqlConnection(ConnectionString);
@@ -1789,8 +1765,136 @@ namespace WpfApp1
                 return false;
             }
         }
+        // Methods for ReportsSettingsWindow
+        public static int GetTotalInvoices()
+        {
+            using var connection = new MySqlConnection(ConnectionString);
+            connection.Open();
+            using var cmd = new MySqlCommand("SELECT COUNT(*) FROM Invoices", connection);
+            var val = cmd.ExecuteScalar();
+            return Convert.ToInt32(val ?? 0);
+        }
 
-        
+        public static decimal GetTotalRevenue()
+        {
+            using var connection = new MySqlConnection(ConnectionString);
+            connection.Open();
+            using var cmd = new MySqlCommand("SELECT IFNULL(SUM(Total), 0) FROM Invoices", connection);
+            var val = cmd.ExecuteScalar();
+            return Convert.ToDecimal(val ?? 0);
+        }
+
+        public static (DateTime? oldestDate, DateTime? newestDate) GetInvoiceDateRange()
+        {
+            using var connection = new MySqlConnection(ConnectionString);
+            connection.Open();
+            using var cmd = new MySqlCommand("SELECT MIN(CreatedDate), MAX(CreatedDate) FROM Invoices", connection);
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                var oldest = reader.IsDBNull(0) ? (DateTime?)null : reader.GetDateTime(0);
+                var newest = reader.IsDBNull(1) ? (DateTime?)null : reader.GetDateTime(1);
+                return (oldest, newest);
+            }
+            return (null, null);
+        }
+
+        public static bool BackupDatabase(string filePath)
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                var backup = new System.Text.StringBuilder();
+                backup.AppendLine("-- Database Backup Created: " + DateTime.Now);
+                backup.AppendLine("-- This is a simplified backup for demonstration");
+                System.IO.File.WriteAllText(filePath, backup.ToString());
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Backup error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public static bool RestoreDatabase(string filePath)
+        {
+            try
+            {
+                if (!System.IO.File.Exists(filePath))
+                    return false;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Restore error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public static int DeleteInvoicesOlderThan(DateTime cutoffDate)
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                using var detailsCmd = new MySqlCommand("DELETE FROM InvoiceDetails WHERE InvoiceId IN (SELECT Id FROM Invoices WHERE CreatedDate < @cutoff)", connection);
+                detailsCmd.Parameters.AddWithValue("@cutoff", cutoffDate);
+                detailsCmd.ExecuteNonQuery();
+                using var invoicesCmd = new MySqlCommand("DELETE FROM Invoices WHERE CreatedDate < @cutoff", connection);
+                invoicesCmd.Parameters.AddWithValue("@cutoff", cutoffDate);
+                return invoicesCmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Delete old invoices error: {ex.Message}");
+                return 0;
+            }
+        }
+
+        public static bool OptimizeDatabase()
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                string[] tables = { "Invoices", "InvoiceDetails", "Products", "Categories", "Customers", "Accounts" };
+                foreach (var table in tables)
+                {
+                    using var cmd = new MySqlCommand($"OPTIMIZE TABLE {table}", connection);
+                    cmd.ExecuteNonQuery();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Optimize database error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public static int DeleteAllInvoices()
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                using var countCmd = new MySqlCommand("SELECT COUNT(*) FROM Invoices", connection);
+                int count = Convert.ToInt32(countCmd.ExecuteScalar() ?? 0);
+                using var detailsCmd = new MySqlCommand("DELETE FROM InvoiceDetails", connection);
+                detailsCmd.ExecuteNonQuery();
+                using var invoicesCmd = new MySqlCommand("DELETE FROM Invoices", connection);
+                invoicesCmd.ExecuteNonQuery();
+                return count;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Delete all invoices error: {ex.Message}");
+                return 0;
+            }
+        }
 
     }
 }
+

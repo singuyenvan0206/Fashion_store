@@ -88,13 +88,13 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBlock Text="⚡ Lọc nhanh:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0"/>
                         <Button Content="📅 Hôm nay" Width="90" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="RefreshButton_Click"/>
+                                FontWeight="SemiBold" Margin="0,0,4,0" Click="TodayButton_Click"/>
                         <Button Content="📅 7 ngày" Width="80" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="RefreshButton_Click"/>
+                                FontWeight="SemiBold" Margin="0,0,4,0" Click="Last7DaysButton_Click"/>
                         <Button Content="📅 30 ngày" Width="80" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="RefreshButton_Click"/>
+                                FontWeight="SemiBold" Margin="0,0,4,0" Click="Last30DaysButton_Click"/>
                         <Button Content="📅 Tháng này" Width="90" Height="28" Background="#2196F3" Foreground="White" 
-                                FontWeight="SemiBold" Click="RefreshButton_Click"/>
+                                FontWeight="SemiBold" Click="ThisMonthButton_Click"/>
                     </StackPanel>
                     
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
@@ -217,30 +217,30 @@
                             GridLinesVisibility="Horizontal"
                             HeadersVisibility="Column" Height="379" Width="1238">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="60" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd HH:mm}" Width="160" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Khách hàng" Binding="{Binding CustomerName}" Width="*" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Tạm tính" Binding="{Binding Subtotal, StringFormat=N2}" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="#" Binding="{Binding Id}" SortMemberPath="Id" Width="60" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd HH:mm}" SortMemberPath="CreatedDate" Width="160" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Khách hàng" Binding="{Binding CustomerName}" SortMemberPath="CustomerName" Width="*" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Tạm tính" Binding="{Binding Subtotal, StringFormat=N2}" SortMemberPath="Subtotal" Width="120" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Thuế" Binding="{Binding TaxAmount, StringFormat=N2}" Width="110" IsReadOnly="True">
+                                <DataGridTextColumn Header="Thuế" Binding="{Binding TaxAmount, StringFormat=N2}" SortMemberPath="TaxAmount" Width="110" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Giảm giá" Binding="{Binding Discount, StringFormat=N2}" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="Giảm giá" Binding="{Binding Discount, StringFormat=N2}" SortMemberPath="Discount" Width="120" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Tổng cộng" Binding="{Binding Total, StringFormat=N2}" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="Tổng cộng" Binding="{Binding Total, StringFormat=N2}" SortMemberPath="Total" Width="120" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Đã trả" Binding="{Binding Paid, StringFormat=N2}" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="Đã trả" Binding="{Binding Paid, StringFormat=N2}" SortMemberPath="Paid" Width="120" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
@@ -264,20 +264,45 @@
 
                     </ScrollViewer>
 
-                    <!-- Pagination controls -->
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,8,12,12">
-                        <TextBlock Text="Trang:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <Button Content="⟨" Width="30" Height="26" Margin="0,0,6,0" Click="PrevPageButton_Click"/>
-                        <TextBlock x:Name="PageInfoText" VerticalAlignment="Center" FontWeight="Bold"/>
-                        <Button Content="⟩" Width="30" Height="26" Margin="6,0,0,0" Click="NextPageButton_Click"/>
-                        <TextBlock Text="  |  Mỗi trang:" VerticalAlignment="Center" Margin="12,0,6,0"/>
-                        <ComboBox x:Name="PageSizeComboBox" Width="70" SelectionChanged="PageSizeComboBox_SelectionChanged">
-                            <ComboBoxItem Content="15" IsSelected="True"/>
-                            <ComboBoxItem Content="25"/>
-                            <ComboBoxItem Content="50"/>
-                            <ComboBoxItem Content="100"/>
-                        </ComboBox>
-                    </StackPanel>
+                    <!-- Enhanced Pagination Controls -->
+                    <Border Grid.Row="2" Background="#F8F9FA" Padding="15" Margin="0,10,0,0" CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Page Info -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📄 Trang:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="ReportsPageInfoTextBlock" Text="1 / 1" FontWeight="Bold" Foreground="#1CB5E0"/>
+                                <TextBlock Text=" • " Margin="10,0"/>
+                                <TextBlock Text="📊 Tổng:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="TotalReportsTextBlock" Text="0 hóa đơn" FontWeight="Bold" Foreground="#FF9800"/>
+                            </StackPanel>
+                            
+                            
+                            <!-- Page Navigation -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="ReportsFirstPageButton" Content="⏮️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="ReportsFirstPageButton_Click" Margin="0,0,5,0"/>
+                                <Button x:Name="ReportsPrevPageButton" Content="◀️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="ReportsPrevPageButton_Click" Margin="0,0,5,0"/>
+                                <TextBox x:Name="ReportsCurrentPageTextBox" Width="50" Height="30" 
+                                         TextAlignment="Center" VerticalContentAlignment="Center"
+                                         FontWeight="Bold" Margin="0,0,5,0"
+                                         KeyDown="ReportsCurrentPageTextBox_KeyDown"/>
+                                <Button x:Name="ReportsNextPageButton" Content="▶️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="ReportsNextPageButton_Click" Margin="0,0,5,0"/>
+                                <Button x:Name="ReportsLastPageButton" Content="⏭️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="ReportsLastPageButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
 

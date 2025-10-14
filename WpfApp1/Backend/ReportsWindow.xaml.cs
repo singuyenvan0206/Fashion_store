@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -15,23 +16,31 @@ namespace WpfApp1
     public partial class ReportsWindow : Window
     {
         private List<InvoiceListItem> _invoices = new();
-        private int _currentPage = 1;
-        private int _pageSize = 25;
+        private PaginationHelper<InvoiceListItem> _paginationHelper = new();
 
         public ReportsWindow()
         {
             InitializeComponent();
+            _paginationHelper.PageChanged += OnPageChanged;
             LoadFilters();
             LoadInvoices();
+            
+            // Enable sorting for DataGrid
+            InvoicesDataGrid.Sorting += InvoicesDataGrid_Sorting;
+        }
+        
+        private void OnPageChanged()
+        {
+            UpdateDisplayAndPagination();
         }
 
         
 
         private void LoadFilters()
         {
-            // Date range defaults: last 30 days
-            ToDatePicker.SelectedDate = DateTime.Today;
-            FromDatePicker.SelectedDate = DateTime.Today.AddDays(-30);
+            // Date range defaults: show all invoices (no date filter)
+            ToDatePicker.SelectedDate = null;
+            FromDatePicker.SelectedDate = null;
 
             var customers = DatabaseHelper.GetAllCustomers();
             var list = new List<CustomerList> { new CustomerList { Id = 0, Name = "Tất cả khách hàng" } };
@@ -42,48 +51,77 @@ namespace WpfApp1
 
         private void LoadInvoices()
         {
-            DateTime? from = FromDatePicker.SelectedDate;
-            DateTime? to = ToDatePicker.SelectedDate?.AddDays(1).AddTicks(-1); // include end day
-            int? customerId = (CustomerComboBox.SelectedValue as int?) ?? 0;
-            string search = (SearchTextBox.Text ?? string.Empty).Trim();
-
-            var data = DatabaseHelper.QueryInvoices(from, to, customerId == 0 ? null : customerId, search);
-            _invoices = data.ConvertAll(i => new InvoiceListItem
+            try
             {
-                Id = i.Id,
-                CreatedDate = i.CreatedDate,
-                CustomerName = i.CustomerName,
-                Subtotal = i.Subtotal,
-                TaxAmount = i.TaxAmount,
-                Discount = i.Discount,
-                Total = i.Total,
-                Paid = i.Paid
-            });
-            ApplyPaging();
-            CountTextBlock.Text = _invoices.Count.ToString();
-            RevenueTextBlock.Text = _invoices.Sum(x => x.Total).ToString("F2");
-            StatusTextBlock.Text = _invoices.Count == 0 ? "Không tìm thấy hóa đơn nào với bộ lọc đã chọn." : string.Empty;
+                DateTime? from = FromDatePicker.SelectedDate;
+                DateTime? to = ToDatePicker.SelectedDate?.AddDays(1).AddTicks(-1); // include end day
+                int? customerId = (CustomerComboBox.SelectedValue as int?) ?? 0;
+                string search = (SearchTextBox.Text ?? string.Empty).Trim();
 
-            LoadCharts();
+                System.Diagnostics.Debug.WriteLine($"LoadInvoices: From={from}, To={to}, CustomerId={customerId}, Search='{search}'");
+
+                var data = DatabaseHelper.QueryInvoices(from, to, customerId == 0 ? null : customerId, search);
+                _invoices = data.ConvertAll(i => new InvoiceListItem
+                {
+                    Id = i.Id,
+                    CreatedDate = i.CreatedDate,
+                    CustomerName = i.CustomerName,
+                    Subtotal = i.Subtotal,
+                    TaxAmount = i.TaxAmount,
+                    Discount = i.Discount,
+                    Total = i.Total,
+                    Paid = i.Paid
+                });
+
+                System.Diagnostics.Debug.WriteLine($"Found {_invoices.Count} invoices");
+
+                _paginationHelper.SetData(_invoices);
+                UpdateDisplayAndPagination();
+                
+                // Update summary information
+                CountTextBlock.Text = _paginationHelper.TotalItems.ToString();
+                RevenueTextBlock.Text = _invoices.Sum(x => x.Total).ToString("F2") + "₫";
+                
+                // Update TotalInvoicesText as well
+                if (TotalInvoicesText != null)
+                {
+                    TotalInvoicesText.Text = $"{_paginationHelper.TotalItems} hóa đơn";
+                }
+                
+                // Update status
+                StatusTextBlock.Text = _paginationHelper.TotalItems == 0 ? "Không tìm thấy hóa đơn nào với bộ lọc đã chọn." : $"Báo cáo được cập nhật lúc: {DateTime.Now:HH:mm:ss}";
+
+                LoadCharts();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in LoadInvoices: {ex.Message}");
+                MessageBox.Show($"Lỗi tải dữ liệu: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void ApplyPaging()
+        private void UpdateDisplayAndPagination()
         {
-            if (_pageSize <= 0) _pageSize = 25;
-            int total = _invoices.Count;
-            int totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)_pageSize));
-            if (_currentPage > totalPages) _currentPage = totalPages;
-            if (_currentPage < 1) _currentPage = 1;
-
-            var pageData = _invoices
-                .Skip((_currentPage - 1) * _pageSize)
-                .Take(_pageSize)
-                .ToList();
-            InvoicesDataGrid.ItemsSource = pageData;
-            if (PageInfoText != null)
+            // Update DataGrid with current page items
+            InvoicesDataGrid.ItemsSource = _paginationHelper.GetCurrentPageItems();
+            
+            // Update pagination info
+            if (ReportsPageInfoTextBlock != null)
             {
-                PageInfoText.Text = $"{_currentPage}/{totalPages}";
+                ReportsPageInfoTextBlock.Text = $"📄 Trang: {_paginationHelper.GetPageInfo()} • 📊 Tổng: {_paginationHelper.TotalItems} hóa đơn";
             }
+            
+            // Update current page textbox
+            if (ReportsCurrentPageTextBox != null)
+            {
+                ReportsCurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+            }
+            
+            // Update button states
+            if (ReportsFirstPageButton != null) ReportsFirstPageButton.IsEnabled = _paginationHelper.CanGoFirst;
+            if (ReportsPrevPageButton != null) ReportsPrevPageButton.IsEnabled = _paginationHelper.CanGoPrevious;
+            if (ReportsNextPageButton != null) ReportsNextPageButton.IsEnabled = _paginationHelper.CanGoNext;
+            if (ReportsLastPageButton != null) ReportsLastPageButton.IsEnabled = _paginationHelper.CanGoLast;
         }
 
         private void FilterChanged(object sender, RoutedEventArgs e)
@@ -130,13 +168,45 @@ namespace WpfApp1
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            _currentPage = 1;
+            LoadInvoices();
+        }
+
+        private void TodayButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("TodayButton_Click called");
+            FromDatePicker.SelectedDate = DateTime.Today;
+            ToDatePicker.SelectedDate = DateTime.Today;
+            LoadInvoices();
+        }
+
+        private void Last7DaysButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Last7DaysButton_Click called");
+            FromDatePicker.SelectedDate = DateTime.Today.AddDays(-7);
+            ToDatePicker.SelectedDate = DateTime.Today;
+            LoadInvoices();
+        }
+
+        private void Last30DaysButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Last30DaysButton_Click called");
+            FromDatePicker.SelectedDate = DateTime.Today.AddDays(-30);
+            ToDatePicker.SelectedDate = DateTime.Today;
+            LoadInvoices();
+        }
+
+        private void ThisMonthButton_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("ThisMonthButton_Click called");
+            var today = DateTime.Today;
+            FromDatePicker.SelectedDate = new DateTime(today.Year, today.Month, 1);
+            ToDatePicker.SelectedDate = DateTime.Today;
             LoadInvoices();
         }
 
         private void OpenSettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            var settings = new SettingsWindow();
+            var settings = new ReportsSettingsWindow();
             try
             {
                 settings.Owner = this;
@@ -189,32 +259,129 @@ namespace WpfApp1
             MessageBox.Show($"Đã xuất đến {path}", "Xuất dữ liệu", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void PrevPageButton_Click(object sender, RoutedEventArgs e)
+        // Pagination event handlers
+        private void ReportsFirstPageButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_currentPage > 1)
-            {
-                _currentPage--;
-                ApplyPaging();
-            }
+            _paginationHelper.FirstPage();
         }
 
-        private void NextPageButton_Click(object sender, RoutedEventArgs e)
+        private void ReportsPrevPageButton_Click(object sender, RoutedEventArgs e)
         {
-            int totalPages = Math.Max(1, (int)Math.Ceiling(_invoices.Count / (double)_pageSize));
-            if (_currentPage < totalPages)
-            {
-                _currentPage++;
-                ApplyPaging();
-            }
+            _paginationHelper.PreviousPage();
         }
 
-        private void PageSizeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ReportsNextPageButton_Click(object sender, RoutedEventArgs e)
         {
-            if (PageSizeComboBox?.SelectedItem is ComboBoxItem item && int.TryParse(item.Content?.ToString(), out int newSize))
+            _paginationHelper.NextPage();
+        }
+
+        private void ReportsLastPageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _paginationHelper.LastPage();
+        }
+
+        private void ReportsCurrentPageTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
             {
-                _pageSize = newSize;
-                _currentPage = 1;
-                ApplyPaging();
+                if (int.TryParse(ReportsCurrentPageTextBox.Text, out int pageNumber))
+                {
+                    if (!_paginationHelper.GoToPage(pageNumber))
+                    {
+                        // Reset to current page if invalid
+                        ReportsCurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+                        MessageBox.Show($"Trang không hợp lệ. Vui lòng nhập từ 1 đến {_paginationHelper.TotalPages}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                else
+                {
+                    ReportsCurrentPageTextBox.Text = _paginationHelper.CurrentPage.ToString();
+                }
+            }
+        }
+        
+        private void InvoicesDataGrid_Sorting(object sender, System.Windows.Controls.DataGridSortingEventArgs e)
+        {
+            e.Handled = true; // Prevent default sorting
+            
+            var column = e.Column;
+            var propertyName = column.SortMemberPath;
+            
+            // Debug: Show what property we're trying to sort by
+            System.Diagnostics.Debug.WriteLine($"Sorting by: '{propertyName}'");
+            
+            if (string.IsNullOrEmpty(propertyName)) 
+            {
+                System.Diagnostics.Debug.WriteLine("SortMemberPath is null or empty!");
+                return;
+            }
+            
+            // Determine sort direction
+            var direction = column.SortDirection != System.ComponentModel.ListSortDirection.Ascending 
+                ? System.ComponentModel.ListSortDirection.Ascending 
+                : System.ComponentModel.ListSortDirection.Descending;
+            
+            // Apply sort to all data through PaginationHelper
+            Func<IEnumerable<InvoiceListItem>, IOrderedEnumerable<InvoiceListItem>>? sortFunc = null;
+            
+            switch (propertyName.ToLower())
+            {
+                case "id":
+                    System.Diagnostics.Debug.WriteLine("Sorting by ID");
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.Id)
+                        : items => items.OrderByDescending(i => i.Id);
+                    break;
+                case "createddate":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.CreatedDate)
+                        : items => items.OrderByDescending(i => i.CreatedDate);
+                    break;
+                case "customername":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.CustomerName)
+                        : items => items.OrderByDescending(i => i.CustomerName);
+                    break;
+                case "subtotal":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.Subtotal)
+                        : items => items.OrderByDescending(i => i.Subtotal);
+                    break;
+                case "taxamount":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.TaxAmount)
+                        : items => items.OrderByDescending(i => i.TaxAmount);
+                    break;
+                case "discount":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.Discount)
+                        : items => items.OrderByDescending(i => i.Discount);
+                    break;
+                case "total":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.Total)
+                        : items => items.OrderByDescending(i => i.Total);
+                    break;
+                case "paid":
+                    sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
+                        ? items => items.OrderBy(i => i.Paid)
+                        : items => items.OrderByDescending(i => i.Paid);
+                    break;
+            }
+            
+            if (sortFunc != null)
+            {
+                _paginationHelper.SetSort(sortFunc);
+                
+                // Update column sort direction
+                column.SortDirection = direction;
+                
+                // Clear other columns' sort direction
+                foreach (var col in InvoicesDataGrid.Columns)
+                {
+                    if (col != column)
+                        col.SortDirection = null;
+                }
             }
         }
 
@@ -260,24 +427,17 @@ namespace WpfApp1
             }
         }
 
+        private int GetEmployeeId(string username)
+        {
+            return DatabaseHelper.GetEmployeeIdByUsername(username);
+        }
+
         private void PrintButton_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is InvoiceListItem row)
             {
-                try
-                {
-                    // Lấy EmployeeId của người đang đăng nhập (hoặc sử dụng ID mặc định)
-                    string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
-                    var employeeId = DatabaseHelper.GetEmployeeIdByUsername(currentUser);
-                    
-                    // Sử dụng constructor từ database để đảm bảo dữ liệu chính xác
-                    var printWindow = new InvoicePrintWindow(row.Id, employeeId);
-                    printWindow.ShowDialog();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Không thể mở cửa sổ in cho hóa đơn #{row.Id}: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                var printWindow = new InvoicePrintWindow(row.Id, 1);
+                printWindow.ShowDialog();
             }
         }
     }

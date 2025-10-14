@@ -21,11 +21,19 @@ namespace WpfApp1
             InitializeComponent();
             _currentUsername = username;
             _currentRole = role;
+            
+            // Add cleanup when window is closing
+            this.Closing += DashboardWindow_Closing;
+            
+            // Set current user in application resources for other windows to access
+            Application.Current.Resources["CurrentUser"] = username;
+            
             UserInfoTextBlock.Text = $"Chào mừng, {username} ({role})";
             LoadKpis();
             
             // Debug: Show role information
             System.Diagnostics.Debug.WriteLine($"DashboardWindow: Username={username}, Role={role}");
+            System.Diagnostics.Debug.WriteLine($"Set CurrentUser in Application.Resources: {username}");
             
             // Apply role-based visibility for unified dashboard
             ApplyRoleVisibility(ParseRole(role));
@@ -197,6 +205,15 @@ namespace WpfApp1
             ShowOwnedDialog(settingsWindow);
         }
 
+        private void DashboardWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                // Clear any resources or connections
+                Application.Current.Resources.Remove("CurrentUser");
+            }
+            catch { }
+        }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
@@ -206,6 +223,7 @@ namespace WpfApp1
             if (result == MessageBoxResult.Yes)
             {
                 var loginWindow = new MainWindow();
+                Application.Current.MainWindow = loginWindow;
                 loginWindow.Show();
                 this.Close();
             }

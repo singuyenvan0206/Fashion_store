@@ -1,6 +1,7 @@
-﻿using System.Configuration;
+using System.Configuration;
 using System.Data;
 using System.Windows;
+using System;
 
 namespace WpfApp1
 {
@@ -28,10 +29,34 @@ namespace WpfApp1
             }
             catch { }
 
+            try
+            {
+                // Force cleanup of MySQL connection pool
+                MySql.Data.MySqlClient.MySqlConnection.ClearAllPools();
+            }
+            catch { }
+
+            try
+            {
+                // Force garbage collection to cleanup any remaining resources
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+            }
+            catch { }
+
             base.OnExit(e);
 
             // Hard-exit the process to ensure no background tasks keep it alive
-            try { System.Environment.Exit(0); } catch { }
+            try 
+            { 
+                System.Environment.Exit(0); 
+            } 
+            catch 
+            { 
+                // Last resort - force terminate
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
         }
 
         private void TryInitializeDatabaseWithFallback()

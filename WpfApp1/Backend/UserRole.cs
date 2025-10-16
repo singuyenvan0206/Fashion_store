@@ -16,7 +16,7 @@ namespace WpfApp1
         Manager = 2,
 
         /// <summary>
-        /// Thu ngân - có quyền bán hàng, quản lý sản phẩm và xem báo cáo cơ bản
+        /// Thu ngân - có quyền bán hàng, quản lý sản phẩm, danh mục, khách hàng
         /// </summary>
         Cashier = 3
     }
@@ -83,6 +83,14 @@ namespace WpfApp1
         }
 
         /// <summary>
+        /// Kiểm tra xem role có quyền cài đặt hạng thành viên không
+        /// </summary>
+        public static bool CanManageTierSettings(this UserRole role)
+        {
+            return role == UserRole.Admin || role == UserRole.Manager;
+        }
+
+        /// <summary>
         /// Lấy tên hiển thị của role
         /// </summary>
         public static string GetDisplayName(this UserRole role)
@@ -105,7 +113,7 @@ namespace WpfApp1
             {
                 UserRole.Admin => "Có toàn quyền quản lý hệ thống, người dùng và dữ liệu",
                 UserRole.Manager => "Quản lý vận hành: sản phẩm, danh mục, khách hàng, hóa đơn, xem báo cáo và cấu hình cơ bản",
-                UserRole.Cashier => "Thực hiện giao dịch bán hàng, quản lý sản phẩm, danh mục, khách hàng và xem báo cáo",
+                UserRole.Cashier => "Thực hiện giao dịch bán hàng, quản lý sản phẩm, danh mục, khách hàng (không thể thay đổi hạng thành viên và điểm tích lũy)",
                 _ => "Không có quyền hạn"
             };
         }

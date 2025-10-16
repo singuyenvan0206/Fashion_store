@@ -155,5 +155,39 @@ namespace WpfApp1
                 return false;
             }
         }
+
+        /// <summary>
+        /// Update all customers' tiers based on their current points and new tier thresholds
+        /// </summary>
+        public static int UpdateAllCustomerTiers()
+        {
+            try
+            {
+                var customers = DatabaseHelper.GetAllCustomers();
+                int updatedCount = 0;
+
+                foreach (var customer in customers)
+                {
+                    var loyalty = DatabaseHelper.GetCustomerLoyalty(customer.Id);
+                    var newTier = DetermineTierByPoints(loyalty.Points);
+                    
+                    // Only update if tier has changed
+                    if (loyalty.Tier != newTier)
+                    {
+                        if (DatabaseHelper.UpdateCustomerLoyalty(customer.Id, loyalty.Points, newTier))
+                        {
+                            updatedCount++;
+                        }
+                    }
+                }
+
+                return updatedCount;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating all customer tiers: {ex.Message}");
+                return -1;
+            }
+        }
     }
 }

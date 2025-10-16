@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#1CB5E0" Padding="20">
+        <Border Height="auto" Grid.Row="0" Background="#1CB5E0" Padding="20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -96,19 +96,13 @@
                         <Button Content="📅 Tháng này" Width="90" Height="28" Background="#2196F3" Foreground="White" 
                                 FontWeight="SemiBold" Click="ThisMonthButton_Click"/>
                     </StackPanel>
-                    
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
-                        <Button Content="📈 Biểu đồ" Width="100" Height="28" Background="#FF9800" Foreground="White" 
-                                FontWeight="SemiBold" Margin="0,0,4,0" Click="ShowChartsButton_Click"/>
-                        <Button Content="📋 Báo cáo" Width="100" Height="28" Background="#9C27B0" Foreground="White" 
-                                FontWeight="SemiBold" Click="ShowReportsButton_Click"/>
-                    </StackPanel>
+
                 </Grid>
             </Grid>
         </Border>
 
         <!-- Data & Charts -->
-        <Grid Grid.Row="2" Margin="20,8,20,8">
+        <Grid Grid.Row="2" Margin="20,0,20,8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="2*"/>
@@ -189,7 +183,7 @@
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    
+
                     <!-- Grid Header -->
                     <Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
                         <Grid>
@@ -204,7 +198,7 @@
                             </StackPanel>
                         </Grid>
                     </Border>
-                    <ScrollViewer Margin="0,45,0,0" Grid.RowSpan="2">
+                    <ScrollViewer Margin="0,45,0,20" Grid.RowSpan="2">
                         <DataGrid ScrollViewer.CanContentScroll="True" 
                             ScrollViewer.VerticalScrollBarVisibility="Visible"
                             x:Name="InvoicesDataGrid"
@@ -215,7 +209,7 @@
                             EnableColumnVirtualization="True"
                             BorderThickness="0"
                             GridLinesVisibility="Horizontal"
-                            HeadersVisibility="Column" Height="379" Width="1238">
+                            HeadersVisibility="Column" Height="435" Width="1238">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="#" Binding="{Binding Id}" SortMemberPath="Id" Width="60" IsReadOnly="True"/>
                                 <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd HH:mm}" SortMemberPath="CreatedDate" Width="160" IsReadOnly="True"/>
@@ -271,7 +265,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            
+
                             <!-- Page Info -->
                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="📄 Trang:" FontWeight="SemiBold" Margin="0,0,5,0"/>
@@ -280,8 +274,8 @@
                                 <TextBlock Text="📊 Tổng:" FontWeight="SemiBold" Margin="0,0,5,0"/>
                                 <TextBlock x:Name="TotalReportsTextBlock" Text="0 hóa đơn" FontWeight="Bold" Foreground="#FF9800"/>
                             </StackPanel>
-                            
-                            
+
+
                             <!-- Page Navigation -->
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button x:Name="ReportsFirstPageButton" Content="⏮️" Width="35" Height="30" 
@@ -305,72 +299,10 @@
                     </Border>
                 </Grid>
             </Border>
-
-            <!-- Charts -->
-            <Grid Grid.Row="2" Visibility="Collapsed">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <Border Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,8,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="📈 Doanh Thu (30 Ngày Gần Đây)" FontWeight="Bold" FontSize="14" Foreground="#333"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="📊" Width="24" Height="24" Background="#4CAF50" Foreground="White" FontSize="12" Margin="0,0,4,0" Click="LoadChartsButton_Click"/>
-                                    <Button Content="📈" Width="24" Height="24" Background="#2196F3" Foreground="White" FontSize="12" Click="LoadChartsButton_Click"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        
-                        <Border Grid.Row="1" Padding="12">
-                            <oxy:PlotView x:Name="RevenuePlot" Height="240"/>
-                        </Border>
-                    </Grid>
-                </Border>
-                
-                <Border Grid.Column="1" Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" Margin="8,0,0,0">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="🏆 Sản Phẩm Bán Chạy (Top 10)" FontWeight="Bold" FontSize="14" Foreground="#333"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="Collapsed">
-                                    <Button Content="📊" Width="24" Height="24" Background="#FF9800" Foreground="White" FontSize="12" Margin="0,0,4,0" Click="LoadChartsButton_Click"/>
-                                    <Button Content="📋" Width="24" Height="24" Background="#9C27B0" Foreground="White" FontSize="12" Click="LoadChartsButton_Click"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        
-                        <Border Grid.Row="1" Padding="12">
-                            <oxy:PlotView x:Name="TopProductsPlot" Height="240"/>
-                        </Border>
-                    </Grid>
-                </Border>
-            </Grid>
         </Grid>
 
         <!-- Summary -->
-        <Border Grid.Row="3" Margin="20,8,20,20" Background="White" CornerRadius="12" Padding="16" BorderBrush="#E0E0E0" BorderThickness="1">
+        <Border Grid.Row="3" Margin="20,8,20,20" Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

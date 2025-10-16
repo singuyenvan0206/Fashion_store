@@ -20,6 +20,54 @@ namespace WpfApp1
             
             // Enable sorting for DataGrid
             CustomerDataGrid.Sorting += CustomerDataGrid_Sorting;
+            
+            // Apply role-based permissions
+            ApplyRolePermissions();
+        }
+        
+        private void ApplyRolePermissions()
+        {
+            // Get current user role from application resources
+            var currentUser = Application.Current.Resources["CurrentUser"] as string;
+            if (string.IsNullOrEmpty(currentUser))
+                return;
+                
+            // Get user role from database
+            var userRole = DatabaseHelper.GetUserRole(currentUser);
+            var role = ParseRole(userRole);
+            
+            // Hide tier settings button for non-admin/manager users
+            if (role == UserRole.Cashier)
+            {
+                if (TierSettingsButton != null)
+                    TierSettingsButton.Visibility = Visibility.Collapsed;
+                    
+                // Disable tier and points editing for cashiers
+                if (TierComboBox != null)
+                {
+                    TierComboBox.IsEnabled = false;
+                    TierComboBox.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+                    TierComboBox.ToolTip = "Chỉ Admin và Manager mới có thể thay đổi hạng thành viên";
+                }
+                if (PointsTextBox != null)
+                {
+                    PointsTextBox.IsReadOnly = true;
+                    PointsTextBox.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.LightGray);
+                    PointsTextBox.ToolTip = "Chỉ Admin và Manager mới có thể thay đổi điểm tích lũy";
+                }
+            }
+        }
+        
+        private static UserRole ParseRole(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return UserRole.Cashier;
+            switch (role.Trim().ToLower())
+            {
+                case "admin": return UserRole.Admin;
+                case "manager": return UserRole.Manager;
+                case "cashier": return UserRole.Cashier;
+                default: return UserRole.Cashier;
+            }
         }
 
         private void LoadCustomers()
@@ -135,13 +183,26 @@ namespace WpfApp1
 
             if (DatabaseHelper.AddCustomer(customer.Name, customer.Phone, customer.Email, customer.CustomerType, customer.Address))
             {
-
                 try
                 {
                     int id = DatabaseHelper.GetAllCustomers().Last().Id;
-                    var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Regular";
-                    int pts = 0; int.TryParse(PointsTextBox.Text, out pts);
-                    DatabaseHelper.UpdateCustomerLoyalty(id, pts, tier);
+                    
+                    // Check if user has permission to set tier and points
+                    var currentUser = Application.Current.Resources["CurrentUser"] as string;
+                    var userRole = DatabaseHelper.GetUserRole(currentUser ?? "");
+                    var role = ParseRole(userRole);
+                    
+                    if (role.CanManageTierSettings())
+                    {
+                        var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Regular";
+                        int pts = 0; int.TryParse(PointsTextBox.Text, out pts);
+                        DatabaseHelper.UpdateCustomerLoyalty(id, pts, tier);
+                    }
+                    else
+                    {
+                        // For cashiers, always set to Regular with 0 points
+                        DatabaseHelper.UpdateCustomerLoyalty(id, 0, "Regular");
+                    }
                 } catch {}
                 LoadCustomers();
                 ClearForm();
@@ -175,13 +236,20 @@ namespace WpfApp1
 
             if (DatabaseHelper.UpdateCustomer(customer.Id, customer.Name, customer.Phone, customer.Email, customer.CustomerType, customer.Address))
             {
-                // Segment removed
-                // Update loyalty
+                // Update loyalty only if user has permission
                 try
                 {
-                    var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _selectedCustomer.Tier;
-                    int pts = _selectedCustomer.Points; int.TryParse(PointsTextBox.Text, out pts);
-                    DatabaseHelper.UpdateCustomerLoyalty(customer.Id, pts, tier);
+                    var currentUser = Application.Current.Resources["CurrentUser"] as string;
+                    var userRole = DatabaseHelper.GetUserRole(currentUser ?? "");
+                    var role = ParseRole(userRole);
+                    
+                    if (role.CanManageTierSettings())
+                    {
+                        var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? _selectedCustomer.Tier;
+                        int pts = _selectedCustomer.Points; int.TryParse(PointsTextBox.Text, out pts);
+                        DatabaseHelper.UpdateCustomerLoyalty(customer.Id, pts, tier);
+                    }
+                    // If cashier, keep existing tier and points unchanged
                 } catch {}
                 LoadCustomers();
                 ClearForm();
@@ -427,7 +495,11 @@ namespace WpfApp1
                 tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             }
             tierSettingsWindow.ShowDialog();
+            
+            // Refresh customer list after tier settings might have changed
+            LoadCustomers();
         }
+
 
         // Pagination event handlers
         private void CustomerFirstPageButton_Click(object sender, RoutedEventArgs e)

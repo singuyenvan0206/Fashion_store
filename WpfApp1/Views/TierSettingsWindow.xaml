@@ -184,25 +184,44 @@
         
         <!-- Footer Buttons -->
         <Border Grid.Row="2" Background="White" Padding="20" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="💾 Lưu Cài Đặt" 
-                        Width="120" 
-                        Background="#4CAF50" 
-                        Foreground="White" 
-                        Click="SaveButton_Click"
-                        Margin="0,0,10,0"/>
-                <Button Content="🔄 Khôi Phục Mặc Định" 
-                        Width="150" 
-                        Background="#FF9800" 
-                        Foreground="White" 
-                        Click="ResetButton_Click"
-                        Margin="0,0,10,0"/>
-                <Button Content="❌ Đóng" 
-                        Width="80" 
-                        Background="#9E9E9E" 
-                        Foreground="White" 
-                        Click="CloseButton_Click"/>
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Auto Update Option -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox x:Name="AutoUpdateTiersCheckBox" 
+                              Content="🔄 Tự động cập nhật hạng khách hàng theo ngưỡng điểm mới"
+                              IsChecked="True"
+                              FontSize="14"
+                              FontWeight="SemiBold"
+                              Foreground="#666666"
+                              VerticalAlignment="Center"/>
+                </StackPanel>
+                
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="💾 Lưu Cài Đặt" 
+                            Width="120" 
+                            Background="#4CAF50" 
+                            Foreground="White" 
+                            Click="SaveButton_Click"
+                            Margin="0,0,10,0"/>
+                    <Button Content="🔄 Khôi Phục Mặc Định" 
+                            Width="150" 
+                            Background="#FF9800" 
+                            Foreground="White" 
+                            Click="ResetButton_Click"
+                            Margin="0,0,10,0"/>
+                    <Button Content="❌ Đóng" 
+                            Width="80" 
+                            Background="#9E9E9E" 
+                            Foreground="White" 
+                            Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

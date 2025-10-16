@@ -93,14 +93,14 @@
                         <ComboBox x:Name="CustomerTypeComboBox" Margin="0,0,0,15" Visibility="Collapsed"/>
 
                         <!-- Loyalty Tier & Points -->
-                        <TextBlock Text="Hạng thành viên" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBlock x:Name="TierLabel" Text="Hạng thành viên" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="TierComboBox" Margin="0,0,0,10">
                             <ComboBoxItem Content="Regular" IsSelected="True"/>
                             <ComboBoxItem Content="Silver"/>
                             <ComboBoxItem Content="Gold"/>
                             <ComboBoxItem Content="Platinum"/>
                         </ComboBox>
-                        <TextBlock Text="Điểm tích lũy" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBlock x:Name="PointsLabel" Text="Điểm tích lũy" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="PointsTextBox" Margin="0,0,0,15" Text="0"/>
 
                         <!-- Segment removed -->
@@ -147,7 +147,8 @@
                         <!-- Secondary Actions -->
                         <TextBlock Text="Quản Lý Dữ Liệu" FontWeight="Bold" FontSize="14" Foreground="#666" Margin="0,15,0,10"/>
                         
-                        <Button Content="⚙️ Cài đặt hạng thành viên" 
+                        <Button x:Name="TierSettingsButton"
+                                Content="⚙️ Cài đặt hạng thành viên" 
                                 Background="#673AB7" 
                                 Foreground="White" 
                                 Click="TierSettingsButton_Click"

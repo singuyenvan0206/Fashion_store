@@ -91,7 +91,6 @@ namespace WpfApp1
                 // Update status
                 StatusTextBlock.Text = _paginationHelper.TotalItems == 0 ? "Không tìm thấy hóa đơn nào với bộ lọc đã chọn." : $"Báo cáo được cập nhật lúc: {DateTime.Now:HH:mm:ss}";
 
-                LoadCharts();
             }
             catch (Exception ex)
             {
@@ -129,42 +128,6 @@ namespace WpfApp1
             LoadInvoices();
         }
 
-        private void LoadCharts()
-        {
-            var to = ToDatePicker.SelectedDate ?? DateTime.Today;
-            var from = FromDatePicker.SelectedDate ?? DateTime.Today.AddDays(-30);
-
-            // Revenue trend
-            var revenue = DatabaseHelper.GetRevenueByDay(from, to);
-            var revenueModel = new PlotModel { Title = null };
-            revenueModel.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, StringFormat = "MM-dd", IsZoomEnabled = false, IsPanEnabled = false });
-            revenueModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, IsZoomEnabled = false, IsPanEnabled = false });
-            var line = new LineSeries { MarkerType = MarkerType.Circle };
-            foreach (var (day, amount) in revenue)
-            {
-                line.Points.Add(new DataPoint(DateTimeAxis.ToDouble(day), (double)amount));
-            }
-            revenueModel.Series.Add(line);
-            RevenuePlot.Model = revenueModel;
-
-            // Top products
-            var top = DatabaseHelper.GetTopProducts(from, to, 10);
-            var barModel = new PlotModel { Title = null };
-            var catAxis = new CategoryAxis { Position = AxisPosition.Left };
-            foreach (var (name, _) in top)
-            {
-                catAxis.Labels.Add(name);
-            }
-            barModel.Axes.Add(catAxis);
-            barModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = 0 });
-            var barSeries = new BarSeries();
-            foreach (var (_, qty) in top)
-            {
-                barSeries.Items.Add(new BarItem { Value = qty });
-            }
-            barModel.Series.Add(barSeries);
-            TopProductsPlot.Model = barModel;
-        }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
@@ -220,21 +183,10 @@ namespace WpfApp1
             settings.ShowDialog();
         }
 
-        private void ShowChartsButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Simply ensure charts reflect current filters
-            LoadCharts();
-        }
-
         private void ShowReportsButton_Click(object sender, RoutedEventArgs e)
         {
             // Refresh data grid and KPIs based on current filters
             LoadInvoices();
-        }
-
-        private void LoadChartsButton_Click(object sender, RoutedEventArgs e)
-        {
-            LoadCharts();
         }
 
         private void ExportCsvButton_Click(object sender, RoutedEventArgs e)

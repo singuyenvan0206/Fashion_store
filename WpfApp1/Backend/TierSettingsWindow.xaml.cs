@@ -86,7 +86,33 @@ namespace WpfApp1
 
                 if (TierSettingsManager.Save(settings))
                 {
-                    MessageBox.Show("Cài đặt hạng thành viên đã được lưu thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    string message = "Cài đặt hạng thành viên đã được lưu thành công!";
+                    
+                    // Check if auto-update is enabled
+                    if (AutoUpdateTiersCheckBox?.IsChecked == true)
+                    {
+                        // Update all customer tiers based on new thresholds
+                        int updatedCustomers = TierSettingsManager.UpdateAllCustomerTiers();
+                        
+                        if (updatedCustomers > 0)
+                        {
+                            message += $"\n\n🔄 Đã tự động cập nhật hạng cho {updatedCustomers} khách hàng theo ngưỡng điểm mới.";
+                        }
+                        else if (updatedCustomers == 0)
+                        {
+                            message += "\n\n✅ Không có khách hàng nào cần cập nhật hạng.";
+                        }
+                        else
+                        {
+                            message += "\n\n⚠️ Cảnh báo: Có lỗi khi cập nhật hạng khách hàng. Vui lòng kiểm tra lại.";
+                        }
+                    }
+                    else
+                    {
+                        message += "\n\n📝 Lưu ý: Hạng khách hàng chưa được cập nhật tự động. Bạn có thể cập nhật thủ công nếu cần.";
+                    }
+                    
+                    MessageBox.Show(message, "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
                     this.Close();
                 }
                 else

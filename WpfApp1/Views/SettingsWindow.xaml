@@ -70,6 +70,40 @@
                     </Grid>
                 </Border>
 
+                <!-- Tier Settings -->
+                <Border Background="White" CornerRadius="14" Padding="24" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Text="Cài Đặt Hạng Thành Viên"
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="#1CB5E0"
+                                   Margin="0,0,0,12"/>
+
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="Quản lý các hạng thành viên và phần trăm giảm giá tương ứng"
+                                       FontSize="14"
+                                       Foreground="#666"
+                                       Margin="0,0,0,16"/>
+                            
+                            <Button x:Name="OpenTierSettingsButton"
+                                    Content="⚙️ Mở Cài Đặt Hạng Thành Viên"
+                                    Width="250"
+                                    Height="40"
+                                    Background="#673AB7"
+                                    Foreground="White"
+                                    FontSize="14"
+                                    FontWeight="SemiBold"
+                                    Click="OpenTierSettingsButton_Click"
+                                    HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <!-- QR Code Settings -->
                 <Border Background="White" CornerRadius="14" Padding="24">
                     <Grid>

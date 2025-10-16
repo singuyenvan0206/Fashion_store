@@ -101,13 +101,10 @@ namespace WpfApp1
                     if (UserManagementNavItem != null) UserManagementNavItem.Visibility = Visibility.Collapsed;
                     break;
                 default:
-                    // Employee: basic operations only
-                    Hide(ProductManagementTile);
-                    Hide(CategoryManagementTile);
+                    // Employee: can manage products, categories, customers, invoices
+                    // Hide only user management, reports, and settings
                     Hide(ReportsTile);
                     Hide(UserManagementBorder);
-                    if (ProductsNavItem != null) ProductsNavItem.Visibility = Visibility.Collapsed;
-                    if (CategoriesNavItem != null) CategoriesNavItem.Visibility = Visibility.Collapsed;
                     if (ReportsNavItem != null) ReportsNavItem.Visibility = Visibility.Collapsed;
                     if (UserManagementNavItem != null) UserManagementNavItem.Visibility = Visibility.Collapsed;
                     if (SettingsNavItem != null) SettingsNavItem.Visibility = Visibility.Collapsed;

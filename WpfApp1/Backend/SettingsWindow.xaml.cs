@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace WpfApp1
 {
@@ -13,6 +14,38 @@ namespace WpfApp1
             LoadCurrentSettings();
             LoadPaymentSettings();
             SetupEventHandlers();
+            ApplyRolePermissions();
+        }
+        
+        private void ApplyRolePermissions()
+        {
+            // Get current user role from application resources
+            var currentUser = Application.Current.Resources["CurrentUser"] as string;
+            if (string.IsNullOrEmpty(currentUser))
+                return;
+                
+            // Get user role from database
+            var userRole = DatabaseHelper.GetUserRole(currentUser);
+            var role = ParseRole(userRole);
+            
+            // Hide tier settings button for non-admin/manager users
+            if (role == UserRole.Cashier)
+            {
+                if (OpenTierSettingsButton != null)
+                    OpenTierSettingsButton.Visibility = Visibility.Collapsed;
+            }
+        }
+        
+        private static UserRole ParseRole(string role)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return UserRole.Cashier;
+            switch (role.Trim().ToLower())
+            {
+                case "admin": return UserRole.Admin;
+                case "manager": return UserRole.Manager;
+                case "cashier": return UserRole.Cashier;
+                default: return UserRole.Cashier;
+            }
         }
 
         private void LoadCurrentSettings()
@@ -211,6 +244,32 @@ namespace WpfApp1
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi lưu cài đặt QR Code: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenTierSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var tierSettingsWindow = new TierSettingsWindow();
+                
+                // Try to set owner, fallback to center screen if fails
+                try
+                {
+                    tierSettingsWindow.Owner = this;
+                    tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                }
+                catch
+                {
+                    tierSettingsWindow.Owner = null;
+                    tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                }
+                
+                tierSettingsWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi mở cài đặt hạng thành viên: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

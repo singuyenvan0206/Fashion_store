@@ -81,7 +81,7 @@
                     <Button Content="➕ Thêm" Width="90" Height="32" Background="#4CAF50" Foreground="White" Click="AddButton_Click" FontWeight="SemiBold"/>
                     <Button Content="✏️ Cập Nhật" Width="100" Height="32" Background="#2196F3" Foreground="White" Margin="8,0,0,0" Click="UpdateButton_Click" FontWeight="SemiBold"/>
                     <Button Content="🗑️ Xóa" Width="80" Height="32" Background="#F44336" Foreground="White" Margin="8,0,0,0" Click="DeleteButton_Click" FontWeight="SemiBold"/>
-                    <Button Content="⚠️ Xóa Tất Cả" Width="110" Height="32" Background="#9E9E9E" Foreground="White" Margin="8,0,0,0" Click="ClearButton_Click" FontWeight="SemiBold"/>
+                    <Button Content="⚠️ Xóa Toàn Bộ" Width="110" Height="32" Background="#9E9E9E" Foreground="White" Margin="8,0,0,0" Click="DeleteAllButton_Click" FontWeight="SemiBold"/>
                 </StackPanel>
                 <ListBox x:Name="CategoryListBox" Height="320" DisplayMemberPath="Name" SelectionChanged="CategoryListBox_SelectionChanged">
                     <ListBox.ItemContainerStyle>

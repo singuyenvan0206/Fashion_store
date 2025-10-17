@@ -73,8 +73,12 @@
                     <ComboBox x:Name="CustomerComboBox" Grid.Column="5" Height="32" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="FilterChanged" Margin="6,0,0,0"/>
                     <TextBox x:Name="SearchTextBox" Grid.Column="6" Height="32" Margin="12,0,12,0" TextChanged="FilterChanged" 
                              ToolTip="🔍 Tìm theo mã KH, tên KH hoặc số hóa đơn" Padding="8,6"/>
-                    <Button Grid.Column="7" Content="📊 Xuất CSV" Width="120" Height="32" Background="#4CAF50" Foreground="White" 
-                            FontWeight="SemiBold" Click="ExportCsvButton_Click"/>
+                    <StackPanel Grid.Column="7" Orientation="Horizontal">
+                        <Button Content="📥 Nhập CSV" Width="120" Height="32" Background="#FF9800" Foreground="White" 
+                                FontWeight="SemiBold" Click="ImportCsvButton_Click" Margin="0,0,8,0"/>
+                        <Button Content="📊 Xuất CSV" Width="120" Height="32" Background="#4CAF50" Foreground="White" 
+                                FontWeight="SemiBold" Click="ExportCsvButton_Click"/>
+                    </StackPanel>
                 </Grid>
                 
                 <!-- Second row - Quick filters and actions -->

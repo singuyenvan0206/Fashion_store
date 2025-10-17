@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient;
 
 namespace WpfApp1
 {
@@ -669,54 +669,46 @@ namespace WpfApp1
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-
+            using var tx = connection.BeginTransaction();
             try
             {
                 // Check if any products are used by invoices
                 try
                 {
                     string checkCmd = "SELECT COUNT(*) FROM InvoiceItems;";
-                    using var check = new MySqlCommand(checkCmd, connection);
+                    using var check = new MySqlCommand(checkCmd, connection, tx);
                     long count = (long)check.ExecuteScalar();
 
                     if (count > 0)
                     {
-                        return false;
+                        return false; // Products are in use by invoices
                     }
                 }
                 catch
                 {
+                    // InvoiceItems table may not exist, continue with truncate
                 }
 
-                string cmdText = "DELETE FROM Products;";
-                using var cmd = new MySqlCommand(cmdText, connection);
-                int result = cmd.ExecuteNonQuery();
+                // Disable foreign key checks
+                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                disableFK.ExecuteNonQuery();
+
+                // Truncate Products table
+                using var truncateCmd = new MySqlCommand("TRUNCATE TABLE Products;", connection, tx);
+                truncateCmd.ExecuteNonQuery();
+
+                // Re-enable foreign key checks
+                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                enableFK.ExecuteNonQuery();
+
+                tx.Commit();
                 return true;
             }
             catch (Exception ex)
             {
-                try
-                {
-                    System.Diagnostics.Debug.WriteLine($"Normal delete all failed: {ex.Message}, trying with FK checks disabled");
-
-                    using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection);
-                    disableFK.ExecuteNonQuery();
-
-                    string cmdText = "DELETE FROM Products;";
-                    using var cmd = new MySqlCommand(cmdText, connection);
-                    int result = cmd.ExecuteNonQuery();
-
-                    using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection);
-                    enableFK.ExecuteNonQuery();
-
-                    return true;
-                }
-                catch (Exception ex2)
-                {
-                    // Log the specific error for debugging
-                    System.Diagnostics.Debug.WriteLine($"Error deleting all products with FK checks disabled: {ex2.Message}");
-                    return false;
-                }
+                try { tx.Rollback(); } catch { }
+                System.Diagnostics.Debug.WriteLine($"Error truncating products: {ex.Message}");
+                return false;
             }
         }
 
@@ -767,22 +759,42 @@ namespace WpfApp1
                     if (!int.TryParse(stockStr, out int stock)) stock = 0;
 
                     int categoryId = 0;
-                    var catIdStr = SafeGet(cols, idxCategoryId);
-                    if (!string.IsNullOrWhiteSpace(catIdStr)) int.TryParse(catIdStr, out categoryId);
-
-                    if (categoryId == 0 && !string.IsNullOrWhiteSpace(catName))
+                    
+                    // Prioritize CategoryName over CategoryId for auto-creation
+                    if (!string.IsNullOrWhiteSpace(catName))
                     {
+                        System.Diagnostics.Debug.WriteLine($"ImportCSV: Processing category '{catName}' for product '{name}'");
                         categoryId = EnsureCategory(catName);
+                        System.Diagnostics.Debug.WriteLine($"ImportCSV: Category '{catName}' resolved to ID {categoryId}");
+                    }
+                    else
+                    {
+                        // Fallback to CategoryId if CategoryName is empty
+                        var catIdStr = SafeGet(cols, idxCategoryId);
+                        if (!string.IsNullOrWhiteSpace(catIdStr)) 
+                        {
+                            int.TryParse(catIdStr, out categoryId);
+                            System.Diagnostics.Debug.WriteLine($"ImportCSV: Using CategoryId {categoryId} for product '{name}'");
+                        }
                     }
 
                     try
                     {
+                        System.Diagnostics.Debug.WriteLine($"ImportCSV: Adding product '{name}' with categoryId {categoryId}");
                         if (AddProduct(name, code ?? string.Empty, categoryId, price, stock, desc ?? string.Empty))
                         {
                             successCount++;
+                            System.Diagnostics.Debug.WriteLine($"ImportCSV: Successfully added product '{name}'");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"ImportCSV: Failed to add product '{name}'");
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"ImportCSV: Exception adding product '{name}': {ex.Message}");
+                    }
                 }
 
                 return successCount;
@@ -792,6 +804,8 @@ namespace WpfApp1
                 return -1;
             }
         }
+
+
 
         public static bool ExportProductsToCsv(string filePath)
         {
@@ -840,25 +854,60 @@ namespace WpfApp1
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(name)) return 0;
+                
+                // Normalize category name
+                name = name.Trim();
+                
                 using var connection = new MySqlConnection(ConnectionString);
                 connection.Open();
                 try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
 
+                System.Diagnostics.Debug.WriteLine($"EnsureCategory: Checking for category '{name}'");
+
+                // Check if category exists
                 using (var getCmd = new MySqlCommand("SELECT Id FROM Categories WHERE Name=@n;", connection))
                 {
                     getCmd.Parameters.AddWithValue("@n", name);
                     var idObj = getCmd.ExecuteScalar();
-                    if (idObj != null) return Convert.ToInt32(idObj);
+                    if (idObj != null) 
+                    {
+                        int existingId = Convert.ToInt32(idObj);
+                        System.Diagnostics.Debug.WriteLine($"EnsureCategory: Found existing category '{name}' with ID {existingId}");
+                        return existingId;
+                    }
                 }
 
-                using (var ins = new MySqlCommand("INSERT INTO Categories (Name) VALUES (@n); SELECT LAST_INSERT_ID();", connection))
+                System.Diagnostics.Debug.WriteLine($"EnsureCategory: Creating new category '{name}'");
+
+                // Create new category
+                using (var insCmd = new MySqlCommand("INSERT INTO Categories (Name) VALUES (@n);", connection))
                 {
-                    ins.Parameters.AddWithValue("@n", name);
-                    var idObj = ins.ExecuteScalar();
-                    return Convert.ToInt32(idObj);
+                    insCmd.Parameters.AddWithValue("@n", name);
+                    int rowsAffected = insCmd.ExecuteNonQuery();
+                    
+                    if (rowsAffected > 0)
+                    {
+                        // Get the inserted ID
+                        using var lastIdCmd = new MySqlCommand("SELECT LAST_INSERT_ID();", connection);
+                        var newIdObj = lastIdCmd.ExecuteScalar();
+                        if (newIdObj != null)
+                        {
+                            int newId = Convert.ToInt32(newIdObj);
+                            System.Diagnostics.Debug.WriteLine($"EnsureCategory: Created new category '{name}' with ID {newId}");
+                            return newId;
+                        }
+                    }
                 }
+
+                System.Diagnostics.Debug.WriteLine($"EnsureCategory: Failed to create category '{name}'");
+                return 0;
             }
-            catch { return 0; }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"EnsureCategory error for '{name}': {ex.Message}");
+                return 0;
+            }
         }
 
         private static string SafeGet(string[] cols, int idx)
@@ -1208,10 +1257,39 @@ namespace WpfApp1
             using var tx = connection.BeginTransaction();
             try
             {
-                // Delete invoice; InvoiceItems has ON DELETE CASCADE for InvoiceId
-                using var del = new MySqlCommand("DELETE FROM Invoices WHERE Id=@id;", connection, tx);
-                del.Parameters.AddWithValue("@id", invoiceId);
-                int affected = del.ExecuteNonQuery();
+                // First, get invoice items to restore stock
+                string getItemsSql = "SELECT ProductId, Quantity FROM InvoiceItems WHERE InvoiceId = @invoiceId";
+                var items = new List<(int ProductId, int Quantity)>();
+                
+                using (var getItemsCmd = new MySqlCommand(getItemsSql, connection, tx))
+                {
+                    getItemsCmd.Parameters.AddWithValue("@invoiceId", invoiceId);
+                    using var reader = getItemsCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        items.Add((reader.GetInt32("ProductId"), reader.GetInt32("Quantity")));
+                    }
+                }
+
+                // Restore stock for each product
+                foreach (var (productId, quantity) in items)
+                {
+                    string restoreStockSql = "UPDATE Products SET StockQuantity = StockQuantity + @quantity WHERE Id = @productId";
+                    using var restoreCmd = new MySqlCommand(restoreStockSql, connection, tx);
+                    restoreCmd.Parameters.AddWithValue("@quantity", quantity);
+                    restoreCmd.Parameters.AddWithValue("@productId", productId);
+                    restoreCmd.ExecuteNonQuery();
+                }
+
+                // Delete invoice items first (although CASCADE should handle this)
+                using var delItems = new MySqlCommand("DELETE FROM InvoiceItems WHERE InvoiceId = @id", connection, tx);
+                delItems.Parameters.AddWithValue("@id", invoiceId);
+                delItems.ExecuteNonQuery();
+
+                // Delete invoice
+                using var delInvoice = new MySqlCommand("DELETE FROM Invoices WHERE Id = @id", connection, tx);
+                delInvoice.Parameters.AddWithValue("@id", invoiceId);
+                int affected = delInvoice.ExecuteNonQuery();
 
                 tx.Commit();
                 return affected > 0;
@@ -1220,6 +1298,48 @@ namespace WpfApp1
             {
                 try { tx.Rollback(); } catch { }
                 System.Diagnostics.Debug.WriteLine($"Error deleting invoice {invoiceId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        public static bool DeleteAllInvoices()
+        {
+            using var connection = new MySqlConnection(ConnectionString);
+            connection.Open();
+            using var tx = connection.BeginTransaction();
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("Starting DeleteAllInvoices...");
+
+                // Disable foreign key checks
+                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                disableFK.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine("Disabled foreign key checks");
+
+                // Truncate InvoiceItems first (child table)
+                using var truncateInvoiceItems = new MySqlCommand("TRUNCATE TABLE InvoiceItems;", connection, tx);
+                truncateInvoiceItems.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine("Truncated InvoiceItems table");
+
+                // Truncate Invoices table (parent table)
+                using var truncateInvoices = new MySqlCommand("TRUNCATE TABLE Invoices;", connection, tx);
+                truncateInvoices.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine("Truncated Invoices table");
+
+                // Re-enable foreign key checks
+                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                enableFK.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine("Re-enabled foreign key checks");
+
+                tx.Commit();
+                System.Diagnostics.Debug.WriteLine("DeleteAllInvoices completed successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                try { tx.Rollback(); } catch { }
+                System.Diagnostics.Debug.WriteLine($"Error in DeleteAllInvoices: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 return false;
             }
         }
@@ -1478,14 +1598,14 @@ namespace WpfApp1
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-
+            using var tx = connection.BeginTransaction();
             try
             {
                 // Check if any invoices reference customers
                 try
                 {
                     string checkCmd = "SELECT COUNT(*) FROM Invoices;";
-                    using var check = new MySqlCommand(checkCmd, connection);
+                    using var check = new MySqlCommand(checkCmd, connection, tx);
                     long count = (long)check.ExecuteScalar();
                     if (count > 0)
                     {
@@ -1494,34 +1614,29 @@ namespace WpfApp1
                 }
                 catch
                 {
-                    // Invoices table may not exist; allow delete
+                    // Invoices table may not exist; allow truncate
                 }
 
-                string cmdText = "DELETE FROM Customers;";
-                using var cmd = new MySqlCommand(cmdText, connection);
-                cmd.ExecuteNonQuery();
+                // Disable foreign key checks
+                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                disableFK.ExecuteNonQuery();
+
+                // Truncate Customers table
+                using var truncateCmd = new MySqlCommand("TRUNCATE TABLE Customers;", connection, tx);
+                truncateCmd.ExecuteNonQuery();
+
+                // Re-enable foreign key checks
+                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                enableFK.ExecuteNonQuery();
+
+                tx.Commit();
                 return true;
             }
             catch (Exception ex)
             {
-                try
-                {
-                    // As a fallback, attempt FK-off approach for MySQL
-                    using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection);
-                    disableFK.ExecuteNonQuery();
-
-                    using var cmd = new MySqlCommand("DELETE FROM Customers;", connection);
-                    cmd.ExecuteNonQuery();
-
-                    using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection);
-                    enableFK.ExecuteNonQuery();
-                    return true;
-                }
-                catch
-                {
-                    System.Diagnostics.Debug.WriteLine($"DeleteAllCustomers error: {ex.Message}");
-                    return false;
-                }
+                try { tx.Rollback(); } catch { }
+                System.Diagnostics.Debug.WriteLine($"Error truncating customers: {ex.Message}");
+                return false;
             }
         }
 
@@ -1598,8 +1713,50 @@ namespace WpfApp1
             return cmd.ExecuteNonQuery() > 0;
         }
 
+        public static bool DeleteAllCategories()
+        {
+            using var connection = new MySqlConnection(ConnectionString);
+            connection.Open();
+            using var tx = connection.BeginTransaction();
+            try
+            {
 
+                try
+                {
+                    string checkCmd = "SELECT COUNT(*) FROM Products WHERE CategoryId > 0;";
+                    using var check = new MySqlCommand(checkCmd, connection, tx);
+                    long count = (long)check.ExecuteScalar();
+                    if (count > 0)
+                    {
+                        return false; // Categories are in use by products
+                    }
+                }
+                catch
+                {
 
+                }
+                // Disable foreign key checks
+                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                disableFK.ExecuteNonQuery();
+
+                // Truncate Categories table
+                using var truncateCmd = new MySqlCommand("TRUNCATE TABLE Categories;", connection, tx);
+                truncateCmd.ExecuteNonQuery();
+
+                // Re-enable foreign key checks
+                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                enableFK.ExecuteNonQuery();
+
+                tx.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                try { tx.Rollback(); } catch { }
+                System.Diagnostics.Debug.WriteLine($"Error truncating categories: {ex.Message}");
+                return false;
+            }
+        }
 
         /// <summary>
         /// TÃ¡ÂºÂ¡o mÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m duy nhÃ¡ÂºÂ¥t
@@ -1874,26 +2031,6 @@ namespace WpfApp1
             }
         }
 
-        public static int DeleteAllInvoices()
-        {
-            try
-            {
-                using var connection = new MySqlConnection(ConnectionString);
-                connection.Open();
-                using var countCmd = new MySqlCommand("SELECT COUNT(*) FROM Invoices", connection);
-                int count = Convert.ToInt32(countCmd.ExecuteScalar() ?? 0);
-                using var detailsCmd = new MySqlCommand("DELETE FROM InvoiceDetails", connection);
-                detailsCmd.ExecuteNonQuery();
-                using var invoicesCmd = new MySqlCommand("DELETE FROM Invoices", connection);
-                invoicesCmd.ExecuteNonQuery();
-                return count;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Delete all invoices error: {ex.Message}");
-                return 0;
-            }
-        }
 
     }
 }

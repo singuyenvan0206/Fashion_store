@@ -266,10 +266,22 @@ namespace WpfApp1
                 {
                     try
                     {
-                        int deletedCount = DatabaseHelper.DeleteAllInvoices();
+                        // Get count before deletion
+                        int deletedCount = DatabaseHelper.GetTotalInvoices();
                         
-                        MessageBox.Show($"Đã xóa {deletedCount} hóa đơn.\n\nTất cả dữ liệu hóa đơn đã được xóa khỏi hệ thống.", 
-                                      "Xóa hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+                        // Delete all invoices
+                        bool success = DatabaseHelper.DeleteAllInvoices();
+                        
+                        if (success)
+                        {
+                            MessageBox.Show($"Đã xóa {deletedCount} hóa đơn.\n\nTất cả dữ liệu hóa đơn đã được xóa khỏi hệ thống.", 
+                                          "Xóa hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Không thể xóa hóa đơn. Vui lòng thử lại.", 
+                                          "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
                         LoadDatabaseStatistics(); // Refresh statistics
                     }
                     catch (Exception ex)

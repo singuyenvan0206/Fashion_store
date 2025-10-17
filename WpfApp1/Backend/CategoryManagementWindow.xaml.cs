@@ -162,11 +162,27 @@ namespace WpfApp1
             }
         }
 
-        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        private void DeleteAllButton_Click(object sender, RoutedEventArgs e)
         {
-            CategoryNameTextBox.Clear();
-            CategoryListBox.SelectedItem = null;
-            CategoryNameTextBox.Focus();
+            var result = MessageBox.Show(
+                "Bạn có chắc chắn muốn xóa tất cả danh mục không?\n\nHành động này không thể hoàn tác.",
+                "Xác nhận xóa",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            
+            if (result == MessageBoxResult.Yes)
+            {
+                if (DatabaseHelper.DeleteAllCategories())
+                {
+                    LoadCategories();
+                    CategoryNameTextBox.Clear();
+                    MessageBox.Show("Tất cả danh mục đã được xóa thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể xóa tất cả danh mục. Có thể có các sản phẩm đang sử dụng các danh mục này.", "Xóa thất bại", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
         }
     }
 }

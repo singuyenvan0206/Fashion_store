@@ -1,15 +1,14 @@
 using System;
 using System.IO;
-using MySql.Data.MySqlClient;
+using Microsoft.Data.Sqlite;
 
 namespace WpfApp1
 {
 	public class SettingsConfig
 	{
-		public string Server { get; set; } = "localhost";
-		public string Database { get; set; } = "accountsdb";
-		public string UserId { get; set; } = "root";
-		public string Password { get; set; } = "";
+		public string DatabasePath { get; set; } = Path.Combine(
+			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+			"WpfApp1", "main.db");
 	}
 
 	public static class SettingsManager
@@ -55,31 +54,19 @@ namespace WpfApp1
 		public static string BuildConnectionString()
 		{
 			var c = Load();
-			var csb = new MySqlConnectionStringBuilder
-			{
-				Server = c.Server,
-				Database = c.Database,
-				UserID = c.UserId,
-				Password = c.Password,
-				CharacterSet = "utf8mb4",
-				AllowUserVariables = true,
-				DefaultCommandTimeout = 30
-			};
-			return csb.ConnectionString;
+			// Ensure directory exists
+			Directory.CreateDirectory(Path.GetDirectoryName(c.DatabasePath)!);
+			return $"Data Source={c.DatabasePath}";
 		}
 
 		public static bool TestConnection(SettingsConfig cfg, out string message)
 		{
 			try
 			{
-				var csb = new MySqlConnectionStringBuilder
-				{
-					Server = cfg.Server,
-					Database = cfg.Database,
-					UserID = cfg.UserId,
-					Password = cfg.Password
-				};
-				using var conn = new MySqlConnection(csb.ConnectionString);
+				// Ensure directory exists
+				Directory.CreateDirectory(Path.GetDirectoryName(cfg.DatabasePath)!);
+				var connectionString = $"Data Source={cfg.DatabasePath}";
+				using var conn = new SqliteConnection(connectionString);
 				conn.Open();
 				message = "Connection successful.";
 				return true;

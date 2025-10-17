@@ -21,7 +21,7 @@ namespace WpfApp1
         {
             try
             {
-                // Close all opened windows just in case
+
                 foreach (Window w in Current.Windows)
                 {
                     try { w.Close(); } catch { }
@@ -31,14 +31,12 @@ namespace WpfApp1
 
             try
             {
-                // Force cleanup of MySQL connection pool
-                MySql.Data.MySqlClient.MySqlConnection.ClearAllPools();
+
             }
             catch { }
 
             try
             {
-                // Force garbage collection to cleanup any remaining resources
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 GC.Collect();

@@ -1,4 +1,4 @@
-using MySql.Data.MySqlClient;
+using Microsoft.Data.Sqlite;
 
 namespace WpfApp1
 {
@@ -10,96 +10,111 @@ namespace WpfApp1
         public static void InitializeDatabase()
         {
 
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
+            
+            // Enable foreign key constraints
+            using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection);
+            enableFK.ExecuteNonQuery();
 
             string tableCmd = @"CREATE TABLE IF NOT EXISTS Accounts (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Username VARCHAR(255) NOT NULL UNIQUE,
-                Password VARCHAR(255) NOT NULL,
-                Role VARCHAR(20) NOT NULL DEFAULT 'Cashier'
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Username TEXT NOT NULL UNIQUE,
+                Password TEXT NOT NULL,
+                Role TEXT NOT NULL DEFAULT 'Cashier'
             );";
-            using var cmd = new MySqlCommand(tableCmd, connection);
+            using var cmd = new SqliteCommand(tableCmd, connection);
             cmd.ExecuteNonQuery();
 
 
             string categoryCmd = @"CREATE TABLE IF NOT EXISTS Categories (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Name VARCHAR(255) NOT NULL UNIQUE
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL UNIQUE
             );";
-            using var catCmd = new MySqlCommand(categoryCmd, connection);
+            using var catCmd = new SqliteCommand(categoryCmd, connection);
             catCmd.ExecuteNonQuery();
 
             string productCmd = @"CREATE TABLE IF NOT EXISTS Products (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Name VARCHAR(255) NOT NULL,
-                Code VARCHAR(50) UNIQUE,
-                CategoryId INT,
-                SalePrice DECIMAL(10,2) NOT NULL,
-                StockQuantity INT NOT NULL DEFAULT 0,
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                Code TEXT UNIQUE,
+                CategoryId INTEGER,
+                SalePrice REAL NOT NULL,
+                StockQuantity INTEGER NOT NULL DEFAULT 0,
                 Description TEXT,
                 CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UpdatedDate DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                UpdatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
             );";
-            using var prodCmd = new MySqlCommand(productCmd, connection);
+            using var prodCmd = new SqliteCommand(productCmd, connection);
             prodCmd.ExecuteNonQuery();
 
             string customerCmd = @"CREATE TABLE IF NOT EXISTS Customers (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                Name VARCHAR(255) NOT NULL,
-                Phone VARCHAR(20),
-                Email VARCHAR(255),
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                Phone TEXT,
+                Email TEXT,
                 Address TEXT,
-                CustomerType VARCHAR(50) DEFAULT 'Regular',
-                Points INT NOT NULL DEFAULT 0,
-                UpdatedDate DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                CustomerType TEXT DEFAULT 'Regular',
+                Points INTEGER NOT NULL DEFAULT 0,
+                UpdatedDate DATETIME DEFAULT CURRENT_TIMESTAMP
             );";
-            using var custCmd = new MySqlCommand(customerCmd, connection);
+            using var custCmd = new SqliteCommand(customerCmd, connection);
             custCmd.ExecuteNonQuery();
 
             try
             {
-                using var checkPoints = new MySqlCommand("SHOW COLUMNS FROM Customers LIKE 'Points';", connection);
-                var pointsExists = checkPoints.ExecuteScalar();
-                if (pointsExists == null)
+                using var checkPoints = new SqliteCommand("PRAGMA table_info(Customers);", connection);
+                using var reader = checkPoints.ExecuteReader();
+                bool pointsExists = false;
+                while (reader.Read())
                 {
-                    using var addPoints = new MySqlCommand("ALTER TABLE Customers ADD COLUMN Points INT NOT NULL DEFAULT 0;", connection);
+                    if (reader.GetString(1) == "Points")
+                    {
+                        pointsExists = true;
+                        break;
+                    }
+                }
+                reader.Close();
+                
+                if (!pointsExists)
+                {
+                    using var addPoints = new SqliteCommand("ALTER TABLE Customers ADD COLUMN Points INTEGER NOT NULL DEFAULT 0;", connection);
                     addPoints.ExecuteNonQuery();
                 }
             }
             catch { }
 
             string invoicesCmd = @"CREATE TABLE IF NOT EXISTS Invoices (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                CustomerId INT NOT NULL,
-                EmployeeId INT NOT NULL,
-                Subtotal DECIMAL(12,2) NOT NULL,
-                TaxPercent DECIMAL(5,2) NOT NULL DEFAULT 0,
-                TaxAmount DECIMAL(12,2) NOT NULL DEFAULT 0,
-                Discount DECIMAL(12,2) NOT NULL DEFAULT 0,
-                Total DECIMAL(12,2) NOT NULL,
-                Paid DECIMAL(12,2) NOT NULL DEFAULT 0,
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                CustomerId INTEGER NOT NULL,
+                EmployeeId INTEGER NOT NULL,
+                Subtotal REAL NOT NULL,
+                TaxPercent REAL NOT NULL DEFAULT 0,
+                TaxAmount REAL NOT NULL DEFAULT 0,
+                Discount REAL NOT NULL DEFAULT 0,
+                Total REAL NOT NULL,
+                Paid REAL NOT NULL DEFAULT 0,
                 CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (CustomerId) REFERENCES Customers(Id),
                 FOREIGN KEY (EmployeeId) REFERENCES Accounts(Id)
             );";
-            using var invCmd = new MySqlCommand(invoicesCmd, connection);
+            using var invCmd = new SqliteCommand(invoicesCmd, connection);
             invCmd.ExecuteNonQuery();
 
             string invoiceItemsCmd = @"CREATE TABLE IF NOT EXISTS InvoiceItems (
-                Id INT AUTO_INCREMENT PRIMARY KEY,
-                InvoiceId INT NOT NULL,
-                ProductId INT NOT NULL,
-                EmployeeId INT NOT NULL,
-                UnitPrice DECIMAL(12,2) NOT NULL,
-                Quantity INT NOT NULL,
-                LineTotal DECIMAL(12,2) NOT NULL,
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                InvoiceId INTEGER NOT NULL,
+                ProductId INTEGER NOT NULL,
+                EmployeeId INTEGER NOT NULL,
+                UnitPrice REAL NOT NULL,
+                Quantity INTEGER NOT NULL,
+                LineTotal REAL NOT NULL,
                 FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE,
                 FOREIGN KEY (ProductId) REFERENCES Products(Id),
                 FOREIGN KEY (EmployeeId) REFERENCES Accounts(Id)
             );";
-            using var invItemsCmd = new MySqlCommand(invoiceItemsCmd, connection);
+            using var invItemsCmd = new SqliteCommand(invoiceItemsCmd, connection);
             invItemsCmd.ExecuteNonQuery();
 
             UpdateProductsTable(connection);
@@ -108,81 +123,89 @@ namespace WpfApp1
             FixExistingProductData(connection);
 
             string checkAdminCmd = "SELECT COUNT(*) FROM Accounts WHERE Username='admin';";
-            using var checkCmd = new MySqlCommand(checkAdminCmd, connection);
+            using var checkCmd = new SqliteCommand(checkAdminCmd, connection);
             long adminExists = (long)checkCmd.ExecuteScalar();
             if (adminExists == 0)
             {
                 string insertAdminCmd = "INSERT INTO Accounts (Username, Password, Role) VALUES ('admin', 'admin', 'Admin');";
-                using var insertCmd = new MySqlCommand(insertAdminCmd, connection);
+                using var insertCmd = new SqliteCommand(insertAdminCmd, connection);
                 insertCmd.ExecuteNonQuery();
             }
         }
 
         
 
-        private static void UpdateProductsTable(MySqlConnection connection)
+        private static void UpdateProductsTable(SqliteConnection connection)
         {
             try
             {
                 // Check if Code column exists
-                string checkCodeCmd = "SHOW COLUMNS FROM Products LIKE 'Code';";
-                using var checkCode = new MySqlCommand(checkCodeCmd, connection);
-                var codeExists = checkCode.ExecuteScalar();
-
-                if (codeExists == null)
+                using var checkCode = new SqliteCommand("PRAGMA table_info(Products);", connection);
+                using var reader = checkCode.ExecuteReader();
+                bool codeExists = false;
+                while (reader.Read())
                 {
-                    // Add Code column without UNIQUE constraint first
-                    string addCodeCmd = "ALTER TABLE Products ADD COLUMN Code VARCHAR(50);";
-                    using var addCode = new MySqlCommand(addCodeCmd, connection);
+                    if (reader.GetString(1) == "Code")
+                    {
+                        codeExists = true;
+                        break;
+                    }
+                }
+                reader.Close();
+
+                if (!codeExists)
+                {
+                    // Add Code column
+                    string addCodeCmd = "ALTER TABLE Products ADD COLUMN Code TEXT;";
+                    using var addCode = new SqliteCommand(addCodeCmd, connection);
                     addCode.ExecuteNonQuery();
 
-                    // Update existing records to have unique codes
-                    string updateCodesCmd = "UPDATE Products SET Code = CONCAT('PROD', LPAD(Id, 4, '0')) WHERE Code IS NULL OR Code = '';";
-                    using var updateCodes = new MySqlCommand(updateCodesCmd, connection);
+                    // Update existing records to have unique codes (SQLite doesn't have LPAD, use printf)
+                    string updateCodesCmd = "UPDATE Products SET Code = 'PROD' || printf('%04d', Id) WHERE Code IS NULL OR Code = '';";
+                    using var updateCodes = new SqliteCommand(updateCodesCmd, connection);
                     updateCodes.ExecuteNonQuery();
 
-                    // Now add UNIQUE constraint
-                    string addUniqueCmd = "ALTER TABLE Products ADD UNIQUE (Code);";
-                    using var addUnique = new MySqlCommand(addUniqueCmd, connection);
-                    addUnique.ExecuteNonQuery();
+                    // SQLite doesn't support adding UNIQUE constraint to existing column easily
+                    // The constraint should be added during table creation
                 }
 
                 // Check if Description column exists
-                string checkDescCmd = "SHOW COLUMNS FROM Products LIKE 'Description';";
-                using var checkDesc = new MySqlCommand(checkDescCmd, connection);
-                var descExists = checkDesc.ExecuteScalar();
+                using var checkDesc = new SqliteCommand("PRAGMA table_info(Products);", connection);
+                using var reader2 = checkDesc.ExecuteReader();
+                bool descExists = false;
+                bool createdExists = false;
+                bool updatedExists = false;
+                
+                while (reader2.Read())
+                {
+                    string columnName = reader2.GetString(1);
+                    if (columnName == "Description") descExists = true;
+                    if (columnName == "CreatedDate") createdExists = true;
+                    if (columnName == "UpdatedDate") updatedExists = true;
+                }
+                reader2.Close();
 
-                if (descExists == null)
+                if (!descExists)
                 {
                     // Add Description column
                     string addDescCmd = "ALTER TABLE Products ADD COLUMN Description TEXT;";
-                    using var addDesc = new MySqlCommand(addDescCmd, connection);
+                    using var addDesc = new SqliteCommand(addDescCmd, connection);
                     addDesc.ExecuteNonQuery();
                 }
 
-                // Check if CreatedDate column exists
-                string checkCreatedCmd = "SHOW COLUMNS FROM Products LIKE 'CreatedDate';";
-                using var checkCreated = new MySqlCommand(checkCreatedCmd, connection);
-                var createdExists = checkCreated.ExecuteScalar();
-
-                if (createdExists == null)
+                if (!createdExists)
                 {
                     // Add CreatedDate column
                     string addCreatedCmd = "ALTER TABLE Products ADD COLUMN CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP;";
-                    using var addCreated = new MySqlCommand(addCreatedCmd, connection);
+                    using var addCreated = new SqliteCommand(addCreatedCmd, connection);
                     addCreated.ExecuteNonQuery();
                 }
 
-                // Check if UpdatedDate column exists
-                string checkUpdatedCmd = "SHOW COLUMNS FROM Products LIKE 'UpdatedDate';";
-                using var checkUpdated = new MySqlCommand(checkUpdatedCmd, connection);
-                var updatedExists = checkUpdated.ExecuteScalar();
-
-                if (updatedExists == null)
+                if (!updatedExists)
                 {
-                    // Add UpdatedDate column
-                    string addUpdatedCmd = "ALTER TABLE Products ADD COLUMN UpdatedDate DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;";
-                    using var addUpdated = new MySqlCommand(addUpdatedCmd, connection);
+                    // Add UpdatedDate column (SQLite doesn't support ON UPDATE CURRENT_TIMESTAMP)
+                    string addUpdatedCmd = "ALTER TABLE Products ADD COLUMN UpdatedDate DATETIME DEFAULT CURRENT_TIMESTAMP;";
+                    using var addUpdated = new SqliteCommand(addUpdatedCmd, connection);
                     addUpdated.ExecuteNonQuery();
                 }
             }
@@ -193,24 +216,27 @@ namespace WpfApp1
             }
         }
 
-        private static void FixExistingProductData(MySqlConnection connection)
+        private static void FixExistingProductData(SqliteConnection connection)
         {
             try
             {
                 // Check if there are any NULL or empty codes and fix them
-                string fixCodesCmd = "UPDATE Products SET Code = CONCAT('PROD', LPAD(Id, 4, '0')) WHERE Code IS NULL OR Code = '';";
-                using var fixCodes = new MySqlCommand(fixCodesCmd, connection);
+                string fixCodesCmd = "UPDATE Products SET Code = 'PROD' || printf('%04d', Id) WHERE Code IS NULL OR Code = '';";
+                using var fixCodes = new SqliteCommand(fixCodesCmd, connection);
                 fixCodes.ExecuteNonQuery();
 
-                // Check for duplicate codes and fix them
+                // Check for duplicate codes and fix them (SQLite doesn't have RAND(), use random())
                 string checkDuplicatesCmd = @"
-                    UPDATE Products p1 
-                    SET Code = CONCAT('PROD', LPAD(p1.Id, 4, '0'), '_', FLOOR(RAND() * 1000))
-                    WHERE EXISTS (
-                        SELECT 1 FROM Products p2 
-                        WHERE p2.Code = p1.Code AND p2.Id != p1.Id
+                    UPDATE Products 
+                    SET Code = 'PROD' || printf('%04d', Id) || '_' || (abs(random()) % 1000)
+                    WHERE Id IN (
+                        SELECT p1.Id FROM Products p1
+                        WHERE EXISTS (
+                            SELECT 1 FROM Products p2 
+                            WHERE p2.Code = p1.Code AND p2.Id != p1.Id
+                        )
                     );";
-                using var fixDuplicates = new MySqlCommand(checkDuplicatesCmd, connection);
+                using var fixDuplicates = new SqliteCommand(checkDuplicatesCmd, connection);
                 fixDuplicates.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -222,10 +248,10 @@ namespace WpfApp1
 
         public static bool RegisterAccount(string username, string employeeName, string password, string role = "Cashier")
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string insertCmd = "INSERT INTO Accounts (Username, EmployeeName, Password, Role) VALUES (@username, @employeeName, @password, @role);";
-            using var cmd = new MySqlCommand(insertCmd, connection);
+            using var cmd = new SqliteCommand(insertCmd, connection);
             cmd.Parameters.AddWithValue("@username", username);
             cmd.Parameters.AddWithValue("@employeeName", employeeName);
             cmd.Parameters.AddWithValue("@password", password);
@@ -241,17 +267,13 @@ namespace WpfApp1
             }
         }
 
-        public static bool RegisterAccount(string username, string password, string role = "Cashier")
-        {
-            return RegisterAccount(username, username, password, role);
-        }
 
         public static string ValidateLogin(string username, string password)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string selectCmd = "SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@password;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
+            using var cmd = new SqliteCommand(selectCmd, connection);
             cmd.Parameters.AddWithValue("@username", username);
             cmd.Parameters.AddWithValue("@password", password);
             long count = (long)cmd.ExecuteScalar();
@@ -260,10 +282,10 @@ namespace WpfApp1
 
         public static string GetUserRole(string username)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string selectCmd = "SELECT Role FROM Accounts WHERE Username=@username;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
+            using var cmd = new SqliteCommand(selectCmd, connection);
             cmd.Parameters.AddWithValue("@username", username);
             var result = cmd.ExecuteScalar();
             return result?.ToString() ?? "Cashier";
@@ -283,11 +305,11 @@ namespace WpfApp1
 
         public static bool ChangePassword(string username, string oldPassword, string newPassword)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
             string verifyCmd = "SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@oldPassword;";
-            using var verify = new MySqlCommand(verifyCmd, connection);
+            using var verify = new SqliteCommand(verifyCmd, connection);
             verify.Parameters.AddWithValue("@username", username);
             verify.Parameters.AddWithValue("@oldPassword", oldPassword);
             long count = (long)verify.ExecuteScalar();
@@ -296,7 +318,7 @@ namespace WpfApp1
                 return false;
 
             string updateCmd = "UPDATE Accounts SET Password=@newPassword WHERE Username=@username;";
-            using var update = new MySqlCommand(updateCmd, connection);
+            using var update = new SqliteCommand(updateCmd, connection);
             update.Parameters.AddWithValue("@username", username);
             update.Parameters.AddWithValue("@newPassword", newPassword);
             return update.ExecuteNonQuery() > 0;
@@ -305,10 +327,10 @@ namespace WpfApp1
         public static List<(int Id, string Username, string EmployeeName)> GetAllAccounts()
         {
             var accounts = new List<(int, string, string)>();
-            using var connection2 = new MySqlConnection(ConnectionString);
+            using var connection2 = new SqliteConnection(ConnectionString);
             connection2.Open();
             string selectCmd = "SELECT Id, Username, COALESCE(EmployeeName, '') FROM Accounts;";
-            using var cmd2 = new MySqlCommand(selectCmd, connection2);
+            using var cmd2 = new SqliteCommand(selectCmd, connection2);
             using var reader2 = cmd2.ExecuteReader();
             while (reader2.Read())
             {
@@ -321,10 +343,10 @@ namespace WpfApp1
         {
             try
             {
-                using var connection = new MySqlConnection(ConnectionString);
+                using var connection = new SqliteConnection(ConnectionString);
                 connection.Open();
                 string selectCmd = "SELECT Id FROM Accounts WHERE Username = @username;";
-                using var cmd = new MySqlCommand(selectCmd, connection);
+                using var cmd = new SqliteCommand(selectCmd, connection);
                 cmd.Parameters.AddWithValue("@username", username);
                 var result = cmd.ExecuteScalar();
                 
@@ -349,10 +371,10 @@ namespace WpfApp1
 
         public static bool DeleteAccount(string username)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string deleteCmd = "DELETE FROM Accounts WHERE Username=@username;";
-            using var cmd = new MySqlCommand(deleteCmd, connection);
+            using var cmd = new SqliteCommand(deleteCmd, connection);
             cmd.Parameters.AddWithValue("@username", username);
             return cmd.ExecuteNonQuery() > 0;
         }
@@ -360,14 +382,14 @@ namespace WpfApp1
 
         public static bool DeleteAllAccountsExceptAdmin()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
+            // SQLite doesn't need SET NAMES
 
             try
             {
                 string sql = "DELETE FROM Accounts WHERE LOWER(Username) <> 'admin';";
-                using var cmd = new MySqlCommand(sql, connection);
+                using var cmd = new SqliteCommand(sql, connection);
                 cmd.ExecuteNonQuery();
                 return true;
             }
@@ -381,18 +403,28 @@ namespace WpfApp1
 
         public static bool AddProduct(string name, string code, int categoryId, decimal salePrice, decimal purchasePrice, string purchaseUnit, int stockQuantity, string description = "")
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
-            string checkColumnCmd = "SHOW COLUMNS FROM Products LIKE 'SalePrice';";
-            using var checkColumn = new MySqlCommand(checkColumnCmd, connection);
-            var salePriceExists = checkColumn.ExecuteScalar();
+            // Check if SalePrice column exists using PRAGMA table_info
+            using var checkColumn = new SqliteCommand("PRAGMA table_info(Products)", connection);
+            using var columnReader = checkColumn.ExecuteReader();
+            bool salePriceExists = false;
+            while (columnReader.Read())
+            {
+                if (columnReader.GetString(1) == "SalePrice")
+                {
+                    salePriceExists = true;
+                    break;
+                }
+            }
+            columnReader.Close();
 
             string cmdText;
-            if (salePriceExists != null)
+            if (salePriceExists)
             {
                 cmdText = "INSERT INTO Products (Name, Code, CategoryId, SalePrice, PurchasePrice, PurchaseUnit, StockQuantity, Description) VALUES (@name, @code, @categoryId, @salePrice, @purchasePrice, @purchaseUnit, @stockQuantity, @description);";
-                using var cmd = new MySqlCommand(cmdText, connection);
+                using var cmd = new SqliteCommand(cmdText, connection);
                 cmd.Parameters.AddWithValue("@name", name);
                 cmd.Parameters.AddWithValue("@code", code);
                 cmd.Parameters.AddWithValue("@categoryId", categoryId);
@@ -414,7 +446,7 @@ namespace WpfApp1
             else
             {
                 cmdText = "INSERT INTO Products (Name, Code, CategoryId, Price, StockQuantity, Description) VALUES (@name, @code, @categoryId, @price, @stockQuantity, @description);";
-                using var cmd = new MySqlCommand(cmdText, connection);
+                using var cmd = new SqliteCommand(cmdText, connection);
                 cmd.Parameters.AddWithValue("@name", name);
                 cmd.Parameters.AddWithValue("@code", code);
                 cmd.Parameters.AddWithValue("@categoryId", categoryId);
@@ -439,93 +471,31 @@ namespace WpfApp1
             return AddProduct(name, code, categoryId, price, Math.Round(price * 0.8m, 2), "Piece", stockQuantity, description);
         }
 
-        /// <summary>
-        /// Debug method to test product addition with detailed error reporting
-        /// </summary>
-        public static string TestAddProduct(string name, string code, int categoryId, decimal price, int stockQuantity, string description = "")
-        {
-            var result = new System.Text.StringBuilder();
-            result.AppendLine($"=== TEST THÃƒÅ M SÃ¡ÂºÂ¢N PHÃ¡ÂºÂ¨M: {name} ===");
-
-            try
-            {
-                using var connection = new MySqlConnection(ConnectionString);
-                connection.Open();
-                result.AppendLine("Ã¢Å“â€¦ KÃ¡ÂºÂ¿t nÃ¡Â»â€˜i database thÃƒÂ nh cÃƒÂ´ng");
-
-                string checkCategoryCmd = "SELECT COUNT(*) FROM Categories WHERE Id = @categoryId;";
-                using var checkCat = new MySqlCommand(checkCategoryCmd, connection);
-                checkCat.Parameters.AddWithValue("@categoryId", categoryId);
-                int categoryExists = Convert.ToInt32(checkCat.ExecuteScalar());
-
-                if (categoryExists == 0)
-                {
-                    result.AppendLine($"Ã¢ÂÅ’ Danh mÃ¡Â»Â¥c ID {categoryId} khÃƒÂ´ng tÃ¡Â»â€œn tÃ¡ÂºÂ¡i!");
-
-                    string listCategoriesCmd = "SELECT Id, Name FROM Categories ORDER BY Id;";
-                    using var listCat = new MySqlCommand(listCategoriesCmd, connection);
-                    using var reader = listCat.ExecuteReader();
-                    result.AppendLine("Ã°Å¸â€œâ€¹ Danh mÃ¡Â»Â¥c cÃƒÂ³ sÃ¡ÂºÂµn:");
-                    while (reader.Read())
-                    {
-                        result.AppendLine($"  - ID: {reader["Id"]}, TÃƒÂªn: {reader["Name"]}");
-                    }
-                    reader.Close();
-                    return result.ToString();
-                }
-                result.AppendLine($"Ã¢Å“â€¦ Danh mÃ¡Â»Â¥c ID {categoryId} tÃ¡Â»â€œn tÃ¡ÂºÂ¡i");
-
-                string checkCodeCmd = "SELECT COUNT(*) FROM Products WHERE Code = @code;";
-                using var checkCode = new MySqlCommand(checkCodeCmd, connection);
-                checkCode.Parameters.AddWithValue("@code", code);
-                int codeExists = Convert.ToInt32(checkCode.ExecuteScalar());
-
-                if (codeExists > 0)
-                {
-                    result.AppendLine($"Ã¢ÂÅ’ MÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{code}' Ã„â€˜ÃƒÂ£ tÃ¡Â»â€œn tÃ¡ÂºÂ¡i!");
-                    return result.ToString();
-                }
-                result.AppendLine($"Ã¢Å“â€¦ MÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{code}' chÃ†Â°a tÃ¡Â»â€œn tÃ¡ÂºÂ¡i");
-
-                string insertCmd = "INSERT INTO Products (Name, Code, CategoryId, SalePrice, StockQuantity, Description) VALUES (@name, @code, @categoryId, @saleprice, @stockQuantity, @description);";
-                using var cmd = new MySqlCommand(insertCmd, connection);
-                cmd.Parameters.AddWithValue("@name", name);
-                cmd.Parameters.AddWithValue("@code", code);
-                cmd.Parameters.AddWithValue("@categoryId", categoryId);
-                cmd.Parameters.AddWithValue("@saleprice", price);
-                cmd.Parameters.AddWithValue("@stockQuantity", stockQuantity);
-                cmd.Parameters.AddWithValue("@description", description);
-
-                int rowsAffected = cmd.ExecuteNonQuery();
-                if (rowsAffected > 0)
-                {
-                    result.AppendLine($"Ã¢Å“â€¦ ThÃƒÂªm sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{name}' thÃƒÂ nh cÃƒÂ´ng!");
-                }
-                else
-                {
-                    result.AppendLine($"Ã¢ÂÅ’ KhÃƒÂ´ng thÃ¡Â»Æ’ thÃƒÂªm sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m '{name}'");
-                }
-            }
-            catch (Exception ex)
-            {
-                result.AppendLine($"Ã¢ÂÅ’ LÃ¡Â»â€”i: {ex.Message}");
-            }
-
-            return result.ToString();
-        }
+ 
+ 
 
         public static List<(int Id, string Name, string Code, int CategoryId, decimal SalePrice, int StockQuantity, string Description)> GetAllProducts()
         {
             var products = new List<(int, string, string, int, decimal, int, string)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
-            string checkColumnCmd = "SHOW COLUMNS FROM Products LIKE 'SalePrice';";
-            using var checkColumn = new MySqlCommand(checkColumnCmd, connection);
-            var salePriceExists = checkColumn.ExecuteScalar();
+            // Check if SalePrice column exists using PRAGMA table_info
+            using var checkColumn = new SqliteCommand("PRAGMA table_info(Products)", connection);
+            using var columnReader = checkColumn.ExecuteReader();
+            bool salePriceExists = false;
+            while (columnReader.Read())
+            {
+                if (columnReader.GetString(1) == "SalePrice")
+                {
+                    salePriceExists = true;
+                    break;
+                }
+            }
+            columnReader.Close();
 
             string cmdText;
-            if (salePriceExists != null)
+            if (salePriceExists)
             {
                 cmdText = "SELECT Id, Name, Code, CategoryId, SalePrice, StockQuantity, Description FROM Products ORDER BY Name;";
             }
@@ -534,7 +504,7 @@ namespace WpfApp1
                 cmdText = "SELECT Id, Name, Code, CategoryId, Price, StockQuantity, Description FROM Products ORDER BY Name;";
             }
 
-            using var cmd = new MySqlCommand(cmdText, connection);
+            using var cmd = new SqliteCommand(cmdText, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -554,13 +524,13 @@ namespace WpfApp1
         public static List<(int Id, string Name, string Code, int CategoryId, string CategoryName, decimal Price, int StockQuantity, string Description)> GetAllProductsWithCategories()
         {
             var products = new List<(int, string, string, int, string, decimal, int, string)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string cmdText = @"SELECT p.Id, p.Name, p.Code, p.CategoryId, c.Name as CategoryName, p.SalePrice, p.StockQuantity, p.Description 
                               FROM Products p 
                               LEFT JOIN Categories c ON p.CategoryId = c.Id 
                               ORDER BY p.Name;";
-            using var cmd = new MySqlCommand(cmdText, connection);
+            using var cmd = new SqliteCommand(cmdText, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -580,10 +550,10 @@ namespace WpfApp1
 
         public static bool UpdateProduct(int id, string name, string code, int categoryId, decimal price, int stockQuantity, string description = "")
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string cmdText = "UPDATE Products SET Name=@name, Code=@code, CategoryId=@categoryId, SalePrice=@saleprice, StockQuantity=@stockQuantity, Description=@description WHERE Id=@id;";
-            using var cmd = new MySqlCommand(cmdText, connection);
+            using var cmd = new SqliteCommand(cmdText, connection);
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Parameters.AddWithValue("@code", code);
@@ -603,14 +573,14 @@ namespace WpfApp1
 
         public static bool DeleteProduct(int id)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
             // Check if product is used by any invoices (when we implement them)
             try
             {
                 string checkCmd = "SELECT COUNT(*) FROM InvoiceItems WHERE ProductId=@id;";
-                using var check = new MySqlCommand(checkCmd, connection);
+                using var check = new SqliteCommand(checkCmd, connection);
                 check.Parameters.AddWithValue("@id", id);
                 long count = (long)check.ExecuteScalar();
 
@@ -628,7 +598,7 @@ namespace WpfApp1
             {
                 // First, try to delete normally
                 string cmdText = "DELETE FROM Products WHERE Id=@id;";
-                using var cmd = new MySqlCommand(cmdText, connection);
+                using var cmd = new SqliteCommand(cmdText, connection);
                 cmd.Parameters.AddWithValue("@id", id);
                 int result = cmd.ExecuteNonQuery();
                 return result > 0;
@@ -641,17 +611,17 @@ namespace WpfApp1
                     System.Diagnostics.Debug.WriteLine($"Normal delete failed: {ex.Message}, trying with FK checks disabled");
 
                     // Disable foreign key checks temporarily
-                    using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection);
+                    using var disableFK = new SqliteCommand("PRAGMA foreign_keys = OFF;", connection);
                     disableFK.ExecuteNonQuery();
 
                     // Try delete again
                     string cmdText = "DELETE FROM Products WHERE Id=@id;";
-                    using var cmd = new MySqlCommand(cmdText, connection);
+                    using var cmd = new SqliteCommand(cmdText, connection);
                     cmd.Parameters.AddWithValue("@id", id);
                     int result = cmd.ExecuteNonQuery();
 
                     // Re-enable foreign key checks
-                    using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection);
+                    using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection);
                     enableFK.ExecuteNonQuery();
 
                     return result > 0;
@@ -667,7 +637,7 @@ namespace WpfApp1
 
         public static bool DeleteAllProducts()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             using var tx = connection.BeginTransaction();
             try
@@ -676,7 +646,7 @@ namespace WpfApp1
                 try
                 {
                     string checkCmd = "SELECT COUNT(*) FROM InvoiceItems;";
-                    using var check = new MySqlCommand(checkCmd, connection, tx);
+                    using var check = new SqliteCommand(checkCmd, connection, tx);
                     long count = (long)check.ExecuteScalar();
 
                     if (count > 0)
@@ -690,15 +660,19 @@ namespace WpfApp1
                 }
 
                 // Disable foreign key checks
-                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                using var disableFK = new SqliteCommand("PRAGMA foreign_keys = OFF;", connection, tx);
                 disableFK.ExecuteNonQuery();
 
                 // Truncate Products table
-                using var truncateCmd = new MySqlCommand("TRUNCATE TABLE Products;", connection, tx);
+                using var truncateCmd = new SqliteCommand("DELETE FROM Products;", connection, tx);
                 truncateCmd.ExecuteNonQuery();
 
+                // Reset auto-increment counter
+                using var resetCmd = new SqliteCommand("DELETE FROM sqlite_sequence WHERE name='Products';", connection, tx);
+                resetCmd.ExecuteNonQuery();
+
                 // Re-enable foreign key checks
-                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection, tx);
                 enableFK.ExecuteNonQuery();
 
                 tx.Commit();
@@ -733,7 +707,7 @@ namespace WpfApp1
 
                 if (idxName < 0 || idxPrice < 0)
                 {
-                    return -1; // required columns missing
+                    return -1;
                 }
 
                 int successCount = 0;
@@ -859,14 +833,14 @@ namespace WpfApp1
                 // Normalize category name
                 name = name.Trim();
                 
-                using var connection = new MySqlConnection(ConnectionString);
+                using var connection = new SqliteConnection(ConnectionString);
                 connection.Open();
-                try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
+                // SQLite doesn't need SET NAMES
 
                 System.Diagnostics.Debug.WriteLine($"EnsureCategory: Checking for category '{name}'");
 
                 // Check if category exists
-                using (var getCmd = new MySqlCommand("SELECT Id FROM Categories WHERE Name=@n;", connection))
+                using (var getCmd = new SqliteCommand("SELECT Id FROM Categories WHERE Name=@n;", connection))
                 {
                     getCmd.Parameters.AddWithValue("@n", name);
                     var idObj = getCmd.ExecuteScalar();
@@ -881,7 +855,7 @@ namespace WpfApp1
                 System.Diagnostics.Debug.WriteLine($"EnsureCategory: Creating new category '{name}'");
 
                 // Create new category
-                using (var insCmd = new MySqlCommand("INSERT INTO Categories (Name) VALUES (@n);", connection))
+                using (var insCmd = new SqliteCommand("INSERT INTO Categories (Name) VALUES (@n);", connection))
                 {
                     insCmd.Parameters.AddWithValue("@n", name);
                     int rowsAffected = insCmd.ExecuteNonQuery();
@@ -889,7 +863,7 @@ namespace WpfApp1
                     if (rowsAffected > 0)
                     {
                         // Get the inserted ID
-                        using var lastIdCmd = new MySqlCommand("SELECT LAST_INSERT_ID();", connection);
+                        using var lastIdCmd = new SqliteCommand("SELECT last_insert_rowid();", connection);
                         var newIdObj = lastIdCmd.ExecuteScalar();
                         if (newIdObj != null)
                         {
@@ -976,15 +950,47 @@ namespace WpfApp1
             decimal paid,
             List<(int ProductId, int Quantity, decimal UnitPrice)> items)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
+            
+            // Ensure foreign key constraints are enabled
+            using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection);
+            enableFK.ExecuteNonQuery();
             using var tx = connection.BeginTransaction();
             try
             {
+                // Validate foreign keys before inserting
+                // Check if customer exists
+                using var checkCustomer = new SqliteCommand("SELECT COUNT(*) FROM Customers WHERE Id = @customerId", connection, tx);
+                checkCustomer.Parameters.AddWithValue("@customerId", customerId);
+                if (Convert.ToInt32(checkCustomer.ExecuteScalar()) == 0)
+                {
+                    throw new Exception($"Customer with ID {customerId} does not exist");
+                }
+
+                // Check if employee exists
+                using var checkEmployee = new SqliteCommand("SELECT COUNT(*) FROM Accounts WHERE Id = @employeeId", connection, tx);
+                checkEmployee.Parameters.AddWithValue("@employeeId", employeeId);
+                if (Convert.ToInt32(checkEmployee.ExecuteScalar()) == 0)
+                {
+                    throw new Exception($"Employee with ID {employeeId} does not exist");
+                }
+
+                // Validate all products exist
+                foreach (var (productId, _, _) in items)
+                {
+                    using var checkProduct = new SqliteCommand("SELECT COUNT(*) FROM Products WHERE Id = @productId", connection, tx);
+                    checkProduct.Parameters.AddWithValue("@productId", productId);
+                    if (Convert.ToInt32(checkProduct.ExecuteScalar()) == 0)
+                    {
+                        throw new Exception($"Product with ID {productId} does not exist");
+                    }
+                }
+
                 string insertInvoice = @"INSERT INTO Invoices (CustomerId, EmployeeId, Subtotal, TaxPercent, TaxAmount, Discount, Total, Paid)
                                          VALUES (@CustomerId, @EmployeeId, @Subtotal, @TaxPercent, @TaxAmount, @Discount, @Total, @Paid);
-                                         SELECT LAST_INSERT_ID();";
-                using var invCmd = new MySqlCommand(insertInvoice, connection, tx);
+                                         SELECT last_insert_rowid();";
+                using var invCmd = new SqliteCommand(insertInvoice, connection, tx);
                 invCmd.Parameters.AddWithValue("@CustomerId", customerId);
                 invCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
                 invCmd.Parameters.AddWithValue("@Subtotal", subtotal);
@@ -1001,7 +1007,7 @@ namespace WpfApp1
                     decimal lineTotal = unitPrice * quantity;
                     string insertItem = @"INSERT INTO InvoiceItems (InvoiceId, ProductId, EmployeeId, UnitPrice, Quantity, LineTotal)
                                            VALUES (@InvoiceId, @ProductId, @EmployeeId, @UnitPrice, @Quantity, @LineTotal);";
-                    using var itemCmd = new MySqlCommand(insertItem, connection, tx);
+                    using var itemCmd = new SqliteCommand(insertItem, connection, tx);
                     itemCmd.Parameters.AddWithValue("@InvoiceId", invoiceId);
                     itemCmd.Parameters.AddWithValue("@ProductId", productId);
                     itemCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
@@ -1010,8 +1016,8 @@ namespace WpfApp1
                     itemCmd.Parameters.AddWithValue("@LineTotal", lineTotal);
                     itemCmd.ExecuteNonQuery();
 
-                    string updateStock = "UPDATE Products SET StockQuantity = GREATEST(0, StockQuantity - @qty) WHERE Id=@pid;";
-                    using var stockCmd = new MySqlCommand(updateStock, connection, tx);
+                    string updateStock = "UPDATE Products SET StockQuantity = MAX(0, StockQuantity - @qty) WHERE Id=@pid;";
+                    using var stockCmd = new SqliteCommand(updateStock, connection, tx);
                     stockCmd.Parameters.AddWithValue("@qty", quantity);
                     stockCmd.Parameters.AddWithValue("@pid", productId);
                     stockCmd.ExecuteNonQuery();
@@ -1034,10 +1040,10 @@ namespace WpfApp1
         public static List<(int Id, string Name, string Phone, string Email, string Address, string CustomerType)> GetAllCustomers()
         {
             var customers = new List<(int, string, string, string, string, string)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string selectCmd = "SELECT Id, Name, Phone, Email, Address, CustomerType FROM Customers ORDER BY Name;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
+            using var cmd = new SqliteCommand(selectCmd, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -1055,10 +1061,10 @@ namespace WpfApp1
 
         public static (string Tier, int Points) GetCustomerLoyalty(int customerId)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = "SELECT IFNULL(CustomerType,'Regular'), IFNULL(Points,0) FROM Customers WHERE Id=@id;";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@id", customerId);
             using var r = cmd.ExecuteReader();
             if (r.Read())
@@ -1070,10 +1076,10 @@ namespace WpfApp1
 
         public static bool UpdateCustomerLoyalty(int customerId, int newPoints, string newTier)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = "UPDATE Customers SET Points=@p, CustomerType=@tier WHERE Id=@id;";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@p", newPoints);
             cmd.Parameters.AddWithValue("@tier", newTier);
             cmd.Parameters.AddWithValue("@id", customerId);
@@ -1082,10 +1088,10 @@ namespace WpfApp1
 
         public static decimal GetRevenueBetween(DateTime from, DateTime to)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = "SELECT IFNULL(SUM(Total), 0) FROM Invoices WHERE CreatedDate BETWEEN @from AND @to";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@from", from);
             cmd.Parameters.AddWithValue("@to", to);
             var val = cmd.ExecuteScalar();
@@ -1094,10 +1100,10 @@ namespace WpfApp1
 
         public static int GetInvoiceCountBetween(DateTime from, DateTime to)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = "SELECT COUNT(*) FROM Invoices WHERE CreatedDate BETWEEN @from AND @to";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@from", from);
             cmd.Parameters.AddWithValue("@to", to);
             var val = cmd.ExecuteScalar();
@@ -1106,18 +1112,18 @@ namespace WpfApp1
 
         public static int GetTotalCustomers()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            using var cmd = new MySqlCommand("SELECT COUNT(*) FROM Customers", connection);
+            using var cmd = new SqliteCommand("SELECT COUNT(*) FROM Customers", connection);
             var val = cmd.ExecuteScalar();
             return Convert.ToInt32(val ?? 0);
         }
 
         public static int GetTotalProducts()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            using var cmd = new MySqlCommand("SELECT COUNT(*) FROM Products", connection);
+            using var cmd = new SqliteCommand("SELECT COUNT(*) FROM Products", connection);
             var val = cmd.ExecuteScalar();
             return Convert.ToInt32(val ?? 0);
         }
@@ -1127,7 +1133,7 @@ namespace WpfApp1
             QueryInvoices(DateTime? from, DateTime? to, int? customerId, string search)
         {
             var list = new List<(int, DateTime, string, decimal, decimal, decimal, decimal, decimal)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             var sb = new System.Text.StringBuilder();
             sb.Append(@"SELECT i.Id, i.CreatedDate, c.Name, i.Subtotal, i.TaxAmount, i.Discount, i.Total, i.Paid
@@ -1141,7 +1147,7 @@ namespace WpfApp1
             if (!string.IsNullOrWhiteSpace(search)) sb.Append(" AND (c.Name LIKE @q OR i.Id LIKE @q)");
             sb.Append(" ORDER BY i.CreatedDate DESC, i.Id DESC");
 
-            using var cmd = new MySqlCommand(sb.ToString(), connection);
+            using var cmd = new SqliteCommand(sb.ToString(), connection);
             if (from.HasValue) cmd.Parameters.AddWithValue("@from", from.Value);
             if (to.HasValue) cmd.Parameters.AddWithValue("@to", to.Value);
             if (customerId.HasValue) cmd.Parameters.AddWithValue("@cust", customerId.Value);
@@ -1166,7 +1172,7 @@ namespace WpfApp1
 
         public static (InvoiceHeader Header, List<InvoiceItemDetail> Items) GetInvoiceDetails(int invoiceId)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
             string headerSql = @"SELECT i.Id, i.CreatedDate, c.Name, i.Subtotal, i.TaxAmount, i.Discount, i.Total, i.Paid,
@@ -1174,7 +1180,7 @@ namespace WpfApp1
                                  FROM Invoices i
                                  LEFT JOIN Customers c ON c.Id = i.CustomerId
                                  WHERE i.Id = @id";
-            using var hcmd = new MySqlCommand(headerSql, connection);
+            using var hcmd = new SqliteCommand(headerSql, connection);
             hcmd.Parameters.AddWithValue("@id", invoiceId);
             using var hr = hcmd.ExecuteReader();
             InvoiceHeader header;
@@ -1207,7 +1213,7 @@ namespace WpfApp1
                                  FROM InvoiceItems ii
                                  LEFT JOIN Products p ON p.Id = ii.ProductId
                                  WHERE ii.InvoiceId = @id";
-            using var icmd = new MySqlCommand(itemsSql, connection);
+            using var icmd = new SqliteCommand(itemsSql, connection);
             icmd.Parameters.AddWithValue("@id", invoiceId);
             using var ir = icmd.ExecuteReader();
             while (ir.Read())
@@ -1252,7 +1258,7 @@ namespace WpfApp1
 
         public static bool DeleteInvoice(int invoiceId)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             using var tx = connection.BeginTransaction();
             try
@@ -1261,13 +1267,13 @@ namespace WpfApp1
                 string getItemsSql = "SELECT ProductId, Quantity FROM InvoiceItems WHERE InvoiceId = @invoiceId";
                 var items = new List<(int ProductId, int Quantity)>();
                 
-                using (var getItemsCmd = new MySqlCommand(getItemsSql, connection, tx))
+                using (var getItemsCmd = new SqliteCommand(getItemsSql, connection, tx))
                 {
                     getItemsCmd.Parameters.AddWithValue("@invoiceId", invoiceId);
                     using var reader = getItemsCmd.ExecuteReader();
                     while (reader.Read())
                     {
-                        items.Add((reader.GetInt32("ProductId"), reader.GetInt32("Quantity")));
+                        items.Add((reader.GetInt32(0), reader.GetInt32(1)));
                     }
                 }
 
@@ -1275,19 +1281,19 @@ namespace WpfApp1
                 foreach (var (productId, quantity) in items)
                 {
                     string restoreStockSql = "UPDATE Products SET StockQuantity = StockQuantity + @quantity WHERE Id = @productId";
-                    using var restoreCmd = new MySqlCommand(restoreStockSql, connection, tx);
+                    using var restoreCmd = new SqliteCommand(restoreStockSql, connection, tx);
                     restoreCmd.Parameters.AddWithValue("@quantity", quantity);
                     restoreCmd.Parameters.AddWithValue("@productId", productId);
                     restoreCmd.ExecuteNonQuery();
                 }
 
                 // Delete invoice items first (although CASCADE should handle this)
-                using var delItems = new MySqlCommand("DELETE FROM InvoiceItems WHERE InvoiceId = @id", connection, tx);
+                using var delItems = new SqliteCommand("DELETE FROM InvoiceItems WHERE InvoiceId = @id", connection, tx);
                 delItems.Parameters.AddWithValue("@id", invoiceId);
                 delItems.ExecuteNonQuery();
 
                 // Delete invoice
-                using var delInvoice = new MySqlCommand("DELETE FROM Invoices WHERE Id = @id", connection, tx);
+                using var delInvoice = new SqliteCommand("DELETE FROM Invoices WHERE Id = @id", connection, tx);
                 delInvoice.Parameters.AddWithValue("@id", invoiceId);
                 int affected = delInvoice.ExecuteNonQuery();
 
@@ -1304,7 +1310,7 @@ namespace WpfApp1
 
         public static bool DeleteAllInvoices()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             using var tx = connection.BeginTransaction();
             try
@@ -1312,22 +1318,29 @@ namespace WpfApp1
                 System.Diagnostics.Debug.WriteLine("Starting DeleteAllInvoices...");
 
                 // Disable foreign key checks
-                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                using var disableFK = new SqliteCommand("PRAGMA foreign_keys = OFF;", connection, tx);
                 disableFK.ExecuteNonQuery();
                 System.Diagnostics.Debug.WriteLine("Disabled foreign key checks");
 
                 // Truncate InvoiceItems first (child table)
-                using var truncateInvoiceItems = new MySqlCommand("TRUNCATE TABLE InvoiceItems;", connection, tx);
+                using var truncateInvoiceItems = new SqliteCommand("DELETE FROM InvoiceItems;", connection, tx);
                 truncateInvoiceItems.ExecuteNonQuery();
                 System.Diagnostics.Debug.WriteLine("Truncated InvoiceItems table");
 
                 // Truncate Invoices table (parent table)
-                using var truncateInvoices = new MySqlCommand("TRUNCATE TABLE Invoices;", connection, tx);
+                using var truncateInvoices = new SqliteCommand("DELETE FROM Invoices;", connection, tx);
                 truncateInvoices.ExecuteNonQuery();
                 System.Diagnostics.Debug.WriteLine("Truncated Invoices table");
 
+                // Reset auto-increment counters
+                using var resetInvoiceItems = new SqliteCommand("DELETE FROM sqlite_sequence WHERE name='InvoiceItems';", connection, tx);
+                resetInvoiceItems.ExecuteNonQuery();
+                using var resetInvoices = new SqliteCommand("DELETE FROM sqlite_sequence WHERE name='Invoices';", connection, tx);
+                resetInvoices.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine("Reset auto-increment counters");
+
                 // Re-enable foreign key checks
-                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection, tx);
                 enableFK.ExecuteNonQuery();
                 System.Diagnostics.Debug.WriteLine("Re-enabled foreign key checks");
 
@@ -1347,14 +1360,14 @@ namespace WpfApp1
         public static List<(DateTime Day, decimal Revenue)> GetRevenueByDay(DateTime from, DateTime to)
         {
             var list = new List<(DateTime, decimal)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = @"SELECT DATE(CreatedDate) as d, SUM(Total) as revenue
                            FROM Invoices
                            WHERE CreatedDate BETWEEN @from AND @to
                            GROUP BY DATE(CreatedDate)
                            ORDER BY d";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@from", from);
             cmd.Parameters.AddWithValue("@to", to);
             using var r = cmd.ExecuteReader();
@@ -1368,7 +1381,7 @@ namespace WpfApp1
         public static List<(string ProductName, int Quantity)> GetTopProducts(DateTime from, DateTime to, int topN = 10)
         {
             var list = new List<(string, int)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = @"SELECT p.Name, SUM(ii.Quantity) as qty
                            FROM InvoiceItems ii
@@ -1378,7 +1391,7 @@ namespace WpfApp1
                            GROUP BY p.Name
                            ORDER BY qty DESC
                            LIMIT @top";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@from", from);
             cmd.Parameters.AddWithValue("@to", to);
             cmd.Parameters.AddWithValue("@top", topN);
@@ -1393,7 +1406,7 @@ namespace WpfApp1
         public static List<(string CategoryName, decimal Revenue)> GetRevenueByCategory(DateTime from, DateTime to, int topN = 8)
         {
             var list = new List<(string, decimal)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string sql = @"SELECT IFNULL(c.Name, 'Uncategorized') as CategoryName, SUM(ii.LineTotal) as Revenue
                            FROM InvoiceItems ii
@@ -1404,7 +1417,7 @@ namespace WpfApp1
                            GROUP BY IFNULL(c.Name, 'Uncategorized')
                            ORDER BY Revenue DESC
                            LIMIT @top";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@from", from);
             cmd.Parameters.AddWithValue("@to", to);
             cmd.Parameters.AddWithValue("@top", topN);
@@ -1418,10 +1431,10 @@ namespace WpfApp1
 
         public static bool AddCustomer(string name, string phone, string email, string customerType, string address)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string insertCmd = "INSERT INTO Customers (Name, Phone, Email, CustomerType, Address) VALUES (@name, @phone, @email, @customerType, @address);";
-            using var cmd = new MySqlCommand(insertCmd, connection);
+            using var cmd = new SqliteCommand(insertCmd, connection);
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Parameters.AddWithValue("@phone", phone);
             cmd.Parameters.AddWithValue("@email", email);
@@ -1457,8 +1470,12 @@ namespace WpfApp1
                 if (idxName < 0) return -1;
 
                 int success = 0;
-                using var connection = new MySqlConnection(ConnectionString);
+                using var connection = new SqliteConnection(ConnectionString);
                 connection.Open();
+                
+                // Ensure foreign key constraints are enabled
+                using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection);
+                enableFK.ExecuteNonQuery();
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var raw = lines[i];
@@ -1477,28 +1494,48 @@ namespace WpfApp1
 
                     try
                     {
-                        // Upsert by Name+Phone as a basic key (can adjust if needed)
-                        using var up = new MySqlCommand(@"INSERT INTO Customers (Name, Phone, Email, CustomerType, Address)
-                                                          VALUES (@n, @ph, @em, @t, @ad)
-                                                          ON DUPLICATE KEY UPDATE Email=VALUES(Email), CustomerType=VALUES(CustomerType), Address=VALUES(Address);", connection);
-                        up.Parameters.AddWithValue("@n", name);
-                        up.Parameters.AddWithValue("@ph", string.IsNullOrWhiteSpace(phone) ? DBNull.Value : phone);
-                        up.Parameters.AddWithValue("@em", string.IsNullOrWhiteSpace(email) ? DBNull.Value : email);
-                        up.Parameters.AddWithValue("@t", type);
-                        up.Parameters.AddWithValue("@ad", string.IsNullOrWhiteSpace(address) ? DBNull.Value : address);
-                        up.ExecuteNonQuery();
-
-                        // Fetch id
-                        int id;
-                        using (var getId = new MySqlCommand("SELECT Id FROM Customers WHERE Name=@n AND (Phone <=> @ph);", connection))
+                        // Check if customer already exists
+                        int existingId = 0;
+                        using (var checkCmd = new SqliteCommand("SELECT Id FROM Customers WHERE Name=@n AND (Phone IS @ph OR (Phone IS NULL AND @ph IS NULL));", connection))
                         {
-                            getId.Parameters.AddWithValue("@n", name);
-                            getId.Parameters.AddWithValue("@ph", string.IsNullOrWhiteSpace(phone) ? (object)DBNull.Value : phone);
-                            id = Convert.ToInt32(getId.ExecuteScalar());
+                            checkCmd.Parameters.AddWithValue("@n", name);
+                            checkCmd.Parameters.AddWithValue("@ph", string.IsNullOrWhiteSpace(phone) ? (object)DBNull.Value : phone);
+                            var result = checkCmd.ExecuteScalar();
+                            if (result != null)
+                                existingId = Convert.ToInt32(result);
+                        }
+
+                        int customerId;
+                        if (existingId > 0)
+                        {
+                            // Update existing customer
+                            using var updateCmd = new SqliteCommand(@"UPDATE Customers SET Email=@em, CustomerType=@t, Address=@ad WHERE Id=@id;", connection);
+                            updateCmd.Parameters.AddWithValue("@em", string.IsNullOrWhiteSpace(email) ? DBNull.Value : email);
+                            updateCmd.Parameters.AddWithValue("@t", type);
+                            updateCmd.Parameters.AddWithValue("@ad", string.IsNullOrWhiteSpace(address) ? DBNull.Value : address);
+                            updateCmd.Parameters.AddWithValue("@id", existingId);
+                            updateCmd.ExecuteNonQuery();
+                            customerId = existingId;
+                        }
+                        else
+                        {
+                            // Insert new customer
+                            using var insertCmd = new SqliteCommand(@"INSERT INTO Customers (Name, Phone, Email, CustomerType, Address)
+                                                                     VALUES (@n, @ph, @em, @t, @ad);", connection);
+                            insertCmd.Parameters.AddWithValue("@n", name);
+                            insertCmd.Parameters.AddWithValue("@ph", string.IsNullOrWhiteSpace(phone) ? DBNull.Value : phone);
+                            insertCmd.Parameters.AddWithValue("@em", string.IsNullOrWhiteSpace(email) ? DBNull.Value : email);
+                            insertCmd.Parameters.AddWithValue("@t", type);
+                            insertCmd.Parameters.AddWithValue("@ad", string.IsNullOrWhiteSpace(address) ? DBNull.Value : address);
+                            insertCmd.ExecuteNonQuery();
+                            
+                            // Get the new customer ID
+                            using var getIdCmd = new SqliteCommand("SELECT last_insert_rowid();", connection);
+                            customerId = Convert.ToInt32(getIdCmd.ExecuteScalar());
                         }
 
                         // Update loyalty
-                        UpdateCustomerLoyalty(id, points, tier);
+                        UpdateCustomerLoyalty(customerId, points, tier);
 
                         success++;
                     }
@@ -1545,10 +1582,10 @@ namespace WpfApp1
 
         public static bool UpdateCustomer(int id, string name, string phone, string email, string customerType, string address)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string updateCmd = "UPDATE Customers SET Name=@name, Phone=@phone, Email=@email, CustomerType=@customerType, Address=@address WHERE Id=@id;";
-            using var cmd = new MySqlCommand(updateCmd, connection);
+            using var cmd = new SqliteCommand(updateCmd, connection);
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Parameters.AddWithValue("@phone", phone);
@@ -1567,14 +1604,14 @@ namespace WpfApp1
 
         public static bool DeleteCustomer(int id)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
             // Check if customer is used by any invoices (when we implement them)
             try
             {
                 string checkCmd = "SELECT COUNT(*) FROM Invoices WHERE CustomerId=@id;";
-                using var check = new MySqlCommand(checkCmd, connection);
+                using var check = new SqliteCommand(checkCmd, connection);
                 check.Parameters.AddWithValue("@id", id);
                 long count = (long)check.ExecuteScalar();
 
@@ -1589,14 +1626,14 @@ namespace WpfApp1
             }
 
             string deleteCmd = "DELETE FROM Customers WHERE Id=@id;";
-            using var cmd = new MySqlCommand(deleteCmd, connection);
+            using var cmd = new SqliteCommand(deleteCmd, connection);
             cmd.Parameters.AddWithValue("@id", id);
             return cmd.ExecuteNonQuery() > 0;
         }
 
         public static bool DeleteAllCustomers()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             using var tx = connection.BeginTransaction();
             try
@@ -1605,7 +1642,7 @@ namespace WpfApp1
                 try
                 {
                     string checkCmd = "SELECT COUNT(*) FROM Invoices;";
-                    using var check = new MySqlCommand(checkCmd, connection, tx);
+                    using var check = new SqliteCommand(checkCmd, connection, tx);
                     long count = (long)check.ExecuteScalar();
                     if (count > 0)
                     {
@@ -1618,15 +1655,19 @@ namespace WpfApp1
                 }
 
                 // Disable foreign key checks
-                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                using var disableFK = new SqliteCommand("PRAGMA foreign_keys = OFF;", connection, tx);
                 disableFK.ExecuteNonQuery();
 
                 // Truncate Customers table
-                using var truncateCmd = new MySqlCommand("TRUNCATE TABLE Customers;", connection, tx);
+                using var truncateCmd = new SqliteCommand("DELETE FROM Customers;", connection, tx);
                 truncateCmd.ExecuteNonQuery();
 
+                // Reset auto-increment counter
+                using var resetCmd = new SqliteCommand("DELETE FROM sqlite_sequence WHERE name='Customers';", connection, tx);
+                resetCmd.ExecuteNonQuery();
+
                 // Re-enable foreign key checks
-                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection, tx);
                 enableFK.ExecuteNonQuery();
 
                 tx.Commit();
@@ -1644,10 +1685,10 @@ namespace WpfApp1
         public static List<(int Id, string Name)> GetAllCategories()
         {
             var categories = new List<(int, string)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string selectCmd = "SELECT Id, Name FROM Categories ORDER BY Name;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
+            using var cmd = new SqliteCommand(selectCmd, connection);
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -1658,10 +1699,10 @@ namespace WpfApp1
 
         public static bool AddCategory(string name)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string insertCmd = "INSERT INTO Categories (Name) VALUES (@name);";
-            using var cmd = new MySqlCommand(insertCmd, connection);
+            using var cmd = new SqliteCommand(insertCmd, connection);
             cmd.Parameters.AddWithValue("@name", name);
             try
             {
@@ -1669,16 +1710,17 @@ namespace WpfApp1
             }
             catch
             {
+            
                 return false; // Category already exists or other error
             }
         }
 
         public static bool UpdateCategory(int id, string name)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             string updateCmd = "UPDATE Categories SET Name=@name WHERE Id=@id;";
-            using var cmd = new MySqlCommand(updateCmd, connection);
+            using var cmd = new SqliteCommand(updateCmd, connection);
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@name", name);
             try
@@ -1693,12 +1735,12 @@ namespace WpfApp1
 
         public static bool DeleteCategory(int id)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
 
             // Check if category is used by any products
             string checkCmd = "SELECT COUNT(*) FROM Products WHERE CategoryId=@id;";
-            using var check = new MySqlCommand(checkCmd, connection);
+            using var check = new SqliteCommand(checkCmd, connection);
             check.Parameters.AddWithValue("@id", id);
             long count = (long)check.ExecuteScalar();
 
@@ -1708,14 +1750,14 @@ namespace WpfApp1
             }
 
             string deleteCmd = "DELETE FROM Categories WHERE Id=@id;";
-            using var cmd = new MySqlCommand(deleteCmd, connection);
+            using var cmd = new SqliteCommand(deleteCmd, connection);
             cmd.Parameters.AddWithValue("@id", id);
             return cmd.ExecuteNonQuery() > 0;
         }
 
         public static bool DeleteAllCategories()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
             using var tx = connection.BeginTransaction();
             try
@@ -1724,7 +1766,7 @@ namespace WpfApp1
                 try
                 {
                     string checkCmd = "SELECT COUNT(*) FROM Products WHERE CategoryId > 0;";
-                    using var check = new MySqlCommand(checkCmd, connection, tx);
+                    using var check = new SqliteCommand(checkCmd, connection, tx);
                     long count = (long)check.ExecuteScalar();
                     if (count > 0)
                     {
@@ -1736,15 +1778,19 @@ namespace WpfApp1
 
                 }
                 // Disable foreign key checks
-                using var disableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 0;", connection, tx);
+                using var disableFK = new SqliteCommand("PRAGMA foreign_keys = OFF;", connection, tx);
                 disableFK.ExecuteNonQuery();
 
                 // Truncate Categories table
-                using var truncateCmd = new MySqlCommand("TRUNCATE TABLE Categories;", connection, tx);
+                using var truncateCmd = new SqliteCommand("DELETE FROM Categories;", connection, tx);
                 truncateCmd.ExecuteNonQuery();
 
+                // Reset auto-increment counter
+                using var resetCmd = new SqliteCommand("DELETE FROM sqlite_sequence WHERE name='Categories';", connection, tx);
+                resetCmd.ExecuteNonQuery();
+
                 // Re-enable foreign key checks
-                using var enableFK = new MySqlCommand("SET FOREIGN_KEY_CHECKS = 1;", connection, tx);
+                using var enableFK = new SqliteCommand("PRAGMA foreign_keys = ON;", connection, tx);
                 enableFK.ExecuteNonQuery();
 
                 tx.Commit();
@@ -1758,44 +1804,22 @@ namespace WpfApp1
             }
         }
 
-        /// <summary>
-        /// TÃ¡ÂºÂ¡o mÃƒÂ£ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m duy nhÃ¡ÂºÂ¥t
-        /// </summary>
-        private static string GenerateUniqueProductCode(string baseCode, MySqlConnection connection)
-        {
-            int counter = 1;
-            string code = baseCode;
-
-            while (true)
-            {
-                string checkCmd = "SELECT COUNT(*) FROM Products WHERE Code = @code;";
-                using var check = new MySqlCommand(checkCmd, connection);
-                check.Parameters.AddWithValue("@code", code);
-                int exists = Convert.ToInt32(check.ExecuteScalar());
-
-                if (exists == 0) return code;
-
-                counter++;
-                code = $"{baseCode}{counter:D3}";
-            }
-        }
-
 
         public static List<(int InvoiceId, DateTime CreatedAt, int ItemCount, decimal Total)> GetCustomerPurchaseHistory(int customerId)
         {
             var list = new List<(int, DateTime, int, decimal)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
+            // SQLite doesn't need SET NAMES
 
             string sql = @"
-                SELECT i.Id, IFNULL(i.CreatedDate, NOW()) AS CreatedAt,
+                SELECT i.Id, IFNULL(i.CreatedDate, datetime('now')) AS CreatedAt,
                        (SELECT COUNT(*) FROM InvoiceItems ii WHERE ii.InvoiceId = i.Id) AS ItemCount,
                        i.Total
                 FROM Invoices i
                 WHERE i.CustomerId = @cid
                 ORDER BY i.CreatedDate DESC, i.Id DESC;";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@cid", customerId);
 
             using var r = cmd.ExecuteReader();
@@ -1811,64 +1835,20 @@ namespace WpfApp1
             return list;
         }
 
-        public static string GetCustomerSegment(int id)
-        {
-            try
-            {
-                using var connection = new MySqlConnection(ConnectionString);
-                connection.Open();
-                try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
-
-                using (var check = new MySqlCommand("SHOW COLUMNS FROM Customers LIKE 'Segment';", connection))
-                {
-                    var ok = check.ExecuteScalar();
-                    if (ok == null) return string.Empty;
-                }
-
-                using var cmd = new MySqlCommand("SELECT Segment FROM Customers WHERE Id=@id;", connection);
-                cmd.Parameters.AddWithValue("@id", id);
-                var result = cmd.ExecuteScalar();
-                return result?.ToString() ?? string.Empty;
-            }
-            catch { return string.Empty; }
-        }
-
-        public static bool UpdateCustomerSegment(int id, string? segment)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(segment)) return true;
-                using var connection = new MySqlConnection(ConnectionString);
-                connection.Open();
-                try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
-
-                using (var check = new MySqlCommand("SHOW COLUMNS FROM Customers LIKE 'Segment';", connection))
-                {
-                    var ok = check.ExecuteScalar();
-                    if (ok == null) return true;
-                }
-
-                using var cmd = new MySqlCommand("UPDATE Customers SET Segment=@segment WHERE Id=@id;", connection);
-                cmd.Parameters.AddWithValue("@segment", segment);
-                cmd.Parameters.AddWithValue("@id", id);
-                return cmd.ExecuteNonQuery() > 0;
-            }
-            catch { return false; }
-        }
 
         public static List<(string ProductName, int Quantity, decimal UnitPrice, decimal LineTotal)> GetInvoiceItemsDetailed(int invoiceId)
         {
             var list = new List<(string, int, decimal, decimal)>();
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
+            // SQLite doesn't need SET NAMES
 
             string sql = @"
                 SELECT p.Name AS ProductName, ii.Quantity, ii.UnitPrice, (ii.UnitPrice * ii.Quantity) AS LineTotal
                 FROM InvoiceItems ii
                 LEFT JOIN Products p ON p.Id = ii.ProductId
                 WHERE ii.InvoiceId = @invoiceId;";
-            using var cmd = new MySqlCommand(sql, connection);
+            using var cmd = new SqliteCommand(sql, connection);
             cmd.Parameters.AddWithValue("@invoiceId", invoiceId);
 
             using var r = cmd.ExecuteReader();
@@ -1886,12 +1866,12 @@ namespace WpfApp1
 
         public static bool UpdateAccount(string username, string? newPassword = null, string? newRole = null, string? newEmployeeName = null)
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            try { using var setNames = new MySqlCommand("SET NAMES utf8mb4;", connection); setNames.ExecuteNonQuery(); } catch { }
+            // SQLite doesn't need SET NAMES
 
             var sets = new List<string>();
-            using var cmd = new MySqlCommand();
+            using var cmd = new SqliteCommand();
             cmd.Connection = connection;
 
             if (!string.IsNullOrWhiteSpace(newPassword))
@@ -1916,7 +1896,7 @@ namespace WpfApp1
             cmd.Parameters.AddWithValue("@username", username);
 
             try { return cmd.ExecuteNonQuery() > 0; }
-            catch (MySqlException ex)
+            catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"UpdateAccount error: {ex.Message}");
                 return false;
@@ -1925,27 +1905,27 @@ namespace WpfApp1
         // Methods for ReportsSettingsWindow
         public static int GetTotalInvoices()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            using var cmd = new MySqlCommand("SELECT COUNT(*) FROM Invoices", connection);
+            using var cmd = new SqliteCommand("SELECT COUNT(*) FROM Invoices", connection);
             var val = cmd.ExecuteScalar();
             return Convert.ToInt32(val ?? 0);
         }
 
         public static decimal GetTotalRevenue()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            using var cmd = new MySqlCommand("SELECT IFNULL(SUM(Total), 0) FROM Invoices", connection);
+            using var cmd = new SqliteCommand("SELECT IFNULL(SUM(Total), 0) FROM Invoices", connection);
             var val = cmd.ExecuteScalar();
             return Convert.ToDecimal(val ?? 0);
         }
 
         public static (DateTime? oldestDate, DateTime? newestDate) GetInvoiceDateRange()
         {
-            using var connection = new MySqlConnection(ConnectionString);
+            using var connection = new SqliteConnection(ConnectionString);
             connection.Open();
-            using var cmd = new MySqlCommand("SELECT MIN(CreatedDate), MAX(CreatedDate) FROM Invoices", connection);
+            using var cmd = new SqliteCommand("SELECT MIN(CreatedDate), MAX(CreatedDate) FROM Invoices", connection);
             using var reader = cmd.ExecuteReader();
             if (reader.Read())
             {
@@ -1960,7 +1940,7 @@ namespace WpfApp1
         {
             try
             {
-                using var connection = new MySqlConnection(ConnectionString);
+                using var connection = new SqliteConnection(ConnectionString);
                 connection.Open();
                 var backup = new System.Text.StringBuilder();
                 backup.AppendLine("-- Database Backup Created: " + DateTime.Now);
@@ -1994,12 +1974,12 @@ namespace WpfApp1
         {
             try
             {
-                using var connection = new MySqlConnection(ConnectionString);
+                using var connection = new SqliteConnection(ConnectionString);
                 connection.Open();
-                using var detailsCmd = new MySqlCommand("DELETE FROM InvoiceDetails WHERE InvoiceId IN (SELECT Id FROM Invoices WHERE CreatedDate < @cutoff)", connection);
+                using var detailsCmd = new SqliteCommand("DELETE FROM InvoiceDetails WHERE InvoiceId IN (SELECT Id FROM Invoices WHERE CreatedDate < @cutoff)", connection);
                 detailsCmd.Parameters.AddWithValue("@cutoff", cutoffDate);
                 detailsCmd.ExecuteNonQuery();
-                using var invoicesCmd = new MySqlCommand("DELETE FROM Invoices WHERE CreatedDate < @cutoff", connection);
+                using var invoicesCmd = new SqliteCommand("DELETE FROM Invoices WHERE CreatedDate < @cutoff", connection);
                 invoicesCmd.Parameters.AddWithValue("@cutoff", cutoffDate);
                 return invoicesCmd.ExecuteNonQuery();
             }
@@ -2014,19 +1994,44 @@ namespace WpfApp1
         {
             try
             {
-                using var connection = new MySqlConnection(ConnectionString);
+                using var connection = new SqliteConnection(ConnectionString);
                 connection.Open();
                 string[] tables = { "Invoices", "InvoiceDetails", "Products", "Categories", "Customers", "Accounts" };
-                foreach (var table in tables)
-                {
-                    using var cmd = new MySqlCommand($"OPTIMIZE TABLE {table}", connection);
-                    cmd.ExecuteNonQuery();
-                }
+                // SQLite uses VACUUM instead of OPTIMIZE TABLE
+                using var cmd = new SqliteCommand("VACUUM;", connection);
+                cmd.ExecuteNonQuery();
                 return true;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Optimize database error: {ex.Message}");
+                return false;
+            }
+        }
+
+
+        public static bool ResetAllIdCounters()
+        {
+            try
+            {
+                using var connection = new SqliteConnection(ConnectionString);
+                connection.Open();
+                
+                // Reset auto-increment counters cho tất cả bảng
+                string[] tables = { "Accounts", "Products", "Categories", "Customers", "Invoices", "InvoiceItems" };
+                
+                foreach (string table in tables)
+                {
+                    using var cmd = new SqliteCommand($"DELETE FROM sqlite_sequence WHERE name='{table}';", connection);
+                    cmd.ExecuteNonQuery();
+                }
+                
+                System.Diagnostics.Debug.WriteLine("All ID counters have been reset to 1");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Reset ID counters error: {ex.Message}");
                 return false;
             }
         }

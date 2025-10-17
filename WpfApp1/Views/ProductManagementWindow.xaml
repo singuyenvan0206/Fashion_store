@@ -4,7 +4,7 @@
         Title="Quản Lý Sản Phẩm" Height="800" Width="1200"
         MinWidth="1200" MinHeight="800"
         WindowStartupLocation="CenterScreen">
-    
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style TargetType="Button">
@@ -39,13 +39,13 @@
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
     </Window.Resources>
-    
+
     <Grid Background="#F5F5F5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
+
         <!-- Header -->
         <Border Grid.Row="0" Background="#1CB5E0" Padding="20">
             <TextBlock Text="📦 Quản Lý Sản Phẩm" 
@@ -54,14 +54,14 @@
                        Foreground="White" 
                        HorizontalAlignment="Center"/>
         </Border>
-        
+
         <!-- Main Content -->
         <Grid Grid.Row="1" Margin="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="350"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
+
             <!-- Input Form -->
             <Border Grid.Column="0" 
                     Background="White" 
@@ -75,30 +75,30 @@
                                    FontWeight="Bold" 
                                    Foreground="#1CB5E0" 
                                    Margin="0,0,0,20"/>
-                        
+
                         <!-- Product Name -->
                         <TextBlock Text="Tên Sản Phẩm *" FontWeight="SemiBold" Margin="0,0,0,5" Height="19"/>
                         <TextBox x:Name="ProductNameTextBox" Margin="0,0,0,15"/>
-                        
+
                         <!-- Product Code -->
                         <TextBlock Text="Mã Sản Phẩm" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="ProductCodeTextBox" Margin="0,0,0,15"/>
-                        
+
                         <!-- Category -->
                         <TextBlock Text="Danh Mục" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <ComboBox x:Name="CategoryComboBox" 
                                   DisplayMemberPath="Name"
                                   SelectedValuePath="Id"
                                   Margin="0,0,0,15"/>
-                        
+
                         <!-- Price -->
                         <TextBlock Text="Giá *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="PriceTextBox" Margin="0,0,0,15"/>
-                        
+
                         <!-- Stock Quantity -->
                         <TextBlock Text="Số Lượng Tồn *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="StockQuantityTextBox" Margin="0,0,0,15"/>
-                        
+
                         <!-- Description -->
                         <TextBlock Text="Mô Tả" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="DescriptionTextBox" 
@@ -107,10 +107,10 @@
                                  AcceptsReturn="True"
                                  VerticalScrollBarVisibility="Auto"
                                  Margin="0,0,0,20"/>
-                        
+
                         <!-- Action Buttons -->
                         <TextBlock Text="Thao Tác" FontWeight="Bold" FontSize="16" Foreground="#1CB5E0" Margin="0,10,0,10"/>
-                        
+
                         <!-- Primary Actions -->
                         <UniformGrid Columns="2" Margin="0,0,0,10">
                             <Button Content="➕ Thêm" 
@@ -124,16 +124,16 @@
                                     Click="UpdateButton_Click"
                                     Margin="5,0,0,5"/>
                         </UniformGrid>
-                        
+
                         <Button Content="🗑️ Xóa" 
                                 Background="#F44336" 
                                 Foreground="White" 
                                 Click="DeleteButton_Click"
                                 Margin="0,0,0,10"/>
-                        
+
                         <!-- Secondary Actions -->
                         <TextBlock Text="Quản Lý Dữ Liệu" FontWeight="Bold" FontSize="14" Foreground="#666" Margin="0,15,0,10"/>
-                        
+
                         <UniformGrid Columns="2" Margin="0,0,0,10">
                             <Button Content="📥 Nhập CSV" 
                                     Background="#FF9800" 
@@ -146,13 +146,13 @@
                                     Click="ExportCsvButton_Click"
                                     Margin="5,0,0,5"/>
                         </UniformGrid>
-                        
+
                         <Button Content="⚠️ Xóa Tất Cả" 
                                 Background="#9E9E9E" 
                                 Foreground="White" 
                                 Click="DeleteAllButton_Click"
                                 Margin="0,5,0,0"/>
-                        
+
                         <!-- Status -->
                         <TextBlock x:Name="StatusTextBlock" 
                                    Text="Sẵn sàng" 
@@ -163,26 +163,31 @@
                     </StackPanel>
                 </ScrollViewer>
             </Border>
-            
+
             <!-- Product List -->
             <Border Grid.Column="1" 
                     Background="White" 
                     CornerRadius="10" 
                     Padding="20">
-                <StackPanel>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
                     <!-- Header with Search -->
-                    <Grid Margin="0,0,0,15">
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        
+
                         <TextBlock Grid.Row="0" 
                                    Text="📦 Danh Sách Sản Phẩm" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
                                    Foreground="#1CB5E0"
                                    Margin="0,0,0,10"/>
-                        
+
                         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
                             <TextBox x:Name="SearchTextBox" 
                                      Width="250" 
@@ -201,14 +206,8 @@
                                     FontWeight="SemiBold"/>
                         </StackPanel>
                     </Grid>
-                    
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        
-                        <DataGrid Grid.Row="0"
+
+                    <DataGrid Grid.Row="1"
                                   x:Name="ProductDataGrid" 
                                   AutoGenerateColumns="False" 
                                   IsReadOnly="True"
@@ -217,88 +216,87 @@
                                   GridLinesVisibility="Horizontal"
                                   AlternatingRowBackground="#F8F9FA"
                                   RowHeight="35">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" SortMemberPath="Id" Width="60">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                            <Setter Property="FontWeight" Value="Bold"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTextColumn Header="📦 Tên Sản Phẩm" Binding="{Binding Name}" SortMemberPath="Name" Width="200"/>
-                                <DataGridTextColumn Header="🏷️ Mã SP" Binding="{Binding Code}" SortMemberPath="Code" Width="120">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                            <Setter Property="FontFamily" Value="Consolas"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTextColumn Header="📂 Danh Mục" Binding="{Binding CategoryName}" SortMemberPath="CategoryName" Width="120"/>
-                                <DataGridTextColumn Header="💰 Giá Bán" Binding="{Binding Price, StringFormat=N0}" SortMemberPath="Price" Width="120">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                                            <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Foreground" Value="#4CAF50"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTextColumn Header="📊 Tồn Kho" Binding="{Binding StockQuantity}" SortMemberPath="StockQuantity" Width="100">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                            <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Foreground" Value="#FF9800"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                                <DataGridTextColumn Header="📝 Mô Tả" Binding="{Binding Description}" SortMemberPath="Description" Width="*"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                        
-                        <!-- Pagination Controls -->
-                        <Border Grid.Row="1" Background="#F8F9FA" Padding="15" Margin="0,10,0,0" CornerRadius="8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <!-- Page Info -->
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="📄 Trang:" FontWeight="SemiBold" Margin="0,0,5,0"/>
-                                    <TextBlock x:Name="PageInfoTextBlock" Text="1 / 1" FontWeight="Bold" Foreground="#1CB5E0"/>
-                                    <TextBlock Text=" • " Margin="10,0"/>
-                                    <TextBlock Text="📊 Tổng:" FontWeight="SemiBold" Margin="0,0,5,0"/>
-                                    <TextBlock x:Name="TotalItemsTextBlock" Text="0 sản phẩm" FontWeight="Bold" Foreground="#FF9800"/>
-                                </StackPanel>
-                                
-                                <!-- Page Navigation -->
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button x:Name="FirstPageButton" Content="⏮️" Width="35" Height="30" 
-                                            Background="#2196F3" Foreground="White" FontWeight="Bold"
-                                            Click="FirstPageButton_Click" Margin="0,0,5,0"/>
-                                    <Button x:Name="PrevPageButton" Content="◀️" Width="35" Height="30" 
-                                            Background="#2196F3" Foreground="White" FontWeight="Bold"
-                                            Click="PrevPageButton_Click" Margin="0,0,5,0"/>
-                                    <TextBox x:Name="CurrentPageTextBox" Width="50" Height="30" 
-                                             TextAlignment="Center" VerticalContentAlignment="Center"
-                                             FontWeight="Bold" Margin="0,0,5,0"
-                                             KeyDown="CurrentPageTextBox_KeyDown"/>
-                                    <Button x:Name="NextPageButton" Content="▶️" Width="35" Height="30" 
-                                            Background="#2196F3" Foreground="White" FontWeight="Bold"
-                                            Click="NextPageButton_Click" Margin="0,0,5,0"/>
-                                    <Button x:Name="LastPageButton" Content="⏭️" Width="35" Height="30" 
-                                            Background="#2196F3" Foreground="White" FontWeight="Bold"
-                                            Click="LastPageButton_Click"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </StackPanel>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" SortMemberPath="Id" Width="60">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Tên" Binding="{Binding Name}" SortMemberPath="Name" Width="200"/>
+                            <DataGridTextColumn Header="Mã" Binding="{Binding Code}" SortMemberPath="Code" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontFamily" Value="Consolas"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Danh Mục" Binding="{Binding CategoryName}" SortMemberPath="CategoryName" Width="120"/>
+                            <DataGridTextColumn Header="Giá Bán" Binding="{Binding Price, StringFormat=N0}" SortMemberPath="Price" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#4CAF50"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Tồn Kho" Binding="{Binding StockQuantity}" SortMemberPath="StockQuantity" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#FF9800"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Mô Tả" Binding="{Binding Description}" SortMemberPath="Description" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Pagination Controls (own row, fixed bottom) -->
+                    <Border Grid.Row="2" Background="#F8F9FA" Padding="15" Margin="0,10,0,0" CornerRadius="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Page Info -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📄 Trang:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="PageInfoTextBlock" Text="1 / 1" FontWeight="Bold" Foreground="#1CB5E0"/>
+                                <TextBlock Text=" • " Margin="10,0"/>
+                                <TextBlock Text="📊 Tổng:" FontWeight="SemiBold" Margin="0,0,5,0"/>
+                                <TextBlock x:Name="TotalItemsTextBlock" Text="0 sản phẩm" FontWeight="Bold" Foreground="#FF9800"/>
+                            </StackPanel>
+
+                            <!-- Page Navigation -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="FirstPageButton" Content="⏮️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="FirstPageButton_Click" Margin="0,0,5,0"/>
+                                <Button x:Name="PrevPageButton" Content="◀️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="PrevPageButton_Click" Margin="0,0,5,0"/>
+                                <TextBox x:Name="CurrentPageTextBox" Width="50" Height="30" 
+                                         TextAlignment="Center" VerticalContentAlignment="Center"
+                                         FontWeight="Bold" Margin="0,0,5,0"
+                                         KeyDown="CurrentPageTextBox_KeyDown"/>
+                                <Button x:Name="NextPageButton" Content="▶️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="NextPageButton_Click" Margin="0,0,5,0"/>
+                                <Button x:Name="LastPageButton" Content="⏭️" Width="35" Height="30" 
+                                        Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                        Click="LastPageButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

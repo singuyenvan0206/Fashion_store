@@ -51,10 +51,7 @@ namespace WpfApp1
         private void LoadCurrentSettings()
         {
             var cfg = SettingsManager.Load();
-            ServerTextBox.Text = cfg.Server;
-            DatabaseTextBox.Text = cfg.Database;
-            UserIdTextBox.Text = cfg.UserId;
-            PasswordBox.Password = cfg.Password;
+            DatabasePathTextBox.Text = cfg.DatabasePath;
         }
 
         private void LoadPaymentSettings()
@@ -152,10 +149,7 @@ namespace WpfApp1
         {
             var cfg = new SettingsConfig
             {
-                Server = ServerTextBox.Text.Trim(),
-                Database = DatabaseTextBox.Text.Trim(),
-                UserId = UserIdTextBox.Text.Trim(),
-                Password = PasswordBox.Password
+                DatabasePath = DatabasePathTextBox.Text.Trim()
             };
 
             bool ok = SettingsManager.TestConnection(cfg, out string message);
@@ -167,10 +161,7 @@ namespace WpfApp1
         {
             var cfg = new SettingsConfig
             {
-                Server = ServerTextBox.Text.Trim(),
-                Database = DatabaseTextBox.Text.Trim(),
-                UserId = UserIdTextBox.Text.Trim(),
-                Password = PasswordBox.Password
+                DatabasePath = DatabasePathTextBox.Text.Trim()
             };
 
             if (SettingsManager.Save(cfg, out string error))

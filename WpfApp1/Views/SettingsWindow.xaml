@@ -45,24 +45,12 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Máy chủ MySQL:" VerticalAlignment="Center"/>
-                            <TextBox x:Name="ServerTextBox" Grid.Row="0" Grid.Column="1" Height="32"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Đường dẫn cơ sở dữ liệu SQLite:" VerticalAlignment="Center"/>
+                            <TextBox x:Name="DatabasePathTextBox" Grid.Row="0" Grid.Column="1" Height="32"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Cơ sở dữ liệu:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <TextBox x:Name="DatabaseTextBox" Grid.Row="1" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
-
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Tên đăng nhập:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <TextBox x:Name="UserIdTextBox" Grid.Row="2" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
-
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Mật khẩu:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <PasswordBox x:Name="PasswordBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
-
-                            <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                                 <Button x:Name="TestConnectionButton" Content="Kiểm Tra Kết Nối" Width="140" Height="34" Margin="0,0,8,0" Click="TestConnectionButton_Click"/>
                                 <Button x:Name="SaveSettingsButton" Content="Lưu" Width="100" Height="34" Background="#4CAF50" Foreground="White" Click="SaveSettingsButton_Click"/>
                             </StackPanel>

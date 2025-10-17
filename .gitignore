@@ -321,3 +321,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+test_auto_category.csv
+WpfApp1/products.csv

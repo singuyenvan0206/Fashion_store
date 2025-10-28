@@ -39,8 +39,6 @@ namespace WpfApp1
             // Hide tier settings button for non-admin/manager users
             if (role == UserRole.Cashier)
             {
-                if (TierSettingsButton != null)
-                    TierSettingsButton.Visibility = Visibility.Collapsed;
                     
                 // Disable tier and points editing for cashiers
                 if (TierComboBox != null)
@@ -102,6 +100,9 @@ namespace WpfApp1
                 {
                     LoadCustomers();
                     MessageBox.Show($"Đã nhập thành công {importedCount} khách hàng từ tệp CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -186,12 +187,12 @@ namespace WpfApp1
                 try
                 {
                     int id = DatabaseHelper.GetAllCustomers().Last().Id;
-                    
+
                     // Check if user has permission to set tier and points
                     var currentUser = Application.Current.Resources["CurrentUser"] as string;
                     var userRole = DatabaseHelper.GetUserRole(currentUser ?? "");
                     var role = ParseRole(userRole);
-                    
+
                     if (role.CanManageTierSettings())
                     {
                         var tier = (TierComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Regular";
@@ -207,6 +208,9 @@ namespace WpfApp1
                 LoadCustomers();
                 ClearForm();
                 MessageBox.Show($"Khách hàng '{customer.Name}' đã được thêm thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Trigger dashboard refresh for real-time updates
+                DashboardWindow.TriggerDashboardRefresh();
             }
             else
             {
@@ -254,6 +258,9 @@ namespace WpfApp1
                 LoadCustomers();
                 ClearForm();
                 MessageBox.Show($"Khách hàng '{customer.Name}' đã được cập nhật thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Trigger dashboard refresh for real-time updates
+                DashboardWindow.TriggerDashboardRefresh();
             }
             else
             {
@@ -285,6 +292,9 @@ namespace WpfApp1
                     LoadCustomers();
                     ClearForm();
                     MessageBox.Show($"Khách hàng '{customerName}' đã được xóa thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -319,6 +329,9 @@ namespace WpfApp1
                     LoadCustomers();
                     ClearForm();
                     MessageBox.Show("Đã xóa tất cả khách hàng thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -473,11 +486,14 @@ namespace WpfApp1
             if (DatabaseHelper.UpdateCustomerLoyalty(_selectedCustomer.Id, pts, tier))
             {
                 LoadCustomers();
-                MessageBox.Show("Đã cập nhật hạng/điểm.");
+                MessageBox.Show("Đã cập nhật hạng/điểm.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Trigger dashboard refresh for real-time updates
+                DashboardWindow.TriggerDashboardRefresh();
             }
             else
             {
-                MessageBox.Show("Cập nhật thất bại.");
+                MessageBox.Show("Cập nhật thất bại.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -495,9 +511,12 @@ namespace WpfApp1
                 tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             }
             tierSettingsWindow.ShowDialog();
-            
+
             // Refresh customer list after tier settings might have changed
             LoadCustomers();
+
+            // Trigger dashboard refresh for real-time updates
+            DashboardWindow.TriggerDashboardRefresh();
         }
 
 

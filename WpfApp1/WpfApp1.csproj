@@ -13,6 +13,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ApplicationDefinition Include="Views\App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.9" />
     <PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.1.0" />
@@ -27,26 +31,14 @@
     <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Page Remove="ProductSearchWindow.xaml" />
-    <Compile Remove="ProductSearchWindow.xaml.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Remove="Views/App.xaml" />
-    <ApplicationDefinition Include="Views/App.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Backend/TierSettingsWindow.xaml.cs" />
-    <Compile Include="Backend/TierSettingsWindow.xaml.cs">
-      <DependentUpon>Views/TierSettingsWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Remove="Backend/ReportsSettingsWindow.xaml.cs" />
-    <Compile Include="Backend/ReportsSettingsWindow.xaml.cs">
-      <DependentUpon>Views/ReportsSettingsWindow.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <UseAppHost>true</UseAppHost>
+    <AssemblyName>WpfApp1</AssemblyName>
+    <OutputPath>bin\Release\net8.0-windows\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
 
 </Project>

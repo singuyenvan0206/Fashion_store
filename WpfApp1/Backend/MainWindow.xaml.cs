@@ -9,6 +9,20 @@ namespace WpfApp1
             InitializeComponent();
         }
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            UsernameTextBox?.Focus();
+        }
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                LoginButton_Click(LoginButton, new RoutedEventArgs());
+                e.Handled = true;
+            }
+        }
+
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
             string username = UsernameTextBox.Text;
@@ -25,10 +39,10 @@ namespace WpfApp1
             {
                 // Get the actual role from database
                 var userRole = DatabaseHelper.GetUserRoleEnum(username);
-                
+
                 // Use a single DashboardWindow for all roles; features are hidden based on role inside the dashboard
                 Window dashboard = new DashboardWindow(username, userRole.ToString());
-                
+
                 // Set the dashboard as the new main window
                 Application.Current.MainWindow = dashboard;
                 dashboard.Show();

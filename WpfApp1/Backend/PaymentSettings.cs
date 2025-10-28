@@ -6,11 +6,10 @@ namespace WpfApp1
 {
     public class PaymentSettings
     {
-        public string PaymentMethod { get; set; } = "tpbank";
-        public string MoMoPhone { get; set; } = "0123456789";
-        public string BankAccount { get; set; } = "000003137";
-        public string BankName { get; set; } = "Ngân Hàng Tiên Phong";
-        public string BankBIN { get; set; } = "970423";
+        public string BankAccount { get; set; } = "";
+        public string BankCode { get; set; } = "";
+        public string BankName { get; set; } = "";
+        public string AccountHolder { get; set; } = "";
         public bool EnableQRCode { get; set; } = true;
     }
 
@@ -30,9 +29,9 @@ namespace WpfApp1
                     return JsonSerializer.Deserialize<PaymentSettings>(json) ?? new PaymentSettings();
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading payment settings: {ex.Message}");
+                // Silent failure
             }
             return new PaymentSettings();
         }
@@ -46,9 +45,8 @@ namespace WpfApp1
                 File.WriteAllText(SettingsPath, json);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving payment settings: {ex.Message}");
                 return false;
             }
         }

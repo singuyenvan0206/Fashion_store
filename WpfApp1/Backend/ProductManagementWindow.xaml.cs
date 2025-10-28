@@ -47,7 +47,10 @@ namespace WpfApp1
                 Code = p.Code,
                 CategoryId = p.CategoryId,
                 CategoryName = p.CategoryName,
-                Price = p.Price,
+                SalePrice = p.SalePrice,
+                PurchasePrice = p.PurchasePrice,
+                PurchaseUnit = p.PurchaseUnit,
+                ImportQuantity = p.ImportQuantity,
                 StockQuantity = p.StockQuantity,
                 Description = p.Description
             });
@@ -101,16 +104,22 @@ namespace WpfApp1
                 Name = ProductNameTextBox.Text.Trim(),
                 Code = ProductCodeTextBox.Text.Trim(),
                 CategoryId = CategoryComboBox.SelectedValue as int? ?? 0,
-                Price = decimal.Parse(PriceTextBox.Text),
+                SalePrice = decimal.Parse(PriceTextBox.Text),
+                PurchasePrice = decimal.TryParse(ImportPriceTextBox.Text, out var pp) ? pp : 0,
+                PurchaseUnit = UnitTextBox.Text.Trim(),
+                ImportQuantity = int.TryParse(ImportQuantityTextBox.Text, out var iq) ? iq : 0,
                 StockQuantity = int.Parse(StockQuantityTextBox.Text),
                 Description = DescriptionTextBox.Text.Trim()
             };
 
-            if (DatabaseHelper.AddProduct(product.Name, product.Code, product.CategoryId, product.Price, product.StockQuantity, product.Description))
+            if (DatabaseHelper.AddProduct(product.Name, product.Code, product.CategoryId, product.SalePrice, product.PurchasePrice, product.PurchaseUnit, product.ImportQuantity, product.StockQuantity, product.Description))
             {
                 LoadProducts();
                 ClearForm();
                 MessageBox.Show($"Sản phẩm '{product.Name}' đã được thêm thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Trigger dashboard refresh for real-time updates
+                DashboardWindow.TriggerDashboardRefresh();
             }
             else
             {
@@ -134,16 +143,22 @@ namespace WpfApp1
                 Name = ProductNameTextBox.Text.Trim(),
                 Code = ProductCodeTextBox.Text.Trim(),
                 CategoryId = CategoryComboBox.SelectedValue as int? ?? 0,
-                Price = decimal.Parse(PriceTextBox.Text),
+                SalePrice = decimal.Parse(PriceTextBox.Text),
+                PurchasePrice = decimal.TryParse(ImportPriceTextBox.Text, out var pp) ? pp : 0,
+                PurchaseUnit = UnitTextBox.Text.Trim(),
+                ImportQuantity = int.TryParse(ImportQuantityTextBox.Text, out var iq) ? iq : 0,
                 StockQuantity = int.Parse(StockQuantityTextBox.Text),
                 Description = DescriptionTextBox.Text.Trim()
             };
 
-            if (DatabaseHelper.UpdateProduct(product.Id, product.Name, product.Code, product.CategoryId, product.Price, product.StockQuantity, product.Description))
+            if (DatabaseHelper.UpdateProduct(product.Id, product.Name, product.Code, product.CategoryId, product.SalePrice, product.PurchasePrice, product.PurchaseUnit, product.ImportQuantity, product.StockQuantity, product.Description))
             {
                 LoadProducts();
                 ClearForm();
                 MessageBox.Show($"Sản phẩm '{product.Name}' đã được cập nhật thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Trigger dashboard refresh for real-time updates
+                DashboardWindow.TriggerDashboardRefresh();
             }
             else
             {
@@ -175,6 +190,9 @@ namespace WpfApp1
                     LoadProducts();
                     ClearForm();
                     MessageBox.Show($"Sản phẩm '{productName}' đã được xóa thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -199,6 +217,9 @@ namespace WpfApp1
                 {
                     LoadProducts();
                     MessageBox.Show($"Đã nhập thành công {importedCount} sản phẩm từ tệp CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -251,6 +272,9 @@ namespace WpfApp1
                     LoadProducts();
                     ClearForm();
                     MessageBox.Show($"Đã xóa thành công tất cả {_products.Count} sản phẩm!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -266,6 +290,9 @@ namespace WpfApp1
             CategoryComboBox.SelectedIndex = -1;
             PriceTextBox.Clear();
             StockQuantityTextBox.Clear();
+            ImportPriceTextBox.Clear();
+            ImportQuantityTextBox.Clear();
+            UnitTextBox.Clear();
             DescriptionTextBox.Clear();
             _selectedProduct = null;
             ProductDataGrid.SelectedItem = null;
@@ -306,8 +333,11 @@ namespace WpfApp1
                 ProductNameTextBox.Text = _selectedProduct.Name ?? "";
                 ProductCodeTextBox.Text = _selectedProduct.Code ?? "";
                 CategoryComboBox.SelectedValue = _selectedProduct.CategoryId;
-                PriceTextBox.Text = _selectedProduct.Price.ToString("F2");
+                PriceTextBox.Text = _selectedProduct.SalePrice.ToString("F2");
                 StockQuantityTextBox.Text = _selectedProduct.StockQuantity.ToString();
+                ImportPriceTextBox.Text = _selectedProduct.PurchasePrice.ToString("F2");
+                ImportQuantityTextBox.Text = _selectedProduct.ImportQuantity.ToString();
+                UnitTextBox.Text = _selectedProduct.PurchaseUnit ?? "";
                 DescriptionTextBox.Text = _selectedProduct.Description ?? "";
             }
         }
@@ -422,8 +452,8 @@ namespace WpfApp1
                     break;
                 case "price":
                     sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
-                        ? items => items.OrderBy(p => p.Price)
-                        : items => items.OrderByDescending(p => p.Price);
+                        ? items => items.OrderBy(p => p.SalePrice)
+                        : items => items.OrderByDescending(p => p.SalePrice);
                     break;
                 case "stockquantity":
                     sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
@@ -461,7 +491,10 @@ namespace WpfApp1
         public string Code { get; set; } = "";
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = "";
-        public decimal Price { get; set; }
+        public decimal SalePrice { get; set; }
+        public decimal PurchasePrice { get; set; }
+        public string PurchaseUnit { get; set; } = "";
+        public int ImportQuantity { get; set; }
         public int StockQuantity { get; set; }
         public string Description { get; set; } = "";
     }

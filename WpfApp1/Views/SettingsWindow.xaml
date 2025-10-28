@@ -129,9 +129,6 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <!-- QR Code Toggle -->
@@ -190,37 +187,20 @@
                                            FontSize="12" Foreground="#666666"/>
                             </StackPanel>
 
-                            <!-- Payment Method -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Phương thức:" VerticalAlignment="Center" Margin="0,16,0,0"/>
-                            <ComboBox x:Name="PaymentMethodComboBox" Grid.Row="1" Grid.Column="1" Height="32" Margin="0,16,0,0">
-                                <ComboBoxItem Content="MoMo" Tag="momo"/>
-                                <ComboBoxItem Content="ZaloPay" Tag="zalopay"/>
-                                <ComboBoxItem Content="TPBank" Tag="tpbank"/>
-                                <ComboBoxItem Content="Ngân hàng khác" Tag="bank"/>
-                            </ComboBox>
+                            <!-- Bank Account -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Số tài khoản:" VerticalAlignment="Center" Margin="0,16,0,0"/>
+                            <TextBox x:Name="BankAccountTextBox" Grid.Row="1" Grid.Column="1" Height="32" Margin="0,16,0,0"/>
 
-                            <!-- MoMo Phone -->
-                            <TextBlock x:Name="PaymentInfoLabel" Grid.Row="2" Grid.Column="0" Text="Số điện thoại MoMo:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                            <TextBox x:Name="PaymentInfoTextBox" Grid.Row="2" Grid.Column="1" Height="32" Margin="0,8,0,0"/>
+                            <!-- Bank Code -->
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Mã ngân hàng:" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBox x:Name="BankCodeTextBox" Grid.Row="2" Grid.Column="1" Height="32" Margin="0,8,0,0" ToolTip="Nhập mã ngân hàng (VD: TPB, VCB, BIDV...)"/>
 
-                            <!-- Bank Account (hidden by default) -->
-                            <TextBlock x:Name="BankAccountLabel" Grid.Row="3" Grid.Column="0" Text="Số tài khoản:" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
-                            <TextBox x:Name="BankAccountTextBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed"/>
+                            <!-- Account Holder -->
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Tên chủ tài khoản:" VerticalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBox x:Name="AccountHolderTextBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="0,8,0,0" ToolTip="Nhập tên chủ tài khoản"/>
 
-                            <!-- Bank Name (hidden by default) -->
-                            <TextBlock x:Name="BankNameLabel" Grid.Row="4" Grid.Column="0" Text="Tên ngân hàng:" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
-                            <TextBox x:Name="BankNameTextBox" Grid.Row="4" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed"/>
-
-                            <!-- Bank BIN (hidden by default) -->
-                            <TextBlock x:Name="BankBINLabel" Grid.Row="5" Grid.Column="0" Text="Mã ngân hàng (BIN):" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
-                            <TextBox x:Name="BankBINTextBox" Grid.Row="5" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed" ToolTip="Mã NAPAS của ngân hàng (ví dụ: 970415 cho Vietinbank)"/>
-
-                            <!-- Account Name (hidden by default) -->
-                            <TextBlock x:Name="AccountNameLabel" Grid.Row="6" Grid.Column="0" Text="Tên chủ tài khoản:" VerticalAlignment="Center" Margin="0,8,0,0" Visibility="Collapsed"/>
-                            <TextBox x:Name="AccountNameTextBox" Grid.Row="6" Grid.Column="1" Height="32" Margin="0,8,0,0" Visibility="Collapsed"/>
-
-                            <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                                <Button x:Name="SaveQRCodeSettingsButton" Content="Lưu QR Code" Width="120" Height="34" Background="#9C27B0" Foreground="White" Click="SaveQRCodeSettingsButton_Click"/>
+                            <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                                <Button x:Name="SaveQRCodeSettingsButton" Content="Lưu thông tin ngân hàng" Width="180" Height="34" Background="#9C27B0" Foreground="White" Click="SaveQRCodeSettingsButton_Click"/>
                             </StackPanel>
                         </Grid>
                     </Grid>

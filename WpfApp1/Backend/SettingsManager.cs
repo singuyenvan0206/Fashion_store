@@ -7,9 +7,9 @@ namespace WpfApp1
 	public class SettingsConfig
 	{
 		public string Server { get; set; } = "localhost";
-		public string Database { get; set; } = "accountsdb";
+		public string Database { get; set; } = "main";
 		public string UserId { get; set; } = "root";
-		public string Password { get; set; } = "";
+		public string Password { get; set; } = "02062003";
 	}
 
 	public static class SettingsManager

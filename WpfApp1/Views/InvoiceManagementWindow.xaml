@@ -90,8 +90,18 @@
 					</Grid.RowDefinitions>
 					
 					<!-- Grid Header -->
-					<Border Grid.Row="0" Background="#F8F9FA" CornerRadius="12,12,0,0" Padding="16,12">
-						<TextBlock Text="🛒 Danh sách sản phẩm trong hóa đơn" FontSize="16" FontWeight="Bold" Foreground="#333"/>
+					<Border Grid.Row="0" Background="#1CB5E0" CornerRadius="12,12,0,0" Padding="16,12">
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="Auto"/>
+							</Grid.ColumnDefinitions>
+							<TextBlock Text="🛒 Danh sách sản phẩm" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+							<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+								<TextBlock Text="Tổng:" Foreground="White" FontWeight="SemiBold" Margin="0,0,5,0"/>
+								<TextBlock x:Name="ItemCountTextBlock" Text="0 mục" Foreground="White" FontWeight="Bold"/>
+							</StackPanel>
+						</Grid>
 					</Border>
 					
 					<DataGrid Grid.Row="1"
@@ -104,10 +114,13 @@
 					          ScrollViewer.VerticalScrollBarVisibility="Auto"
 					          ScrollViewer.HorizontalScrollBarVisibility="Auto"
 					          EnableRowVirtualization="True"
-					          EnableColumnVirtualization="True"
+					          EnableColumnVirtualization="False"
 					          BorderThickness="0"
 					          GridLinesVisibility="Horizontal"
-					          HeadersVisibility="Column">
+					          HeadersVisibility="Column"
+					          MinHeight="400"
+					          HorizontalAlignment="Stretch"
+					          VerticalAlignment="Stretch">
 				<DataGrid.Resources>
 					<Style TargetType="TextBlock" x:Key="RightAlignedCell">
 						<Setter Property="TextAlignment" Value="Right"/>
@@ -161,13 +174,22 @@
 			<!-- Totals sidebar on the right -->
 			<Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" Background="White" CornerRadius="12" Padding="20" Margin="12,0,0,0" BorderBrush="#E0E0E0" BorderThickness="1">
 				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
-					</Grid.ColumnDefinitions>
-					<!-- Totals only -->
-					<Border Grid.Column="0" Background="#F8F9FA" CornerRadius="8" Padding="16">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					
+					<!-- Summary Header -->
+					<Border Grid.Row="0" Background="#1CB5E0" CornerRadius="8" Padding="12" Margin="0,0,0,15">
+						<TextBlock Text="💰 Tổng Kết Hóa Đơn" FontSize="16" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+					</Border>
+					
+					<!-- Totals Content -->
+					<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+						<Border Background="#F8F9FA" CornerRadius="8" Padding="16">
 						<Grid>
 							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
 								<RowDefinition Height="Auto"/>
@@ -203,84 +225,73 @@
 								<TextBox x:Name="DiscountValueTextBox" Width="80" Height="28" Text="0" TextChanged="TotalsInput_TextChanged" Margin="6,0,0,0" TextAlignment="Center"/>
 								
 							</StackPanel>
-                            <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,59,0,8">
-                            <TextBlock x:Name="TierDiscountInlineText" Text="(+ Ưu đãi hạng: 0₫)" Margin="8,0,0,0" />
+                            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,8">
+                            <TextBlock x:Name="TierDiscountInlineText" Text="(+ Ưu đãi hạng: 0₫)" Margin="8,0,0,0" Foreground="#4CAF50" FontWeight="SemiBold"/>
                             </StackPanel>
-                            <Border Grid.Row="3" Grid.ColumnSpan="2" Background="#E0E0E0" Height="1" Margin="0,8,0,8"/>
+                            <Border Grid.Row="4" Grid.ColumnSpan="2" Background="#E0E0E0" Height="1" Margin="0,0,0,8"/>
 
-							<TextBlock Grid.Row="4" Grid.Column="0" Text="💵 Tổng cộng:" HorizontalAlignment="Left" FontWeight="Bold" FontSize="16" Margin="0,0,8,8" Foreground="#D32F2F"/>
-							<TextBlock x:Name="TotalTextBlock" Grid.Row="4" Grid.Column="1" Text="0₫" HorizontalAlignment="Left" TextAlignment="Left" FontWeight="Bold" FontSize="22" Foreground="#D32F2F"/>
+							<TextBlock Grid.Row="5" Grid.Column="0" Text="💵 Tổng cộng:" HorizontalAlignment="Left" FontWeight="Bold" FontSize="16" Margin="0,0,8,8" Foreground="#D32F2F"/>
+							<TextBlock x:Name="TotalTextBlock" Grid.Row="5" Grid.Column="1" Text="0₫" HorizontalAlignment="Left" TextAlignment="Left" FontWeight="Bold" FontSize="22" Foreground="#D32F2F"/>
 
-							<StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,8,0,8">
+							<StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,8,0,8">
 								<TextBlock Text="💳 PTTT:" VerticalAlignment="Center" FontWeight="SemiBold"/>
 								<ComboBox x:Name="PaymentMethodComboBox" Width="100" Height="28" Margin="6,0,12,0" SelectedIndex="0" FontSize="12" SelectionChanged="PaymentMethodComboBox_SelectionChanged">
 									<ComboBoxItem Content="💵 Tiền mặt"/>
 									<ComboBoxItem Content="💳 Thẻ"/>
 									<ComboBoxItem Content="🏦 Chuyển khoản"/>
-									<ComboBoxItem Content="📱 Ví điện tử"/>
 								</ComboBox>
 								<TextBlock Text="Đã trả:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-								<TextBox x:Name="PaidTextBox" Width="100" Height="28" Text="0" TextChanged="TotalsInput_TextChanged" Margin="6,0,0,0" TextAlignment="Center"/>
+								<TextBox x:Name="PaidTextBox" Width="70" Height="28" Text="0" TextChanged="TotalsInput_TextChanged" Margin="6,0,0,0" TextAlignment="Center"/>
 							</StackPanel>
 
-							<StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,8,0,12">
+							<StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,8,0,12">
 								<TextBlock Text="🔄 Tiền thừa:" VerticalAlignment="Center" FontWeight="Bold"/>
 								<TextBlock x:Name="ChangeTextBlock" Text="0₫" Width="80" TextAlignment="Left" Margin="6,0,0,0" FontWeight="Bold" Foreground="#388E3C"/>
 							</StackPanel>
 
 							<!-- QR Code Section -->
-                            <Border Grid.Row="7" Grid.ColumnSpan="2" Background="#F8F9FA" CornerRadius="8" Padding="15" Margin="0,8,0,8" BorderBrush="#E0E0E0" BorderThickness="1">
+                            <Border Grid.Row="8" Grid.ColumnSpan="2" Background="#FFFFFF" CornerRadius="10" Padding="12" Margin="0,0,0,8" 
+									BorderBrush="#4CAF50" BorderThickness="2" Width="260">
 								<Grid>
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="*"/>
-										<ColumnDefinition Width="Auto"/>
-									</Grid.ColumnDefinitions>
-									
-									<!-- QR Info -->
-									<StackPanel Grid.Column="0" VerticalAlignment="Center">
-										<TextBlock Text="💳 QR CODE THANH TOÁN" FontSize="14" FontWeight="Bold" 
-												   Foreground="#2E7D32" Margin="0,0,0,4"/>
-										<TextBlock Text="Quét mã QR để thanh toán nhanh" FontSize="11" 
-												   Foreground="#666666" Margin="0,0,0,2"/>
-										<TextBlock Text="Hỗ trợ: MoMo, ZaloPay, TPBank, Ngân hàng" FontSize="10" 
-												   Foreground="#888888"/>
-									</StackPanel>
-									
-									<!-- QR Code -->
-									<Border Grid.Column="1" Background="White" CornerRadius="6" Padding="8" 
-											BorderBrush="#E0E0E0" BorderThickness="1">
-										<StackPanel>
-											<Image x:Name="InvoiceQRCode" Width="80" Height="80" 
-												   Stretch="Uniform" HorizontalAlignment="Center"/>
-											<TextBlock Text="Quét để thanh toán" FontSize="9" 
-													   Foreground="#666666" HorizontalAlignment="Center" 
-													   Margin="0,2,0,0"/>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="45"/>
+										<RowDefinition Height="*"/>
+									</Grid.RowDefinitions>
+
+									<!-- Header -->
+									<Border Grid.Row="0" Background="#4CAF50" CornerRadius="6" Padding="8" Margin="0,0,0,10">
+										<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+											<TextBlock Text="💳" FontSize="20" VerticalAlignment="Center" Margin="0,0,6,0"/>
+											<TextBlock Text="QUÉT MÃ THANH TOÁN" FontSize="13" FontWeight="Bold"
+													   Foreground="White"/>
+										</StackPanel>
+									</Border>
+
+									<!-- QR Code Image -->
+									<Border Grid.Row="1" Background="#F5F5F5" CornerRadius="8" Padding="10" 
+											BorderBrush="#E0E0E0" BorderThickness="2" MinHeight="200">
+										<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+											<Image x:Name="InvoiceQRCode" Width="200" Height="200"
+												   Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+											<TextBlock x:Name="QRPlaceholderText" Text="Chọn 'Chuyển khoản' để hiển thị QR" FontSize="10"
+													   Foreground="#9E9E9E" HorizontalAlignment="Center" TextAlignment="Center"
+													   Margin="0,8,0,0" TextWrapping="Wrap"/>
 										</StackPanel>
 									</Border>
 								</Grid>
 							</Border>
 							
-							<Grid Grid.Row="8" Grid.ColumnSpan="2">
-	<Grid.RowDefinitions>
-		<RowDefinition Height="Auto"/>
-		<RowDefinition Height="Auto"/>
-	</Grid.RowDefinitions>
-	<Grid.ColumnDefinitions>
-		<ColumnDefinition Width="Auto"/>
-		<ColumnDefinition Width="Auto"/>
-	</Grid.ColumnDefinitions>
-
-	<Button x:Name="SaveInvoiceButton" Grid.Row="0" Grid.Column="0" Content="💾 Lưu Hóa Đơn" Width="140" Height="40" 
-			Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="SaveInvoiceButton_Click" Margin="0,0,8,8"/>
-	<Button x:Name="PrintInvoiceButton" Grid.Row="0" Grid.Column="1" Content="🖨️ In Hóa Đơn" Width="140" Height="40" 
-			Background="#FF9800" Foreground="White" FontWeight="SemiBold" Click="PrintInvoiceButton_Click" Margin="0,0,0,8"/>
-                                <Button x:Name="ClearInvoiceButton" Grid.Row="1" Grid.Column="0" Content="🧹 Xóa Hóa Đơn" Width="140" Height="40"
-			Background="#9E9E9E" Foreground="White" FontWeight="SemiBold" Click="ClearInvoiceButton_Click" Margin="0,0,8,0"/>
-                            </Grid>
+							<StackPanel Grid.Row="9" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+								<Button x:Name="SaveInvoiceButton" Content="💾 Lưu Hóa Đơn" Width="140" Height="40" 
+										Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="SaveInvoiceButton_Click" Margin="0,0,8,0"/>
+								<Button x:Name="ClearInvoiceButton" Content="🧹 Xóa Hóa Đơn" Width="140" Height="40"
+										Background="#9E9E9E" Foreground="White" FontWeight="SemiBold" Click="ClearInvoiceButton_Click" Margin="0,0,0,0"/>
+							</StackPanel>
 						</Grid>
 					</Border>
+					</ScrollViewer>
 				</Grid>
 			</Border>
 		</Grid>
 	</Grid>
-	</Window>
+</Window>

@@ -114,6 +114,9 @@ namespace WpfApp1
                     
                     MessageBox.Show(message, "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
                     this.Close();
+
+                    // Trigger dashboard refresh for real-time updates (customer tiers may have changed)
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -171,6 +174,9 @@ namespace WpfApp1
                 {
                     LoadCurrentSettings();
                     MessageBox.Show("Đã khôi phục cài đặt mặc định.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates (customer tiers may have changed)
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {

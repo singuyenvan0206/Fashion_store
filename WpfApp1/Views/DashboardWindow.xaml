@@ -58,6 +58,35 @@
                 </StackPanel>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Low Stock Alert Button -->
+                    <Button x:Name="LowStockAlertButton"
+                            Click="LowStockAlertButton_Click"
+                            Width="180" 
+                            Height="40"
+                            Margin="0,0,10,0"
+                            Background="#FFC107"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            FontSize="12"
+                            Padding="12,8"
+                            Cursor="Hand"
+                            Opacity="0.9">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="⚠️ Sắp hết" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <Border Background="#DC2626" 
+                                    CornerRadius="12" 
+                                    Padding="6,2"
+                                    MinWidth="30">
+                                <TextBlock x:Name="LowStockAlertCount" 
+                                          Text="0" 
+                                          Foreground="White" 
+                                          FontWeight="Bold" 
+                                          FontSize="12"
+                                          HorizontalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                    </Button>
+                    
                     <Button Content="🚪 Đăng Xuất" 
                             Width="120" 
                             Height="35" 
@@ -76,7 +105,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Left Nav -->
-            <Border Grid.Column="0" Background="#1E293B" CornerRadius="0,20,20,0">
+            <Border Grid.Column="0" Background="#1E293B" CornerRadius="0,0,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -115,33 +144,47 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border x:Name="ItemBorder"
-                                                            Background="Transparent"
-                                                            Margin="12,4,12,4"
-                                                            CornerRadius="12"
-                                                            Padding="16,12">
-                                                        <ContentPresenter/>
-                                                    </Border>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="6"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <!-- Left accent bar -->
+                                                        <Border x:Name="Accent"
+                                                                Grid.Column="0"
+                                                                Background="Transparent"
+                                                                CornerRadius="3"/>
+                                                        <!-- Item background + content -->
+                                                        <Border x:Name="ItemBorder"
+                                                                Grid.Column="1"
+                                                                Background="Transparent"
+                                                                Margin="10,4,12,4"
+                                                                CornerRadius="12"
+                                                                Padding="14,10">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                    </Grid>
                                                     <ControlTemplate.Triggers>
                                                         <Trigger Property="IsSelected" Value="True">
-                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#3B82F6"/>
+                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#2563EB"/>
+                                                            <Setter TargetName="Accent" Property="Background" Value="#60A5FA"/>
                                                             <Setter Property="Foreground" Value="White"/>
                                                         </Trigger>
                                                         <Trigger Property="IsMouseOver" Value="True">
-                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#334155"/>
+                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#263445"/>
+                                                            <Setter TargetName="Accent" Property="Background" Value="#475569"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
-                                        <Setter Property="FontSize" Value="14"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="FontSize" Value="15"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
                                         <Setter Property="HorizontalContentAlignment" Value="Left"/>
                                     </Style>
                                 </ListBox.Resources>
-                                
                                 <ListBoxItem x:Name="HomeNavItem" Content="🏠 Trang Chủ" IsSelected="True"/>
-                                <ListBoxItem x:Name="ProductsNavItem" Content="📦 Sản Phẩm"/>
+                                <ListBoxItem x:Name="ProductsNavItem" Content="📦 Sản Phẩm" />
                                 <ListBoxItem x:Name="CategoriesNavItem" Content="📂 Danh Mục"/>
                                 <ListBoxItem x:Name="ProductSearchNavItem" Content="🔎 Tìm Kiếm Sản Phẩm" Visibility="Collapsed"/>
                                 <ListBoxItem x:Name="CustomersNavItem" Content="👥 Khách Hàng"/>
@@ -164,6 +207,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
@@ -175,6 +219,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    
                     <Border Background="White" CornerRadius="16" Padding="20" Margin="8">
                         <StackPanel>
                             <TextBlock Text="💰 Doanh thu hôm nay" Foreground="#777" FontSize="12"/>
@@ -201,263 +246,45 @@
                     </Border>
                 </Grid>
 
-                <!-- Home charts -->
-                <Grid Grid.Row="1" Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Border Background="White" CornerRadius="16" Padding="12" Margin="8">
-                        <StackPanel>
-                            <TextBlock Text="📊 Doanh thu 30 ngày qua" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#374151"/>
-                            <oxy:PlotView x:Name="HomeRevenuePlot" Height="220"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Grid.Column="1" Background="White" CornerRadius="16" Padding="12" Margin="8">
-                        <StackPanel>
-                            <TextBlock Text="🥧 Doanh thu theo danh mục" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#374151"/>
-                            <oxy:PlotView x:Name="HomeCategoryPie" Height="220"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
+                <!-- Home charts - Row 1 -->
+                        <Grid Grid.Row="1" Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="White" CornerRadius="16" Padding="12" Margin="8">
+                                <StackPanel>
+                                    <TextBlock Text="📊 Doanh thu 30 ngày qua" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#374151"/>
+                                    <oxy:PlotView x:Name="HomeRevenuePlot" Height="220"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Background="White" CornerRadius="16" Padding="12" Margin="8">
+                                <StackPanel>
+                                    <TextBlock Text="🥧 Doanh thu theo danh mục" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#374151"/>
+                                    <oxy:PlotView x:Name="HomeCategoryPie" Height="220"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
 
-                <!-- Module Grid -->
-                <Grid Grid.Row="2" Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    
-                    <!-- Product Management -->
-                    <Border x:Name="ProductManagementTile" Grid.Row="0" Grid.Column="0" 
-                            Background="White" 
-                            CornerRadius="20" 
-                            Margin="10" 
-                            Padding="25">
-                        <Button Style="{StaticResource {x:Type Button}}" 
-                                Background="Transparent" 
-                                BorderThickness="0"
-                                Click="ProductManagement_Click">
-                            <StackPanel>
-                                <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                                <TextBlock Text="Product Management" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           Foreground="#1CB5E0" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="Add, edit, and manage products. Organize by categories with detailed information." 
-                                           FontSize="14" 
-                                           Foreground="#666666" 
-                                           HorizontalAlignment="Center"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                    
-                    <!-- Category Management -->
-                    <Border x:Name="CategoryManagementTile" Grid.Row="0" Grid.Column="1" 
-                            Background="White" 
-                            CornerRadius="20" 
-                            Margin="10" 
-                            Padding="25">
-                        <Button Style="{StaticResource {x:Type Button}}" 
-                                Background="Transparent" 
-                                BorderThickness="0"
-                                Click="CategoryManagement_Click">
-                            <StackPanel>
-                                <TextBlock Text="📂" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                                <TextBlock Text="Category Management" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           Foreground="#1CB5E0" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="Create and organize product categories for better inventory management." 
-                                           FontSize="14" 
-                                           Foreground="#666666" 
-                                           HorizontalAlignment="Center"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                    
-                    <!-- Customer Management -->
-                    <Border x:Name="CustomerManagementTile" Grid.Row="1" Grid.Column="0" 
-                            Background="White" 
-                            CornerRadius="20" 
-                            Margin="10" 
-                            Padding="25">
-                        <Button Style="{StaticResource {x:Type Button}}" 
-                                Background="Transparent" 
-                                BorderThickness="0"
-                                Click="CustomerManagement_Click">
-                            <StackPanel>
-                                <TextBlock Text="👥" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                                <TextBlock Text="Customer Management" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           Foreground="#1CB5E0" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="Store and manage customer information including contact details and preferences." 
-                                           FontSize="14" 
-                                           Foreground="#666666" 
-                                           HorizontalAlignment="Center"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                    
-                    <!-- Invoice Management -->
-                    <Border x:Name="InvoiceManagementTile" Grid.Row="1" Grid.Column="1" 
-                            Background="White" 
-                            CornerRadius="20" 
-                            Margin="10" 
-                            Padding="25">
-                        <Button Style="{StaticResource {x:Type Button}}" 
-                                Background="Transparent" 
-                                BorderThickness="0"
-                                Click="InvoiceManagement_Click">
-                            <StackPanel>
-                                <TextBlock Text="🧾" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                                <TextBlock Text="Invoice Management" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           Foreground="#1CB5E0" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="Create sales invoices, add products, calculate totals and manage transactions." 
-                                           FontSize="14" 
-                                           Foreground="#666666" 
-                                           HorizontalAlignment="Center"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                    
-                    <!-- Reports and Statistics -->
-                    <Border x:Name="ReportsTile" Grid.Row="2" Grid.Column="0" 
-                            Background="White" 
-                            CornerRadius="20" 
-                            Margin="10" 
-                            Padding="25">
-                        <Button Style="{StaticResource {x:Type Button}}" 
-                                Background="Transparent" 
-                                BorderThickness="0"
-                                Click="ReportsManagement_Click">
-                            <StackPanel>
-                                <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                                <TextBlock Text="Báo Cáo và Thống Kê" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           Foreground="#1CB5E0" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="View sales reports, revenue analytics, and business insights with detailed statistics." 
-                                           FontSize="14" 
-                                           Foreground="#666666" 
-                                           HorizontalAlignment="Center"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                    
-                    <!-- User Management (Admin only) -->
-                    <Border x:Name="UserManagementBorder" Grid.Row="2" Grid.Column="1" 
-                            Background="White" 
-                            CornerRadius="20" 
-                            Margin="10" 
-                            Padding="25">
-                        <Button Style="{StaticResource {x:Type Button}}" 
-                                Background="Transparent" 
-                                BorderThickness="0"
-                                Click="UserManagement_Click">
-                            <StackPanel>
-                                <TextBlock Text="👥" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                                <TextBlock Text="Quản Lý Người Dùng" 
-                                           FontSize="20" 
-                                           FontWeight="Bold" 
-                                           Foreground="#E91E63" 
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="Thêm, sửa, xóa người dùng và phân quyền trong hệ thống." 
-                                           FontSize="14" 
-                                           Foreground="#666666" 
-                                           HorizontalAlignment="Center"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                </Grid>
-
-                <!-- Data Visualization -->
-                <Border Grid.Row="3" Grid.Column="0" 
-                        Background="White" 
-                        CornerRadius="20" 
-                        Margin="10" 
-                        Padding="25">
-                    <Button Style="{StaticResource {x:Type Button}}" 
-                            Background="Transparent" 
-                            BorderThickness="0"
-                            Click="DataVisualization_Click" IsEnabled="False" Visibility="Hidden">
-                        <StackPanel>
-                            <TextBlock Text="📈" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                            <TextBlock Text="Trực Quan Hóa Dữ Liệu" 
-                                       FontSize="20" 
-                                       FontWeight="Bold" 
-                                       Foreground="#FF5722" 
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,10"/>
-                            <TextBlock Text="Dashboard trực quan với KPI, biểu đồ và thống kê real-time." 
-                                       FontSize="14" 
-                                       Foreground="#666666" 
-                                       HorizontalAlignment="Center"
-                                       TextAlignment="Center"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Button>
-                </Border>
-
-                <!-- Charts and Analytics Section -->
-                <Border Grid.Row="3" Grid.Column="1" 
-                        Background="White" 
-                        CornerRadius="20" 
-                        Margin="10" 
-                        Padding="25"
-                        Visibility="Hidden">
-                    <Button Style="{StaticResource {x:Type Button}}" 
-                            Background="Transparent" 
-                            BorderThickness="0"
-                            Click="ChartsAnalytics_Click">
-                        <StackPanel>
-                            <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15" Visibility="Hidden"/>
-                            <TextBlock Text="Biểu Đồ &amp; Phân Tích" 
-                                       FontSize="20" 
-                                       FontWeight="Bold" 
-                                       Foreground="#9C27B0" 
-                                       HorizontalAlignment="Center"
-                                       Margin="0,0,0,10"/>
-                            <TextBlock Text="Xem biểu đồ doanh thu, thống kê sản phẩm và phân tích xu hướng bán hàng." 
-                                       FontSize="14" 
-                                       Foreground="#666666" 
-                                       HorizontalAlignment="Center"
-                                       TextAlignment="Center"
-                                       TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Button>
-                </Border>
+                <!-- Home charts - Row 2 -->
+                        <Grid Grid.Row="2" Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="White" CornerRadius="16" Padding="12" Margin="8">
+                                <StackPanel>
+                                    <TextBlock Text="👥 Top 10 Khách Hàng" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#374151"/>
+                                    <oxy:PlotView x:Name="TopCustomersPlot" Height="220"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Background="White" CornerRadius="16" Padding="12" Margin="8">
+                                <StackPanel>
+                                    <TextBlock Text="🔥 Top 10 Sản Phẩm Bán Chạy" FontWeight="SemiBold" Margin="0,0,0,8" Foreground="#374151"/>
+                                    <oxy:PlotView x:Name="TopProductsPlot" Height="220"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
                 </ScrollViewer>
                 <ScrollViewer Grid.Column="1" x:Name="MainContentScrollViewer" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">

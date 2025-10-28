@@ -20,7 +20,12 @@
             <!-- Invoices list -->
             <Border Background="White" CornerRadius="8" Padding="8" Margin="0,0,8,0">
                 <DataGrid x:Name="InvoicesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
-                          SelectionChanged="InvoicesGrid_SelectionChanged">
+                          SelectionChanged="InvoicesGrid_SelectionChanged"
+                          MinHeight="400"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="#" Binding="{Binding InvoiceId}" Width="60"/>
                         <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedAt}" Width="140"/>
@@ -39,7 +44,12 @@
                                 Background="#FF9800" Foreground="White" FontWeight="SemiBold" 
                                 Click="PrintInvoiceButton_Click" HorizontalAlignment="Right"/>
                     </Grid>
-                    <DataGrid x:Name="InvoiceItemsGrid" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid x:Name="InvoiceItemsGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                              MinHeight="400"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Sản phẩm" Binding="{Binding ProductName}" Width="*"/>
                             <DataGridTextColumn Header="SL" Binding="{Binding Quantity}" Width="60"/>

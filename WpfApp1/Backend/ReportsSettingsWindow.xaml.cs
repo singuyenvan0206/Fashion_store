@@ -63,9 +63,8 @@ namespace WpfApp1
                 if (DatabaseSizeTextBlock != null)
                     DatabaseSizeTextBlock.Text = EstimateDatabaseSize();
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading database statistics: {ex.Message}");
                 // Safely update UI elements with error values
                 if (TotalInvoicesTextBlock != null) TotalInvoicesTextBlock.Text = "N/A";
                 if (TotalRevenueTextBlock != null) TotalRevenueTextBlock.Text = "N/A";
@@ -116,131 +115,6 @@ namespace WpfApp1
             }
         }
 
-        private void BackupDatabaseButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var saveDialog = new Microsoft.Win32.SaveFileDialog
-                {
-                    Filter = "Backup Files (*.bak)|*.bak|All Files (*.*)|*.*",
-                    Title = "Sao lưu cơ sở dữ liệu",
-                    FileName = $"backup_{DateTime.Now:yyyyMMdd_HHmmss}.bak"
-                };
-
-                if (saveDialog.ShowDialog() == true)
-                {
-                    // Implement backup logic here
-                    bool success = DatabaseHelper.BackupDatabase(saveDialog.FileName);
-                    
-                    if (success)
-                    {
-                        MessageBox.Show($"Sao lưu thành công!\nFile: {saveDialog.FileName}", 
-                                      "Sao lưu", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Sao lưu thất bại. Vui lòng thử lại.", 
-                                      "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi sao lưu: {ex.Message}", 
-                              "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void RestoreDatabaseButton_Click(object sender, RoutedEventArgs e)
-        {
-            var result = MessageBox.Show("Khôi phục dữ liệu sẽ ghi đè lên dữ liệu hiện tại.\n\nBạn có chắc chắn muốn tiếp tục?", 
-                                       "Xác nhận khôi phục", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    var openDialog = new Microsoft.Win32.OpenFileDialog
-                    {
-                        Filter = "Backup Files (*.bak)|*.bak|All Files (*.*)|*.*",
-                        Title = "Chọn file sao lưu để khôi phục"
-                    };
-
-                    if (openDialog.ShowDialog() == true)
-                    {
-                        // Implement restore logic here
-                        bool success = DatabaseHelper.RestoreDatabase(openDialog.FileName);
-                        
-                        if (success)
-                        {
-                            MessageBox.Show("Khôi phục thành công!", 
-                                          "Khôi phục", MessageBoxButton.OK, MessageBoxImage.Information);
-                            LoadDatabaseStatistics(); // Refresh statistics
-                        }
-                        else
-                        {
-                            MessageBox.Show("Khôi phục thất bại. Vui lòng kiểm tra file sao lưu.", 
-                                          "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Lỗi khôi phục: {ex.Message}", 
-                                  "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
-        private void CleanOldDataButton_Click(object sender, RoutedEventArgs e)
-        {
-            var result = MessageBox.Show("Dọn dữ liệu cũ sẽ xóa các hóa đơn cũ hơn 1 năm.\n\nBạn có chắc chắn muốn tiếp tục?", 
-                                       "Xác nhận dọn dữ liệu", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            
-            if (result == MessageBoxResult.Yes)
-            {
-                try
-                {
-                    DateTime cutoffDate = DateTime.Now.AddYears(-1);
-                    int deletedCount = DatabaseHelper.DeleteInvoicesOlderThan(cutoffDate);
-                    
-                    MessageBox.Show($"Đã xóa {deletedCount} hóa đơn cũ.", 
-                                  "Dọn dữ liệu", MessageBoxButton.OK, MessageBoxImage.Information);
-                    LoadDatabaseStatistics(); // Refresh statistics
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Lỗi dọn dữ liệu: {ex.Message}", 
-                                  "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
-        private void OptimizeDatabaseButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                bool success = DatabaseHelper.OptimizeDatabase();
-                
-                if (success)
-                {
-                    MessageBox.Show("Tối ưu database thành công!", 
-                                  "Tối ưu", MessageBoxButton.OK, MessageBoxImage.Information);
-                    LoadDatabaseStatistics(); // Refresh statistics
-                }
-                else
-                {
-                    MessageBox.Show("Tối ưu database thất bại.", 
-                                  "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi tối ưu: {ex.Message}", 
-                              "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void DeleteAllInvoicesButton_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show("⚠️ CẢNH BÁO: Bạn sắp XÓA TẤT CẢ HÓA ĐƠN!\n\n" +
@@ -276,6 +150,9 @@ namespace WpfApp1
                         {
                             MessageBox.Show($"Đã xóa {deletedCount} hóa đơn.\n\nTất cả dữ liệu hóa đơn đã được xóa khỏi hệ thống.", 
                                           "Xóa hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+                            
+                            // Trigger dashboard refresh for real-time updates
+                            DashboardWindow.TriggerDashboardRefresh();
                         }
                         else
                         {

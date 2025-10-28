@@ -1,337 +1,407 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Text.RegularExpressions;
 
 namespace WpfApp1
 {
     public partial class InvoiceManagementWindow : Window
     {
-        private readonly List<InvoiceItemViewModel> _items = new();
+        private readonly List<InvoiceItemViewModel> _invoiceItems = new();
 
         public InvoiceManagementWindow()
         {
             InitializeComponent();
-            LoadCustomers();
-            LoadProducts();
-            RefreshItemsGrid();
-            RecalculateTotals();
-            InitializeQRCodeState();
+            InitializeWindow();
         }
 
-        private void InitializeQRCodeState()
+        private void InitializeWindow()
+        {
+            LoadCustomers();
+            LoadProducts();
+            ClearInvoice();
+            UpdateTotals();
+            InitializeQRCode();
+            FocusProductEntry();
+        }
+
+        private void InitializeQRCode()
         {
             try
             {
                 var paymentSettings = PaymentSettingsManager.Load();
                 if (InvoiceQRCode != null)
                 {
-                    if (!paymentSettings.EnableQRCode)
-                    {
-                        InvoiceQRCode.Source = null;
-                        InvoiceQRCode.Visibility = Visibility.Collapsed;
-                    }
-                    else
-                    {
-                        InvoiceQRCode.Visibility = Visibility.Visible;
-                        LoadStaticQRCode(paymentSettings);
-                    }
+                    HideQRCode(); // Hidden by default until payment method selected
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error initializing QR code state: {ex.Message}");
+                // Silent failure - QR code will be hidden
             }
         }
 
-        private void LoadStaticQRCode(PaymentSettings paymentSettings)
+        private void FocusProductEntry()
         {
-            try
-            {
-                // Sử dụng QR code chuyển khoản cố định theo phương thức thanh toán
-                InvoiceQRCode.Source = QRCodeHelper.GenerateQRByMethod(paymentSettings.PaymentMethod);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error loading static QR code: {ex.Message}");
-                // Fallback: sử dụng TPBank QR mặc định
-                InvoiceQRCode.Source = QRCodeHelper.GenerateTPBankQR();
-            }
+            ProductComboBox?.Focus();
         }
 
-        // Đã chuyển sang sử dụng QRCodeHelper.GenerateQRByMethod() thay vì các method riêng lẻ
+        #region Customer Management
 
         private void LoadCustomers()
         {
-            var customers = DatabaseHelper.GetAllCustomers();
-            var customerVms = customers.ConvertAll(c => new CustomerListItem { Id = c.Id, Name = c.Name, Phone = c.Phone });
-            CustomerComboBox.ItemsSource = customerVms;
-            if (customerVms.Count > 0)
+            try
             {
-                CustomerComboBox.SelectedIndex = 0;
+                var customers = DatabaseHelper.GetAllCustomers();
+                var customerList = customers.ConvertAll(c => new CustomerListItem
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Phone = c.Phone
+                });
+
+                CustomerComboBox.ItemsSource = customerList;
+
+                if (customerList.Count > 0)
+                {
+                    CustomerComboBox.SelectedIndex = 0;
+                }
+
+                UpdateLoyaltyDisplay();
             }
-            UpdateLoyaltyHeader();
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi tải danh sách khách hàng: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CustomerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            UpdateLoyaltyHeader();
-            RecalculateTotals();
+            UpdateLoyaltyDisplay();
+            UpdateTotals();
         }
 
-        private void UpdateLoyaltyHeader()
+        private void UpdateLoyaltyDisplay()
         {
-            var (tier, points) = GetSelectedCustomerLoyalty();
-            if (LoyaltyTierTextBlock != null) LoyaltyTierTextBlock.Text = tier;
-            if (LoyaltyPointsTextBlock != null) LoyaltyPointsTextBlock.Text = $"{points} điểm";
+            try
+            {
+                var (tier, points) = GetSelectedCustomerLoyalty();
+
+                if (LoyaltyTierTextBlock != null)
+                    LoyaltyTierTextBlock.Text = tier;
+
+                if (LoyaltyPointsTextBlock != null)
+                    LoyaltyPointsTextBlock.Text = $"{points} điểm";
+            }
+            catch
+            {
+                // Silent failure
+            }
         }
 
         private (string tier, int points) GetSelectedCustomerLoyalty()
         {
-            if (CustomerComboBox?.SelectedValue is int cid && cid > 0)
+            if (CustomerComboBox?.SelectedValue is int customerId && customerId > 0)
             {
-                return DatabaseHelper.GetCustomerLoyalty(cid);
+                return DatabaseHelper.GetCustomerLoyalty(customerId);
             }
             return ("Regular", 0);
         }
 
+        #endregion
+
+        #region Product Management
+
         private void LoadProducts()
         {
-            var products = DatabaseHelper.GetAllProducts();
-            var productVms = products.ConvertAll(p => new ProductListItem
+            try
             {
-                Id = p.Id,
-                Name = string.IsNullOrWhiteSpace(p.Code) ? p.Name : $"{p.Name} ({p.Code})",
-                UnitPrice = p.SalePrice
-            });
-            ProductComboBox.ItemsSource = productVms;
+                var products = DatabaseHelper.GetAllProducts();
+                var productList = products.ConvertAll(p => new ProductListItem
+                {
+                    Id = p.Id,
+                    Name = string.IsNullOrWhiteSpace(p.Code) ? p.Name : $"{p.Name} ({p.Code})",
+                    UnitPrice = p.SalePrice,
+                    StockQuantity = p.StockQuantity
+                });
+
+                ProductComboBox.ItemsSource = productList;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi tải danh sách sản phẩm: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void RefreshItemsGrid()
+        private void ProductComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            for (int i = 0; i < _items.Count; i++)
+            if (ProductComboBox.SelectedItem is ProductListItem selectedProduct)
             {
-                _items[i].RowNumber = i + 1;
+                UnitPriceTextBox.Text = selectedProduct.UnitPrice.ToString("F2");
+                QuantityTextBox.Text = string.IsNullOrWhiteSpace(QuantityTextBox.Text) ? "1" : QuantityTextBox.Text;
             }
-            InvoiceItemsDataGrid.ItemsSource = null;
-            InvoiceItemsDataGrid.ItemsSource = _items.ToList();
+            UpdateTotals();
         }
+
+        #endregion
+
+        #region Invoice Item Management
 
         private void AddItemButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ValidateProductSelection()) return;
+            if (!ValidateQuantity()) return;
+
+            var selectedProduct = (ProductListItem)ProductComboBox.SelectedItem;
+            var quantity = int.Parse(QuantityTextBox.Text);
+            var unitPrice = GetUnitPrice(selectedProduct);
+
+            AddOrUpdateInvoiceItem(selectedProduct, quantity, unitPrice);
+            ClearProductEntry();
+            RefreshInvoiceGrid();
+            UpdateTotals();
+        }
+
+        private bool ValidateProductSelection()
         {
             if (ProductComboBox.SelectedItem is not ProductListItem selectedProduct)
             {
                 MessageBox.Show("Vui lòng chọn sản phẩm.", "Xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                return false;
             }
+            return true;
+        }
 
+        private bool ValidateQuantity()
+        {
             if (!int.TryParse(QuantityTextBox.Text, out int quantity) || quantity <= 0)
             {
                 MessageBox.Show("Vui lòng nhập số lượng hợp lệ.", "Xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
                 QuantityTextBox.Focus();
-                return;
+                return false;
             }
-
-            decimal unitPrice = selectedProduct.UnitPrice;
-            if (!string.IsNullOrWhiteSpace(UnitPriceTextBox.Text) && decimal.TryParse(UnitPriceTextBox.Text, out decimal manualPrice) && manualPrice >= 0)
+            
+            // Check stock quantity
+            if (ProductComboBox.SelectedItem is ProductListItem selectedProduct)
             {
-                unitPrice = manualPrice;
+                int currentStock = DatabaseHelper.GetProductStockQuantity(selectedProduct.Id);
+                
+                // Check if item already exists in invoice
+                var existingItem = _invoiceItems.FirstOrDefault(i => i.ProductId == selectedProduct.Id);
+                int requestedQuantity = quantity;
+                if (existingItem != null)
+                {
+                    requestedQuantity += existingItem.Quantity;
+                }
+                
+                if (requestedQuantity > currentStock)
+                {
+                    MessageBox.Show($"Không đủ hàng! Sản phẩm '{selectedProduct.Name}' chỉ còn {currentStock} sản phẩm trong kho.\nBạn đã có {existingItem?.Quantity ?? 0} sản phẩm trong hóa đơn.", 
+                                  "Hết hàng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    QuantityTextBox.Focus();
+                    return false;
+                }
             }
+            
+            return true;
+        }
 
-            var existing = _items.FirstOrDefault(i => i.ProductId == selectedProduct.Id && i.UnitPrice == unitPrice);
-            if (existing != null)
+        private decimal GetUnitPrice(ProductListItem product)
+        {
+            if (!string.IsNullOrWhiteSpace(UnitPriceTextBox.Text) &&
+                decimal.TryParse(UnitPriceTextBox.Text, out decimal manualPrice) &&
+                manualPrice >= 0)
             {
-                existing.Quantity += quantity;
-                existing.LineTotal = existing.UnitPrice * existing.Quantity;
+                return manualPrice;
+            }
+            return product.UnitPrice;
+        }
+
+        private void AddOrUpdateInvoiceItem(ProductListItem product, int quantity, decimal unitPrice)
+        {
+            var existingItem = _invoiceItems.FirstOrDefault(i =>
+                i.ProductId == product.Id && i.UnitPrice == unitPrice);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += quantity;
+                existingItem.LineTotal = existingItem.UnitPrice * existingItem.Quantity;
             }
             else
             {
-                _items.Add(new InvoiceItemViewModel
+                _invoiceItems.Add(new InvoiceItemViewModel
                 {
-                    ProductId = selectedProduct.Id,
-                    ProductName = selectedProduct.Name,
+                    ProductId = product.Id,
+                    ProductName = product.Name,
                     UnitPrice = unitPrice,
                     Quantity = quantity,
                     LineTotal = unitPrice * quantity
                 });
             }
-
-            QuantityTextBox.Text = "1";
-            UnitPriceTextBox.Text = string.Empty;
-            RefreshItemsGrid();
-            RecalculateTotals();
         }
 
-        private void ProductComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ClearProductEntry()
         {
-            if (ProductComboBox.SelectedItem is ProductListItem selected)
+            QuantityTextBox.Text = "1";
+            UnitPriceTextBox.Text = string.Empty;
+        }
+
+        private void RefreshInvoiceGrid()
+        {
+            for (int i = 0; i < _invoiceItems.Count; i++)
             {
-                UnitPriceTextBox.Text = selected.UnitPrice.ToString("F2");
-                QuantityTextBox.Text = string.IsNullOrWhiteSpace(QuantityTextBox.Text) ? "1" : QuantityTextBox.Text;
+                _invoiceItems[i].RowNumber = i + 1;
             }
-            RecalculateTotals();
+
+            InvoiceItemsDataGrid.ItemsSource = null;
+            InvoiceItemsDataGrid.ItemsSource = _invoiceItems.ToList();
+            
+            // Update item count
+            if (ItemCountTextBlock != null)
+            {
+                ItemCountTextBlock.Text = $"{_invoiceItems.Count} mục";
+            }
         }
 
         private void RemoveItemButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is InvoiceItemViewModel item)
+            if (sender is Button button && button.DataContext is InvoiceItemViewModel item)
             {
-                _items.Remove(item);
-                RefreshItemsGrid();
-                RecalculateTotals();
+                _invoiceItems.Remove(item);
+                RefreshInvoiceGrid();
+                UpdateTotals();
             }
         }
 
         private void IncreaseQtyButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is InvoiceItemViewModel item)
+            if (sender is Button button && button.DataContext is InvoiceItemViewModel item)
             {
-                item.Quantity += 1;
+                // Check stock before increasing quantity
+                int currentStock = DatabaseHelper.GetProductStockQuantity(item.ProductId);
+                int requestedQuantity = item.Quantity + 1;
+                
+                if (requestedQuantity > currentStock)
+                {
+                    MessageBox.Show($"Không đủ hàng! Sản phẩm '{item.ProductName}' chỉ còn {currentStock} sản phẩm trong kho.\nHiện tại trong hóa đơn: {item.Quantity} sản phẩm.", 
+                                  "Hết hàng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                
+                item.Quantity++;
                 item.LineTotal = item.UnitPrice * item.Quantity;
-                RefreshItemsGrid();
-                RecalculateTotals();
+                RefreshInvoiceGrid();
+                UpdateTotals();
             }
         }
 
         private void DecreaseQtyButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is InvoiceItemViewModel item)
+            if (sender is Button button && button.DataContext is InvoiceItemViewModel item)
             {
                 if (item.Quantity > 1)
                 {
-                    item.Quantity -= 1;
+                    item.Quantity--;
                     item.LineTotal = item.UnitPrice * item.Quantity;
                 }
                 else
                 {
-                    _items.Remove(item);
+                    _invoiceItems.Remove(item);
                 }
-                RefreshItemsGrid();
-                RecalculateTotals();
+                RefreshInvoiceGrid();
+                UpdateTotals();
             }
         }
 
         private void ClearInvoiceButton_Click(object sender, RoutedEventArgs e)
         {
-            _items.Clear();
-            RefreshItemsGrid();
-            RecalculateTotals();
+            ClearInvoice();
+            UpdateTotals();
         }
 
-        private void UpdateInvoiceQRCode(decimal total)
+        private void ClearInvoice()
         {
+            _invoiceItems.Clear();
+            RefreshInvoiceGrid();
+        }
+
+        #endregion
+
+        #region Totals Calculation
+
+        private void UpdateTotals()
+        {
+            if (!AreTotalsControlsReady()) return;
+
             try
             {
-                var paymentSettings = PaymentSettingsManager.Load();
-                
-                if (InvoiceQRCode == null || PaymentMethodComboBox == null)
-                {
-                    return;
-                }
+                var subtotal = _invoiceItems.Sum(item => item.LineTotal);
+                UpdateSubtotalDisplay(subtotal);
 
-                // Lấy phương thức thanh toán từ ComboBox
-                string selectedPayment = "";
-                if (PaymentMethodComboBox.SelectedItem is ComboBoxItem selectedItem)
-                {
-                    selectedPayment = selectedItem.Content?.ToString() ?? "";
-                }
+                var taxPercent = GetTaxPercent();
+                var discount = CalculateDiscount(subtotal);
+                var tierDiscount = CalculateTierDiscount(subtotal);
 
-                // Chỉ hiển thị QR code cho chuyển khoản và ví điện tử
-                if (!selectedPayment.Contains("Chuyển khoản") && !selectedPayment.Contains("Ví điện tử"))
-                {
-                    InvoiceQRCode.Source = null;
-                    InvoiceQRCode.Visibility = Visibility.Collapsed;
-                    return;
-                }
+                var taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
+                var totalDiscount = discount + tierDiscount;
+                var total = Math.Max(0, subtotal + taxAmount - totalDiscount);
 
-                if (!paymentSettings.EnableQRCode)
-                {
-                    InvoiceQRCode.Source = null;
-                    InvoiceQRCode.Visibility = Visibility.Collapsed;
-                    return;
-                }
-
-                InvoiceQRCode.Visibility = Visibility.Visible;
-                
-                // Quyết định loại QR code dựa trên lựa chọn
-                string qrMethod = paymentSettings.PaymentMethod; // Mặc định từ settings
-                if (selectedPayment.Contains("Ví điện tử"))
-                {
-                    qrMethod = "momo"; // Sử dụng MoMo cho ví điện tử
-                }
-                
-                var qrCode = QRCodeHelper.GenerateQRByMethod(qrMethod);
-                InvoiceQRCode.Source = qrCode;
+                UpdateTotalsDisplay(taxAmount, totalDiscount, total);
+                UpdateQRCode(total);
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error updating QR code: {ex.Message}");
+                // Silent failure
             }
         }
 
-
-        private void TotalsInput_TextChanged(object sender, TextChangedEventArgs e)
+        private void UpdateSubtotalDisplay(decimal subtotal)
         {
-            RecalculateTotals();
-        }
-
-        private void RecalculateTotals()
-        {
-            if (!TotalsControlsReady())
-            {
-                return;
-            }
-
-            decimal subtotal = _items.Sum(i => i.LineTotal);
             SubtotalTextBlock.Text = subtotal.ToString("F2");
 
-            decimal taxPercent = TryGetDecimal(GetTextOrEmpty(TaxPercentTextBox));
-            decimal discount = 0m;
-            // New unified discount controls
-            if (DiscountModeComboBox != null && DiscountValueTextBox != null)
+            if (TierDiscountInlineText != null)
             {
-                var modeText = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
-                var discountVal = TryGetDecimal(GetTextOrEmpty(DiscountValueTextBox));
-                if (string.Equals(modeText, "%", StringComparison.Ordinal))
-                {
-                    discount = Math.Round(subtotal * (discountVal / 100m), 2);
-                }
-                else
-                {
-                    discount = discountVal;
-                }
+                var tierDiscount = CalculateTierDiscount(subtotal);
+                TierDiscountInlineText.Text = $"(+ Ưu đãi hạng: {tierDiscount:F2})";
             }
+        }
 
-            // Loyalty tier auto-discount
+        private decimal GetTaxPercent()
+        {
+            return decimal.TryParse(TaxPercentTextBox?.Text, out var tax) ? tax : 0m;
+        }
+
+        private decimal CalculateDiscount(decimal subtotal)
+        {
+            if (DiscountModeComboBox == null || DiscountValueTextBox == null) return 0m;
+
+            var mode = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
+            var discountValue = decimal.TryParse(DiscountValueTextBox.Text, out var value) ? value : 0m;
+
+            return mode == "%" ? Math.Round(subtotal * (discountValue / 100m), 2) : discountValue;
+        }
+
+        private decimal CalculateTierDiscount(decimal subtotal)
+        {
             var (tier, _) = GetSelectedCustomerLoyalty();
-            decimal tierDiscountPercent = TierSettingsManager.GetTierDiscount(tier);
-            decimal tierDiscount = Math.Round(subtotal * (tierDiscountPercent / 100m), 2);
-            if (TierDiscountInlineText != null) TierDiscountInlineText.Text = $"(+ Ưu đãi hạng: {tierDiscount:F2})";
-            discount += tierDiscount;
+            var tierDiscountPercent = TierSettingsManager.GetTierDiscount(tier);
+            return Math.Round(subtotal * (tierDiscountPercent / 100m), 2);
+        }
 
-            decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
+        private void UpdateTotalsDisplay(decimal taxAmount, decimal discount, decimal total)
+        {
             TaxAmountTextBlock.Text = taxAmount.ToString("F2");
-
-            decimal total = Math.Max(0, subtotal + taxAmount - discount);
             TotalTextBlock.Text = total.ToString("F2");
 
-            decimal paid = TryGetDecimal(GetTextOrEmpty(PaidTextBox));
-            decimal change = Math.Max(0, paid - total);
+            var paid = decimal.TryParse(PaidTextBox?.Text, out var p) ? p : 0m;
+            var change = Math.Max(0, paid - total);
             ChangeTextBlock.Text = change.ToString("F2");
-
-            // Update QR code when totals change
-            UpdateInvoiceQRCode(total);
         }
 
-        private static string GetTextOrEmpty(TextBox? textBox)
-        {
-            return textBox?.Text ?? string.Empty;
-        }
-
-        private bool TotalsControlsReady()
+        private bool AreTotalsControlsReady()
         {
             return SubtotalTextBlock != null &&
                    TaxPercentTextBox != null &&
@@ -343,233 +413,414 @@ namespace WpfApp1
                    ChangeTextBlock != null;
         }
 
-        private void TotalsInput_Toggle(object sender, RoutedEventArgs e)
+        #endregion
+
+        #region QR Code Management
+
+        private void UpdateQRCode(decimal total)
         {
-            RecalculateTotals();
+            try
+            {
+                var paymentSettings = PaymentSettingsManager.Load();
+
+                if (InvoiceQRCode == null || PaymentMethodComboBox == null) return;
+
+                var selectedPayment = GetSelectedPaymentMethod();
+
+                if (!IsBankTransferSelected(selectedPayment))
+                {
+                    HideQRCode();
+                    return;
+                }
+
+                if (!paymentSettings.EnableQRCode)
+                {
+                    HideQRCode();
+                    return;
+                }
+
+                if (total <= 0)
+                {
+                    ShowErrorQRCode("Vui lòng thêm sản phẩm để tạo QR thanh toán");
+                    return;
+                }
+
+                if (paymentSettings.BankAccount == null || paymentSettings.BankCode == null)
+                {
+                    ShowErrorQRCode("Chưa cấu hình thông tin ngân hàng. Vui lòng vào Settings để thiết lập");
+                    return;
+                }
+
+                GenerateQRCode(paymentSettings, total);
+            }
+            catch
+            {
+                ShowErrorQRCode("Lỗi tạo QR code");
+            }
+        }
+
+        private string GetSelectedPaymentMethod()
+        {
+            if (PaymentMethodComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                return selectedItem.Content?.ToString() ?? "";
+            }
+            return "";
+        }
+
+        private bool IsBankTransferSelected(string paymentMethod)
+        {
+            return paymentMethod.Contains("Chuyển khoản");
+        }
+
+        private void GenerateQRCode(PaymentSettings settings, decimal total)
+        {
+            var description = GenerateTransactionDescription();
+            var qrCode = QRCodeHelper.GenerateVietQRCode_Safe(
+                settings.BankCode.ToLower(),
+                settings.BankAccount,
+                total,
+                description,
+                true,
+                370,
+                settings.AccountHolder);
+
+            InvoiceQRCode.Source = qrCode;
+            
+            // Hide placeholder text when QR code is shown
+            var placeholderText = this.FindName("QRPlaceholderText") as TextBlock;
+            if (placeholderText != null)
+                placeholderText.Visibility = Visibility.Collapsed;
+
+            ShowQRCode();
+        }
+
+        private string GenerateTransactionDescription()
+        {
+
+            var description = "INV" + DateTime.Now.ToString("yyMMdd");
+            description = Regex.Replace(description, @"[^a-zA-Z0-9]", "");
+
+            if (description.Length > 8)
+                description = description.Substring(0, 8);
+
+            if (!description.StartsWith("INV"))
+            {
+                description = "INV" + DateTime.Now.ToString("yyMMdd");
+                description = Regex.Replace(description, @"[^a-zA-Z0-9]", "");
+                if (description.Length > 8) description = description.Substring(0, 8);
+            }
+
+            return description;
+        }
+
+        private void ShowErrorQRCode(string message)
+        {
+            InvoiceQRCode.Source = CreateErrorQRCode(message, 120);
+            
+            // Show placeholder text for errors
+            var placeholderText = this.FindName("QRPlaceholderText") as TextBlock;
+            if (placeholderText != null)
+            {
+                placeholderText.Text = message;
+                placeholderText.Visibility = Visibility.Visible;
+            }
+
+            ShowQRCode();
+        }
+
+        private void ShowQRCode()
+        {
+            if (InvoiceQRCode != null)
+                InvoiceQRCode.Visibility = Visibility.Visible;
+        }
+
+        private void HideQRCode()
+        {
+            if (InvoiceQRCode != null)
+            {
+                InvoiceQRCode.Source = null;
+                InvoiceQRCode.Visibility = Visibility.Collapsed;
+            }
+
+            // Show placeholder text when hiding
+            var placeholderText = this.FindName("QRPlaceholderText") as TextBlock;
+            if (placeholderText != null)
+            {
+                placeholderText.Text = "Chọn 'Chuyển khoản' để hiển thị QR";
+                placeholderText.Visibility = Visibility.Visible;
+            }
+        }
+
+        private BitmapSource CreateErrorQRCode(string message, int size)
+        {
+            var drawingVisual = new System.Windows.Media.DrawingVisual();
+            using (var drawingContext = drawingVisual.RenderOpen())
+            {
+                // White background with red border
+                drawingContext.DrawRectangle(
+                    System.Windows.Media.Brushes.White,
+                    new System.Windows.Media.Pen(System.Windows.Media.Brushes.Red, 2),
+                    new System.Windows.Rect(0, 0, size, size));
+
+                // Error message
+                var formattedText = new System.Windows.Media.FormattedText(
+                    message,
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    System.Windows.FlowDirection.LeftToRight,
+                    new System.Windows.Media.Typeface("Arial"),
+                    Math.Min(10, size / 12.0),
+                    System.Windows.Media.Brushes.Red,
+                    System.Windows.Media.VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+                // Center the text
+                double x = (size - formattedText.Width) / 2;
+                double y = (size - formattedText.Height) / 2;
+
+                drawingContext.DrawText(formattedText, new System.Windows.Point(x, y));
+            }
+
+            var renderTargetBitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(
+                size, size, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+            renderTargetBitmap.Render(drawingVisual);
+            return renderTargetBitmap;
+        }
+
+        #endregion
+
+        #region Event Handlers
+
+        private void TotalsInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateTotals();
         }
 
         private void TotalsSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            RecalculateTotals();
+            UpdateTotals();
         }
 
         private void PaymentMethodComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Cập nhật QR code khi thay đổi phương thức thanh toán
-            decimal total = _items.Sum(i => i.LineTotal);
-            UpdateInvoiceQRCode(total);
-        }
-
-
-        protected override void OnContentRendered(EventArgs e)
-        {
-            base.OnContentRendered(e);
-            // Focus product entry for quick keyboard usage
-            ProductComboBox?.Focus();
+            var total = _invoiceItems.Sum(item => item.LineTotal);
+            UpdateQRCode(total);
         }
 
         private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Enter)
+            switch (e.Key)
             {
-                AddItemButton_Click(AddItemButton, new RoutedEventArgs());
-                e.Handled = true;
-                return;
-            }
-            if (e.Key == System.Windows.Input.Key.Delete && InvoiceItemsDataGrid?.SelectedItem is InvoiceItemViewModel)
-            {
-                RemoveItemButton_Click(RemoveItemButtonFromSelection(), new RoutedEventArgs());
-                e.Handled = true;
-                return;
-            }
-            if ((System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == System.Windows.Input.ModifierKeys.Control
-                && e.Key == System.Windows.Input.Key.S)
-            {
-                SaveInvoiceButton_Click(SaveInvoiceButton, new RoutedEventArgs());
-                e.Handled = true;
-            }
-        }
+                case System.Windows.Input.Key.Enter:
+                    AddItemButton_Click(AddItemButton, new RoutedEventArgs());
+                    e.Handled = true;
+                    break;
 
-        private Button RemoveItemButtonFromSelection()
-        {
-            var btn = new Button();
-            btn.DataContext = InvoiceItemsDataGrid?.SelectedItem;
-            return btn;
-        }
+                case System.Windows.Input.Key.Delete:
+                    if (InvoiceItemsDataGrid?.SelectedItem is InvoiceItemViewModel selectedItem)
+                    {
+                        var button = new Button { DataContext = selectedItem };
+                        RemoveItemButton_Click(button, new RoutedEventArgs());
+                        e.Handled = true;
+                    }
+                    break;
 
-        private static decimal TryGetDecimal(string? text)
-        {
-            if (decimal.TryParse(text, out var value) && value >= 0)
-                return value;
-            return 0m;
-        }
-
-        private int GetEmployeeId(string username)
-        {
-            return DatabaseHelper.GetEmployeeIdByUsername(username);
-        }
-
-        private void PrintInvoiceButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (_items.Count == 0)
-            {
-                MessageBox.Show("Vui lòng thêm ít nhất một sản phẩm để in hóa đơn.", "Xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (CustomerComboBox.SelectedItem is not CustomerListItem customer)
-            {
-                MessageBox.Show("Vui lòng chọn khách hàng.", "Xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            decimal subtotal = _items.Sum(i => i.LineTotal);
-            decimal taxPercent = TryGetDecimal(TaxPercentTextBox.Text);
-            decimal discount = 0m;
-            if (DiscountModeComboBox != null && DiscountValueTextBox != null)
-            {
-                var modeText = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
-                var discountVal = TryGetDecimal(DiscountValueTextBox.Text);
-                if (string.Equals(modeText, "%", StringComparison.Ordinal))
-                {
-                    discount = Math.Round(subtotal * (discountVal / 100m), 2);
-                }
-                else
-                {
-                    discount = discountVal;
-                }
-            }
-            var (stier, _) = GetSelectedCustomerLoyalty();
-            decimal sTierPercent = TierSettingsManager.GetTierDiscount(stier);
-            discount += Math.Round(subtotal * (sTierPercent / 100m), 2);
-            decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
-            decimal total = Math.Max(0, subtotal + taxAmount - discount);
-
-            int tempInvoiceId = new Random().Next(1000, 9999);
-            DateTime invoiceDate = DateTime.Now;
-            string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
-            var employeeId = GetEmployeeId(currentUser);
-            var itemsForSave = _items.Select(i => (i.ProductId, i.Quantity, i.UnitPrice)).ToList();
-            var success = DatabaseHelper.SaveInvoice(customer.Id, employeeId, subtotal, taxPercent, taxAmount, discount, total, 0, itemsForSave);
-            if (success)
-            {
-
-                var invoiceId = DatabaseHelper.LastSavedInvoiceId;
-                var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
-                printWindow.ShowDialog();
-            }
-            else
-            {
-                MessageBox.Show("Không thể lưu hóa đơn để in.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                case System.Windows.Input.Key.S when e.KeyboardDevice.Modifiers == System.Windows.Input.ModifierKeys.Control:
+                    SaveInvoiceButton_Click(SaveInvoiceButton, new RoutedEventArgs());
+                    e.Handled = true;
+                    break;
             }
         }
+
+        #endregion
+
+        #region Invoice Operations
 
         private void SaveInvoiceButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_items.Count == 0)
+            if (!ValidateInvoiceForSave()) return;
+
+            var customerId = (int)CustomerComboBox.SelectedValue;
+            var paid = decimal.TryParse(PaidTextBox?.Text, out var p) ? p : 0m;
+
+            if (CreateAndSaveInvoice(customerId, paid))
             {
-                MessageBox.Show("Vui lòng thêm ít nhất một sản phẩm.", "Xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                ProcessSuccessfulSave(customerId);
+            }
+        }
+
+        private bool ValidateInvoiceForSave()
+        {
+            if (_invoiceItems.Count == 0)
+            {
+                MessageBox.Show("Vui lòng thêm ít nhất một sản phẩm.", "Xác thực",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
             }
 
             if (CustomerComboBox.SelectedValue is not int customerId || customerId <= 0)
             {
-                MessageBox.Show("Vui lòng chọn khách hàng.", "Xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                MessageBox.Show("Vui lòng chọn khách hàng.", "Xác thực",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
             }
 
-            decimal subtotal = _items.Sum(i => i.LineTotal);
-            decimal taxPercent = TryGetDecimal(TaxPercentTextBox.Text);
-            decimal discount = 0m;
-            if (DiscountModeComboBox != null && DiscountValueTextBox != null)
-            {
-                var modeText = (DiscountModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "VND";
-                var discountVal = TryGetDecimal(DiscountValueTextBox.Text);
-                if (string.Equals(modeText, "%", StringComparison.Ordinal))
-                {
-                    discount = Math.Round(subtotal * (discountVal / 100m), 2);
-                }
-                else
-                {
-                    discount = discountVal;
-                }
-            }
-            var (saveTier, savePts) = GetSelectedCustomerLoyalty();
-            decimal saveTierPercent = TierSettingsManager.GetTierDiscount(saveTier);
-            discount += Math.Round(subtotal * (saveTierPercent / 100m), 2);
-            decimal taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
-            decimal total = Math.Max(0, subtotal + taxAmount - discount);
-            decimal paid = TryGetDecimal(PaidTextBox.Text);
+            return true;
+        }
 
-            var itemsToSave = _items.Select(i => (i.ProductId, i.Quantity, i.UnitPrice)).ToList();
-            
-            // Lấy EmployeeId của người đang đăng nhập
-            string currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
-            var employeeId = GetEmployeeId(currentUser);
-            
-            // Debug: Log thông tin để kiểm tra
-            System.Diagnostics.Debug.WriteLine($"Current user: {currentUser}");
-            System.Diagnostics.Debug.WriteLine($"Employee ID: {employeeId}");
-            
-            bool ok = DatabaseHelper.SaveInvoice(customerId, employeeId, subtotal, taxPercent, taxAmount, discount, total, paid, itemsToSave);
-            if (ok)
+        private bool CreateAndSaveInvoice(int customerId, decimal paid)
+        {
+            try
             {
-                int invoiceId = DatabaseHelper.LastSavedInvoiceId;
-                MessageBox.Show($"Hóa đơn #{invoiceId} đã được lưu.", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
-                // Update loyalty points and tier
-                int earned = (int)Math.Floor((double)total / 100000); // 1 point per 100k
-                int newPoints = savePts + earned;
-                string newTier = TierSettingsManager.DetermineTierByPoints(newPoints);
+                var subtotal = _invoiceItems.Sum(item => item.LineTotal);
+                var taxPercent = GetTaxPercent();
+                var discount = CalculateTotalDiscount(subtotal);
+                var taxAmount = Math.Round(subtotal * (taxPercent / 100m), 2);
+                var total = Math.Max(0, subtotal + taxAmount - discount);
+
+                var itemsForSave = _invoiceItems.Select(item =>
+                    (item.ProductId, item.Quantity, item.UnitPrice)).ToList();
+
+                var currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
+                var employeeId = DatabaseHelper.GetEmployeeIdByUsername(currentUser);
+
+                System.Diagnostics.Debug.WriteLine($"Attempting to save invoice: CustomerId={customerId}, EmployeeId={employeeId}, Items={itemsForSave.Count}");
+
+                var result = DatabaseHelper.SaveInvoice(customerId, employeeId, subtotal, taxPercent,
+                    taxAmount, discount, total, paid, itemsForSave);
+
+                if (!result)
+                {
+                    MessageBox.Show($"Không thể lưu hóa đơn. Vui lòng kiểm tra:\n" +
+                                   $"1. Database connection\n" +
+                                   $"2. Customer ID: {customerId}\n" +
+                                   $"3. Employee ID: {employeeId}\n" +
+                                   $"4. Products có tồn tại trong database\n" +
+                                   $"Xem Debug Output để biết chi tiết.",
+                                   "Lỗi",
+                                   MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi lưu hóa đơn: {ex.Message}\n\nChi tiết: {ex.StackTrace}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"SaveInvoice exception: {ex}");
+                return false;
+            }
+        }
+
+        private decimal CalculateTotalDiscount(decimal subtotal)
+        {
+            var manualDiscount = CalculateDiscount(subtotal);
+            var tierDiscount = CalculateTierDiscount(subtotal);
+            return manualDiscount + tierDiscount;
+        }
+
+        private void ProcessSuccessfulSave(int customerId)
+        {
+            var invoiceId = DatabaseHelper.LastSavedInvoiceId;
+            MessageBox.Show($"Hóa đơn #{invoiceId} đã được lưu.", "Thành công",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+
+            UpdateCustomerLoyalty(customerId);
+            ClearInvoiceAfterSave();
+            ShowPrintWindow(invoiceId);
+
+            DashboardWindow.TriggerDashboardRefresh();
+        }
+
+        private void ShowPrintWindow(int invoiceId)
+        {
+            try
+            {
+                var currentUser = Application.Current.Resources["CurrentUser"]?.ToString() ?? "admin";
+                var employeeId = DatabaseHelper.GetEmployeeIdByUsername(currentUser);
+
+                var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
+                printWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi hiển thị cửa sổ in: {ex.Message}", "Lỗi",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void UpdateCustomerLoyalty(int customerId)
+        {
+            try
+            {
+                var subtotal = _invoiceItems.Sum(item => item.LineTotal);
+                var discount = CalculateTotalDiscount(subtotal);
+                var total = Math.Max(0, subtotal - discount);
+
+                var (_, currentPoints) = DatabaseHelper.GetCustomerLoyalty(customerId);
+                var earnedPoints = (int)Math.Floor((double)total / 100000);
+                var newPoints = currentPoints + earnedPoints;
+                var newTier = TierSettingsManager.DetermineTierByPoints(newPoints);
+
                 DatabaseHelper.UpdateCustomerLoyalty(customerId, newPoints, newTier);
-
-                _items.Clear();
-                RefreshItemsGrid();
-                TaxPercentTextBox.Text = "0";
-                if (DiscountValueTextBox != null) DiscountValueTextBox.Text = "0";
-                PaidTextBox.Text = "0";
-                RecalculateTotals();
-
-           
-                try
-                {
-                    var selectedCustomer = CustomerComboBox.SelectedItem as CustomerListItem;
-                    var printWindow = new InvoicePrintWindow(invoiceId, employeeId);
-                    printWindow.ShowDialog();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Không thể mở cửa sổ in cho hóa đơn #{invoiceId}: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
             }
-            else
+            catch
             {
-                MessageBox.Show("Không thể lưu hóa đơn.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Silent failure
             }
+        }
+
+        private void ClearInvoiceAfterSave()
+        {
+            _invoiceItems.Clear();
+            RefreshInvoiceGrid();
+            ResetFormFields();
+            UpdateTotals();
+        }
+
+        private void ResetFormFields()
+        {
+            TaxPercentTextBox.Text = "0";
+            if (DiscountValueTextBox != null) DiscountValueTextBox.Text = "0";
+            PaidTextBox.Text = "0";
         }
 
         private void OpenHistoryButton_Click(object sender, RoutedEventArgs e)
         {
             var historyWindow = new TransactionHistoryWindow();
-            try
-            {
-                if (this.IsLoaded)
-                {
-                    historyWindow.Owner = this;
-                    historyWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-                }
-                else
-                {
-                    historyWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                }
-            }
-            catch (InvalidOperationException)
-            {
-                historyWindow.Owner = null;
-                historyWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            }
             historyWindow.ShowDialog();
         }
+
+        #endregion
+
+        #region Helper Methods
+
+        private static string GetTextOrEmpty(TextBox textBox)
+        {
+            return textBox?.Text ?? string.Empty;
+        }
+
+        private static decimal TryGetDecimal(string text)
+        {
+            return decimal.TryParse(text, out var value) && value >= 0 ? value : 0m;
+        }
+
+        private int GetEmployeeId(string username)
+        {
+            try
+            {
+                return DatabaseHelper.GetEmployeeIdByUsername(username);
+            }
+            catch
+            {
+                return 1; // Default to admin
+            }
+        }
+
+        #endregion
     }
+
+    #region View Models
 
     public class InvoiceItemViewModel
     {
@@ -586,6 +837,7 @@ namespace WpfApp1
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal UnitPrice { get; set; }
+        public int StockQuantity { get; set; }
     }
 
     public class CustomerListItem
@@ -593,8 +845,7 @@ namespace WpfApp1
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
     }
-}
 
+    #endregion
+}

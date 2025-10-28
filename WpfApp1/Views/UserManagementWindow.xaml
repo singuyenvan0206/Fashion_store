@@ -120,7 +120,10 @@
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       ScrollViewer.HorizontalScrollBarVisibility="Auto"
                       EnableRowVirtualization="True"
-                      EnableColumnVirtualization="True">
+                      EnableColumnVirtualization="False"
+                      MinHeight="400"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Stretch">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow">
                         <EventSetter Event="MouseDoubleClick" Handler="UsersDataGrid_MouseDoubleClick"/>

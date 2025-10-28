@@ -112,73 +112,6 @@
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-
-            <!-- KPI Cards -->
-            <Grid Grid.Row="0" Margin="0,0,0,8" Visibility="Collapsed">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <Border Style="{StaticResource KpiCard}">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="📈 Doanh thu" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +12%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiRevenueText" Text="0₫" FontSize="22" FontWeight="Bold" Foreground="#059669" Margin="0,4,0,0"/>
-                        <TextBlock Text="Tổng doanh thu" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-                
-                <Border Grid.Column="1" Style="{StaticResource KpiCard}">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="🧾 Số hóa đơn" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +8%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiInvoiceCountText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#0D9488" Margin="0,4,0,0"/>
-                        <TextBlock Text="Hóa đơn đã tạo" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-                
-                <Border Grid.Column="2" Style="{StaticResource KpiCard}">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="👥 Khách hàng" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +5%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiCustomerCountText" Text="0" FontSize="22" FontWeight="Bold" Foreground="#2563EB" Margin="0,4,0,0"/>
-                        <TextBlock Text="Khách hàng mới" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-                
-                <Border Grid.Column="3" Style="{StaticResource KpiCard}">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="💸 Giảm giá" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↘️ -3%" Foreground="#F44336" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiDiscountText" Text="0₫" FontSize="22" FontWeight="Bold" Foreground="#DC2626" Margin="0,4,0,0"/>
-                        <TextBlock Text="Tổng giảm giá" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-                
-                <Border Grid.Column="4" Style="{StaticResource KpiCard}">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                            <TextBlock Text="💰 Lợi nhuận" Foreground="#777" FontSize="12"/>
-                            <TextBlock Text="↗️ +15%" Foreground="#4CAF50" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                        <TextBlock x:Name="KpiProfitText" Text="0₫" FontSize="22" FontWeight="Bold" Foreground="#FF9800" Margin="0,4,0,0"/>
-                        <TextBlock Text="Lợi nhuận ròng" Foreground="#999" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
             <!-- Invoices DataGrid -->
             <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,8">
                 <Grid>
@@ -202,48 +135,51 @@
                             </StackPanel>
                         </Grid>
                     </Border>
-                    <ScrollViewer Margin="0,45,0,20" Grid.RowSpan="2">
-                        <DataGrid ScrollViewer.CanContentScroll="True" 
-                            ScrollViewer.VerticalScrollBarVisibility="Visible"
-                            x:Name="InvoicesDataGrid"
+                    <ScrollViewer Grid.Row="1" 
+                                  HorizontalScrollBarVisibility="Auto" 
+                                  VerticalScrollBarVisibility="Auto">
+                        <DataGrid x:Name="InvoicesDataGrid"
                             AutoGenerateColumns="False"
                             CanUserAddRows="False"
                             SelectionMode="Single"
                             EnableRowVirtualization="True"
-                            EnableColumnVirtualization="True"
+                            EnableColumnVirtualization="False"
                             BorderThickness="0"
                             GridLinesVisibility="Horizontal"
-                            HeadersVisibility="Column" Height="435" Width="1238">
+                            HeadersVisibility="Column" 
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            CanUserResizeColumns="True">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="#" Binding="{Binding Id}" SortMemberPath="Id" Width="60" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd HH:mm}" SortMemberPath="CreatedDate" Width="160" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Khách hàng" Binding="{Binding CustomerName}" SortMemberPath="CustomerName" Width="*" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Tạm tính" Binding="{Binding Subtotal, StringFormat=N2}" SortMemberPath="Subtotal" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="#" Binding="{Binding Id}" SortMemberPath="Id" Width="70" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Ngày" Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd HH:mm}" SortMemberPath="CreatedDate" Width="150" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Khách hàng" Binding="{Binding CustomerName}" SortMemberPath="CustomerName" Width="180" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Tạm tính" Binding="{Binding Subtotal, StringFormat=N2}" SortMemberPath="Subtotal" Width="100" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Thuế" Binding="{Binding TaxAmount, StringFormat=N2}" SortMemberPath="TaxAmount" Width="110" IsReadOnly="True">
+                                <DataGridTextColumn Header="Thuế" Binding="{Binding TaxAmount, StringFormat=N2}" SortMemberPath="TaxAmount" Width="100" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Giảm giá" Binding="{Binding Discount, StringFormat=N2}" SortMemberPath="Discount" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="Giảm giá" Binding="{Binding Discount, StringFormat=N2}" SortMemberPath="Discount" Width="100" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Tổng cộng" Binding="{Binding Total, StringFormat=N2}" SortMemberPath="Total" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="Tổng cộng" Binding="{Binding Total, StringFormat=N2}" SortMemberPath="Total" Width="100" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Đã trả" Binding="{Binding Paid, StringFormat=N2}" SortMemberPath="Paid" Width="120" IsReadOnly="True">
+                                <DataGridTextColumn Header="Đã trả" Binding="{Binding Paid, StringFormat=N2}" SortMemberPath="Paid" Width="100" IsReadOnly="True">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource RightAlignedCell}"/>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTemplateColumn Header="⚙️ Thao tác" Width="200">
+                                <DataGridTemplateColumn Header="⚙️" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

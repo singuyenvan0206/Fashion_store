@@ -89,9 +89,9 @@ namespace WpfApp1
                     return JsonSerializer.Deserialize<TierSettings>(json) ?? new TierSettings();
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading tier settings: {ex.Message}");
+                // Silent failure
             }
             return new TierSettings();
         }
@@ -105,9 +105,8 @@ namespace WpfApp1
                 File.WriteAllText(SettingsPath, json);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving tier settings: {ex.Message}");
                 return false;
             }
         }
@@ -149,9 +148,8 @@ namespace WpfApp1
                 var newTier = DetermineTierByPoints(points);
                 return DatabaseHelper.UpdateCustomerLoyalty(customerId, points, newTier);
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error updating customer tier: {ex.Message}");
                 return false;
             }
         }
@@ -183,9 +181,8 @@ namespace WpfApp1
 
                 return updatedCount;
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error updating all customer tiers: {ex.Message}");
                 return -1;
             }
         }

@@ -48,6 +48,9 @@ namespace WpfApp1
                 LoadCategories();
                 CategoryNameTextBox.Clear();
                 MessageBox.Show($"Danh mục '{name}' đã được thêm thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Trigger dashboard refresh for real-time updates
+                DashboardWindow.TriggerDashboardRefresh();
             }
             else
             {
@@ -90,6 +93,9 @@ namespace WpfApp1
                     LoadCategories();
                     CategoryNameTextBox.Clear();
                     MessageBox.Show($"Danh mục đã được cập nhật thành công thành '{name}'!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {
@@ -132,6 +138,9 @@ namespace WpfApp1
                         LoadCategories();
                         CategoryNameTextBox.Clear();
                         MessageBox.Show($"Danh mục '{categoryName}' đã được xóa thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        // Trigger dashboard refresh for real-time updates
+                        DashboardWindow.TriggerDashboardRefresh();
                     }
                     else
                     {
@@ -177,6 +186,9 @@ namespace WpfApp1
                     LoadCategories();
                     CategoryNameTextBox.Clear();
                     MessageBox.Show("Tất cả danh mục đã được xóa thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
                 }
                 else
                 {

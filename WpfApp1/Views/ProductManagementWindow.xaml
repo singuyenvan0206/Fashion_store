@@ -99,6 +99,18 @@
                         <TextBlock Text="Số Lượng Tồn *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="StockQuantityTextBox" Margin="0,0,0,15"/>
                         
+                        <!-- Import Price -->
+                        <TextBlock Text="Giá Nhập" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="ImportPriceTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Import Quantity -->
+                        <TextBlock Text="Số Lượng Nhập" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="ImportQuantityTextBox" Margin="0,0,0,15"/>
+                        
+                        <!-- Supplier/Unit -->
+                        <TextBlock Text="Nhà Cung Cấp" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="UnitTextBox" Margin="0,0,0,15"/>
+                        
                         <!-- Description -->
                         <TextBlock Text="Mô Tả" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <TextBox x:Name="DescriptionTextBox" 
@@ -208,15 +220,19 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         
-                        <DataGrid Grid.Row="0"
-                                  x:Name="ProductDataGrid" 
-                                  AutoGenerateColumns="False" 
-                                  IsReadOnly="True"
-                                  SelectionMode="Single"
-                                  SelectionChanged="ProductDataGrid_SelectionChanged"
-                                  GridLinesVisibility="Horizontal"
-                                  AlternatingRowBackground="#F8F9FA"
-                                  RowHeight="35">
+                        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MinHeight="400">
+                            <DataGrid x:Name="ProductDataGrid" 
+                                      AutoGenerateColumns="False" 
+                                      IsReadOnly="True"
+                                      SelectionMode="Single"
+                                      SelectionChanged="ProductDataGrid_SelectionChanged"
+                                      GridLinesVisibility="Horizontal"
+                                      AlternatingRowBackground="#F8F9FA"
+                                      RowHeight="35"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Stretch"
+                                      MinHeight="400"
+                                      CanUserResizeColumns="True">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" SortMemberPath="Id" Width="60">
                                     <DataGridTextColumn.ElementStyle>
@@ -226,7 +242,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="📦 Tên Sản Phẩm" Binding="{Binding Name}" SortMemberPath="Name" Width="200"/>
+                                <DataGridTextColumn Header="📦 Tên Sản Phẩm" Binding="{Binding Name}" SortMemberPath="Name" Width="250"/>
                                 <DataGridTextColumn Header="🏷️ Mã SP" Binding="{Binding Code}" SortMemberPath="Code" Width="120">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
@@ -236,7 +252,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
                                 <DataGridTextColumn Header="📂 Danh Mục" Binding="{Binding CategoryName}" SortMemberPath="CategoryName" Width="120"/>
-                                <DataGridTextColumn Header="💰 Giá Bán" Binding="{Binding Price, StringFormat=N0}" SortMemberPath="Price" Width="120">
+                                <DataGridTextColumn Header="💰 Giá Bán" Binding="{Binding SalePrice, StringFormat=N0}" SortMemberPath="SalePrice" Width="120">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -245,7 +261,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="📊 Tồn Kho" Binding="{Binding StockQuantity}" SortMemberPath="StockQuantity" Width="100">
+                                <DataGridTextColumn Header="📊 Tồn Kho" Binding="{Binding StockQuantity}" SortMemberPath="StockQuantity" Width="80">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -254,9 +270,25 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
+                                <DataGridTextColumn Header="💰 Giá Nhập" Binding="{Binding PurchasePrice, StringFormat=N0}" SortMemberPath="PurchasePrice" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="📦 SL Nhập" Binding="{Binding ImportQuantity}" SortMemberPath="ImportQuantity" Width="80">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="🏪 Nhà Cung Cấp" Binding="{Binding PurchaseUnit}" SortMemberPath="PurchaseUnit" Width="150"/>
                                 <DataGridTextColumn Header="📝 Mô Tả" Binding="{Binding Description}" SortMemberPath="Description" Width="*"/>
                             </DataGrid.Columns>
-                        </DataGrid>
+                            </DataGrid>
+                        </ScrollViewer>
                         
                         <!-- Pagination Controls -->
                         <Border Grid.Row="1" Background="#F8F9FA" Padding="15" Margin="0,10,0,0" CornerRadius="8">

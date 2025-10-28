@@ -39,9 +39,12 @@ namespace WpfApp1
 
         private void LoadFilters()
         {
-            // Date range defaults: last 30 days
+            // Get oldest invoice date from database
+            var (oldestDate, newestDate) = DatabaseHelper.GetInvoiceDateRange();
+            
+            // Set default date range: from oldest invoice to today
             ToDatePicker.SelectedDate = DateTime.Today;
-            FromDatePicker.SelectedDate = DateTime.Today.AddDays(-30);
+            FromDatePicker.SelectedDate = oldestDate ?? DateTime.Today.AddYears(-1); // Fallback to 1 year ago if no invoices
 
             var customers = DatabaseHelper.GetAllCustomers();
             var list = new List<CustomerList> { new CustomerList { Id = 0, Name = "Tất cả khách hàng" } };
@@ -117,16 +120,8 @@ namespace WpfApp1
                 // Get total customers and products
                 var totalCustomers = DatabaseHelper.GetTotalCustomers();
                 var totalProducts = DatabaseHelper.GetTotalProducts();
-                
-                // Update KPI TextBlocks
-                if (KpiRevenueText != null)
-                    KpiRevenueText.Text = $"{monthRevenue:N0}₫";
-                    
-                if (KpiInvoiceCountText != null)
-                    KpiInvoiceCountText.Text = todayInvoices.Count.ToString();
-                    
-                if (KpiCustomerCountText != null)
-                    KpiCustomerCountText.Text = $"{totalCustomers} / {totalProducts}";
+
+   
                     
                 if (TotalInvoicesText != null)
                     TotalInvoicesText.Text = $"{_paginationHelper.TotalItems} hóa đơn";
@@ -138,9 +133,9 @@ namespace WpfApp1
                 if (LastUpdateText != null)
                     LastUpdateText.Text = DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy");
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"Error refreshing KPI stats: {ex.Message}");
+                // Silent failure
             }
         }
 
@@ -149,49 +144,13 @@ namespace WpfApp1
             LoadInvoices();
         }
 
-        private void LoadCharts()
-        {
-            var to = ToDatePicker.SelectedDate ?? DateTime.Today;
-            var from = FromDatePicker.SelectedDate ?? DateTime.Today.AddDays(-30);
-
-            // Revenue trend
-            var revenue = DatabaseHelper.GetRevenueByDay(from, to);
-            var revenueModel = new PlotModel { Title = null };
-            revenueModel.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, StringFormat = "MM-dd", IsZoomEnabled = false, IsPanEnabled = false });
-            revenueModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, IsZoomEnabled = false, IsPanEnabled = false });
-            var line = new LineSeries { MarkerType = MarkerType.Circle };
-            foreach (var (day, amount) in revenue)
-            {
-                line.Points.Add(new DataPoint(DateTimeAxis.ToDouble(day), (double)amount));
-            }
-            revenueModel.Series.Add(line);
-
-            // Top products
-            var top = DatabaseHelper.GetTopProducts(from, to, 10);
-            var barModel = new PlotModel { Title = null };
-            var catAxis = new CategoryAxis { Position = AxisPosition.Left };
-            foreach (var (name, _) in top)
-            {
-                catAxis.Labels.Add(name);
-            }
-            barModel.Axes.Add(catAxis);
-            barModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = 0 });
-            var barSeries = new BarSeries();
-            foreach (var (_, qty) in top)
-            {
-                barSeries.Items.Add(new BarItem { Value = qty });
-            }
-            barModel.Series.Add(barSeries);
-  
-        }
-
+       
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             LoadInvoices();
         }
         private void TodayButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("TodayButton_Click called");
             FromDatePicker.SelectedDate = DateTime.Today;
             ToDatePicker.SelectedDate = DateTime.Today;
             LoadInvoices();
@@ -199,7 +158,6 @@ namespace WpfApp1
 
         private void Last7DaysButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Last7DaysButton_Click called");
             FromDatePicker.SelectedDate = DateTime.Today.AddDays(-7);
             ToDatePicker.SelectedDate = DateTime.Today;
             LoadInvoices();
@@ -207,7 +165,6 @@ namespace WpfApp1
 
         private void Last30DaysButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Last30DaysButton_Click called");
             FromDatePicker.SelectedDate = DateTime.Today.AddDays(-30);
             ToDatePicker.SelectedDate = DateTime.Today;
             LoadInvoices();
@@ -215,7 +172,6 @@ namespace WpfApp1
 
         private void ThisMonthButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("ThisMonthButton_Click called");
             var today = DateTime.Today;
             FromDatePicker.SelectedDate = new DateTime(today.Year, today.Month, 1);
             ToDatePicker.SelectedDate = DateTime.Today;
@@ -250,18 +206,18 @@ namespace WpfApp1
                 return;
             }
 
-            var sb = new StringBuilder();
-            sb.AppendLine("Id,Date,Customer,Subtotal,Tax,Discount,Total,Paid");
-            foreach (var i in _invoices)
-            {
-                sb.AppendLine($"{i.Id},\"{i.CreatedDate:yyyy-MM-dd HH:mm}\",\"{i.CustomerName}\",{i.Subtotal:F2},{i.TaxAmount:F2},{i.Discount:F2},{i.Total:F2},{i.Paid:F2}");
-            }
-
             var downloads = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var path = System.IO.Path.Combine(downloads, $"invoices_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
-            // Ghi UTF-8 không BOM theo yêu cầu
-            File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
-            MessageBox.Show($"Đã xuất đến {path}", "Xuất dữ liệu", MessageBoxButton.OK, MessageBoxImage.Information);
+            
+            bool success = DatabaseHelper.ExportInvoicesToCsv(path);
+            if (success)
+            {
+                MessageBox.Show($"Đã xuất {_invoices.Count} hóa đơn (bao gồm chi tiết items) đến:\n{path}", "Xuất dữ liệu", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("Không thể xuất dữ liệu. Vui lòng thử lại.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ImportCsvButton_Click(object sender, RoutedEventArgs e)
@@ -287,6 +243,45 @@ namespace WpfApp1
         }
 
         private void ImportCsvFile(string filePath)
+        {
+            try
+            {
+                // Check if file exists
+                if (!System.IO.File.Exists(filePath))
+                {
+                    MessageBox.Show("File CSV không tồn tại.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                int importedCount = DatabaseHelper.ImportInvoicesFromCsv(filePath);
+                
+                if (importedCount > 0)
+                {
+                    MessageBox.Show($"Đã nhập thành công {importedCount} hóa đơn (bao gồm chi tiết items) từ file CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    
+                    // Refresh the list
+                    LoadInvoices();
+                    
+                    // Trigger dashboard refresh
+                    DashboardWindow.TriggerDashboardRefresh();
+                }
+                else if (importedCount == 0)
+                {
+                    MessageBox.Show("Không có hóa đơn nào được nhập từ file CSV.\n\nVui lòng kiểm tra:\n1. File CSV có đúng format export từ hệ thống này không\n2. File có dữ liệu items (các dòng bắt đầu bằng ITEM)\n3. ProductId trong file CSV phải tồn tại trong database\n4. Định dạng file CSV đúng\n\nXem Output Window để biết chi tiết lỗi.", "Không có dữ liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể nhập hóa đơn từ file CSV.\n\nNguyên nhân có thể:\n1. File CSV đang được mở bởi Excel/ứng dụng khác (vui lòng đóng file)\n2. Định dạng file CSV không đúng\n3. Sản phẩm không tồn tại trong database\n4. Lỗi kết nối database\n\nVui lòng xem Output Window để biết chi tiết lỗi.", "Lỗi nhập", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi nhập file CSV:\n{ex.Message}\n\nChi tiết:\n{ex.StackTrace}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Old import method kept for backwards compatibility
+        private void ImportCsvFileOld(string filePath)
         {
             var lines = File.ReadAllLines(filePath, Encoding.UTF8);
             if (lines.Length <= 1)
@@ -327,12 +322,22 @@ namespace WpfApp1
                     }
 
                     // Parse CSV fields: Id,Date,Customer,Subtotal,Tax,Discount,Total,Paid
+                    var dateStr = fields[1].Trim('"');
                     var customerName = fields[2].Trim('"');
                     var subtotal = decimal.Parse(fields[3]);
                     var taxAmount = decimal.Parse(fields[4]);
                     var discount = decimal.Parse(fields[5]);
                     var total = decimal.Parse(fields[6]);
                     var paid = decimal.Parse(fields[7]);
+
+                    // Parse date from CSV file
+                    DateTime invoiceDate;
+                    if (!DateTime.TryParse(dateStr, out invoiceDate))
+                    {
+                        // Fallback to current time if date parsing fails
+                        invoiceDate = DateTime.Now;
+                        errors.Add($"Dòng {i + 1}: Không thể parse thời gian '{dateStr}', sử dụng thời gian hiện tại");
+                    }
 
                     // Tìm hoặc tạo khách hàng
                     var customers = DatabaseHelper.GetAllCustomers();
@@ -377,8 +382,8 @@ namespace WpfApp1
                     };
 
                     bool success = DatabaseHelper.SaveInvoice(
-                        customerId, employeeId, subtotal, taxPercent, taxAmount, 
-                        discount, total, paid, items);
+                        customerId, employeeId, subtotal, taxPercent, taxAmount,
+                        discount, total, paid, items, invoiceDate);
 
                     if (success)
                     {
@@ -508,12 +513,8 @@ namespace WpfApp1
             var column = e.Column;
             var propertyName = column.SortMemberPath;
             
-            // Debug: Show what property we're trying to sort by
-            System.Diagnostics.Debug.WriteLine($"Sorting by: '{propertyName}'");
-            
             if (string.IsNullOrEmpty(propertyName)) 
             {
-                System.Diagnostics.Debug.WriteLine("SortMemberPath is null or empty!");
                 return;
             }
             
@@ -528,7 +529,6 @@ namespace WpfApp1
             switch (propertyName.ToLower())
             {
                 case "id":
-                    System.Diagnostics.Debug.WriteLine("Sorting by ID");
                     sortFunc = direction == System.ComponentModel.ListSortDirection.Ascending
                         ? items => items.OrderBy(i => i.Id)
                         : items => items.OrderByDescending(i => i.Id);

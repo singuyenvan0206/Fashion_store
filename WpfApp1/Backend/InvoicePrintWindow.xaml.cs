@@ -87,8 +87,8 @@ namespace WpfApp1
             // Set customer information
             SetText("CustomerNameText", string.IsNullOrWhiteSpace(_customer?.Name) ? "Khách lẻ" : _customer!.Name);
             SetText("CustomerPhoneText", string.IsNullOrWhiteSpace(_customer?.Phone) ? "Không có" : _customer!.Phone);
-            SetText("CustomerEmailText", string.IsNullOrWhiteSpace(_customer?.Email) ? "Không có" : _customer!.Email);
-            SetText("CustomerAddressText", string.IsNullOrWhiteSpace(_customer?.Address) ? "Không có" : _customer!.Address);
+            SetText("CustomerEmailText", "Không có"); // CustomerListItem doesn't have Email property
+            SetText("CustomerAddressText", "Không có"); // CustomerListItem doesn't have Address property
 
             SetItemsSource("InvoiceItemsList", _items);
 
@@ -106,15 +106,10 @@ namespace WpfApp1
         {
             try
             {
-                // Debug: Log thông tin invoice
-                System.Diagnostics.Debug.WriteLine($"Loading invoice {invoiceId} for employee {employeeId}");
                 
                 var (header, items) = DatabaseHelper.GetInvoiceDetails(invoiceId);
                 _invoiceHeader = header; // Lưu header để sử dụng trong CreateInvoiceContent
                 
-                // Debug: Log thông tin header và items
-                System.Diagnostics.Debug.WriteLine($"Header loaded: ID={header.Id}, Customer={header.CustomerName}, Total={header.Total}");
-                System.Diagnostics.Debug.WriteLine($"Items count: {items.Count}");
 
                 // Header
                 SetText("InvoiceDateText", header.CreatedDate.ToString("dd/MM/yyyy"));
@@ -158,12 +153,6 @@ namespace WpfApp1
                     });
                 }
                 
-                // Debug: Log số lượng items
-                System.Diagnostics.Debug.WriteLine($"Loaded {vmItems.Count} items for invoice {invoiceId}");
-                foreach (var item in vmItems)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Item: {item.ProductName}, Qty: {item.Quantity}, Price: {item.UnitPrice}");
-                }
                 
                 SetItemsSource("InvoiceItemsList", vmItems);
 
@@ -280,7 +269,7 @@ namespace WpfApp1
             var customerStack = new StackPanel { Margin = new Thickness(0, 20, 0, 20) };
             customerStack.Children.Add(new TextBlock { Text = "KHÁCH HÀNG:", FontWeight = FontWeights.Bold, FontSize = 16 });
             customerStack.Children.Add(new TextBlock { Text = _customer?.Name ?? "Khách lẻ", FontSize = 14, Margin = new Thickness(0, 5, 0, 0) });
-            if (!string.IsNullOrWhiteSpace(_customer?.Phone))
+            if (_customer != null && !string.IsNullOrWhiteSpace(_customer.Phone))
                 customerStack.Children.Add(new TextBlock { Text = _customer.Phone, FontSize = 14 });
             Grid.SetRow(customerStack, 1);
             mainGrid.Children.Add(customerStack);
@@ -415,12 +404,47 @@ namespace WpfApp1
                     return;
                 }
 
-                // Sử dụng method mới từ QRCodeHelper để tạo QR theo phương thức thanh toán
+                // Sử dụng VietQR API để tạo QR code thanh toán ngân hàng
                 var qrCodeImage = FindName("PaymentQRCode") as Image;
                 if (qrCodeImage != null)
                 {
-                    // Tạo QR code theo phương thức thanh toán
-                    qrCodeImage.Source = QRCodeHelper.GenerateQRByMethod(paymentSettings.PaymentMethod);
+                    // Tạo QR code nếu có thông tin ngân hàng được cấu hình
+                    if (paymentSettings.BankAccount != null && paymentSettings.BankCode != null)
+                    {
+                        // Use INV prefix + invoice ID (max 5 digits) to keep it safe and clearly not an amount
+                        string invoiceIdStr = invoiceId.ToString();
+                        int invoiceDigitsToUse = Math.Min(invoiceIdStr.Length, 5);
+                        string description = "INV" + invoiceIdStr.Substring(0, invoiceDigitsToUse);
+
+                        // Đảm bảo description ngắn và an toàn, bắt đầu bằng chữ cái
+                        description = System.Text.RegularExpressions.Regex.Replace(description, @"[^a-zA-Z0-9]", "");
+                        if (description.Length > 8)
+                        {
+                            description = description.Substring(0, 8);
+                        }
+                        
+                        // Ensure it starts with letters and is safe from being confused with amounts
+                        if (string.IsNullOrWhiteSpace(description) || char.IsDigit(description[0]))
+                        {
+                            description = "INVOICE";
+                            if (invoiceIdStr.Length > 0)
+                            {
+                                description = "INV" + invoiceIdStr.Substring(0, Math.Min(5, invoiceIdStr.Length));
+                            }
+                            description = System.Text.RegularExpressions.Regex.Replace(description, @"[^a-zA-Z0-9]", "");
+                            if (description.Length > 8) description = description.Substring(0, 8);
+                        }
+
+                        qrCodeImage.Source = QRCodeHelper.GenerateVietQRCode_Safe(paymentSettings.BankCode.ToLower(), paymentSettings.BankAccount, total, description, false, 370, paymentSettings.AccountHolder);
+                    }
+                    else
+                    {
+                        qrCodeImage.Source = null;
+                        if (qrCodeImage.Parent is Border qrBorderHide)
+                        {
+                            qrBorderHide.Visibility = Visibility.Collapsed;
+                        }
+                    }
                     
                     // Hiển thị QR code container nếu bị ẩn
                     if (qrCodeImage.Parent is Border qrBorder)
@@ -429,9 +453,8 @@ namespace WpfApp1
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Error generating payment QR code: {ex.Message}");
             }
         }
 

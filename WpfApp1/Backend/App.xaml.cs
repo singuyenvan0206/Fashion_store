@@ -14,7 +14,6 @@ namespace WpfApp1
         {
             base.OnStartup(e);
             TryInitializeDatabaseWithFallback();
-            DatabaseHelper.InitializeDatabase();
         }
 
         protected override void OnExit(ExitEventArgs e)

@@ -351,6 +351,25 @@ namespace WpfApp1
             return accounts;
         }
 
+        public static string GetEmployeeName(string username)
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                string selectCmd = "SELECT COALESCE(EmployeeName, Username) FROM Accounts WHERE Username = @username;";
+                using var cmd = new MySqlCommand(selectCmd, connection);
+                cmd.Parameters.AddWithValue("@username", username);
+                var result = cmd.ExecuteScalar();
+                
+                return result?.ToString() ?? username; // Fallback to username if EmployeeName is null
+            }
+            catch
+            {
+                return username; // Fallback to username on error
+            }
+        }
+
         public static int GetEmployeeIdByUsername(string username)
         {
             try
@@ -362,15 +381,7 @@ namespace WpfApp1
                 cmd.Parameters.AddWithValue("@username", username);
                 var result = cmd.ExecuteScalar();
                 
-                if (result != null)
-                {
-                    int employeeId = Convert.ToInt32(result);
-                    return employeeId;
-                }
-                else
-                {
-                    return 1; // Default to admin ID
-                }
+                return result != null ? Convert.ToInt32(result) : 1; // Default to admin ID
             }
             catch
             {
@@ -546,7 +557,7 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Check if product is used by any invoices (when we implement them)
+            // Check if product is used by any invoices
             try
             {
                 string checkCmd = "SELECT COUNT(*) FROM InvoiceItems WHERE ProductId=@id;";
@@ -561,7 +572,7 @@ namespace WpfApp1
             }
             catch
             {
-                // InvoiceItems table doesn't exist yet, so we can safely delete
+                // Continue with deletion if check fails
             }
 
             try
@@ -922,7 +933,8 @@ namespace WpfApp1
             decimal total,
             decimal paid,
             List<(int ProductId, int Quantity, decimal UnitPrice)> items,
-            DateTime? createdDate = null)
+            DateTime? createdDate = null,
+            int? invoiceId = null)  // Thêm tham số để chỉ định ID khi import CSV
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
@@ -930,22 +942,46 @@ namespace WpfApp1
             try
             {
                 DateTime invoiceDate = createdDate ?? DateTime.Now;
+                int actualInvoiceId;
 
-                string insertInvoice = @"INSERT INTO Invoices (CustomerId, EmployeeId, Subtotal, TaxPercent, TaxAmount, Discount, Total, Paid, CreatedDate)
-                                         VALUES (@CustomerId, @EmployeeId, @Subtotal, @TaxPercent, @TaxAmount, @Discount, @Total, @Paid, @CreatedDate);
-                                         SELECT LAST_INSERT_ID();";
-                using var invCmd = new MySqlCommand(insertInvoice, connection, tx);
-                invCmd.Parameters.AddWithValue("@CustomerId", customerId);
-                invCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
-                invCmd.Parameters.AddWithValue("@Subtotal", subtotal);
-                invCmd.Parameters.AddWithValue("@TaxPercent", taxPercent);
-                invCmd.Parameters.AddWithValue("@TaxAmount", taxAmount);
-                invCmd.Parameters.AddWithValue("@Discount", discount);
-                invCmd.Parameters.AddWithValue("@Total", total);
-                invCmd.Parameters.AddWithValue("@Paid", paid);
-                invCmd.Parameters.AddWithValue("@CreatedDate", invoiceDate);
-                var invoiceIdObj = invCmd.ExecuteScalar();
-                int invoiceId = Convert.ToInt32(invoiceIdObj);
+                if (invoiceId.HasValue)
+                {
+                    // Import từ CSV với ID cụ thể
+                    string insertInvoice = @"INSERT INTO Invoices (Id, CustomerId, EmployeeId, Subtotal, TaxPercent, TaxAmount, Discount, Total, Paid, CreatedDate)
+                                             VALUES (@Id, @CustomerId, @EmployeeId, @Subtotal, @TaxPercent, @TaxAmount, @Discount, @Total, @Paid, @CreatedDate);";
+                    using var invCmd = new MySqlCommand(insertInvoice, connection, tx);
+                    invCmd.Parameters.AddWithValue("@Id", invoiceId.Value);
+                    invCmd.Parameters.AddWithValue("@CustomerId", customerId);
+                    invCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    invCmd.Parameters.AddWithValue("@Subtotal", subtotal);
+                    invCmd.Parameters.AddWithValue("@TaxPercent", taxPercent);
+                    invCmd.Parameters.AddWithValue("@TaxAmount", taxAmount);
+                    invCmd.Parameters.AddWithValue("@Discount", discount);
+                    invCmd.Parameters.AddWithValue("@Total", total);
+                    invCmd.Parameters.AddWithValue("@Paid", paid);
+                    invCmd.Parameters.AddWithValue("@CreatedDate", invoiceDate);
+                    invCmd.ExecuteNonQuery();
+                    actualInvoiceId = invoiceId.Value;
+                }
+                else
+                {
+                    // Tạo hóa đơn mới bình thường (AUTO_INCREMENT)
+                    string insertInvoice = @"INSERT INTO Invoices (CustomerId, EmployeeId, Subtotal, TaxPercent, TaxAmount, Discount, Total, Paid, CreatedDate)
+                                             VALUES (@CustomerId, @EmployeeId, @Subtotal, @TaxPercent, @TaxAmount, @Discount, @Total, @Paid, @CreatedDate);
+                                             SELECT LAST_INSERT_ID();";
+                    using var invCmd = new MySqlCommand(insertInvoice, connection, tx);
+                    invCmd.Parameters.AddWithValue("@CustomerId", customerId);
+                    invCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    invCmd.Parameters.AddWithValue("@Subtotal", subtotal);
+                    invCmd.Parameters.AddWithValue("@TaxPercent", taxPercent);
+                    invCmd.Parameters.AddWithValue("@TaxAmount", taxAmount);
+                    invCmd.Parameters.AddWithValue("@Discount", discount);
+                    invCmd.Parameters.AddWithValue("@Total", total);
+                    invCmd.Parameters.AddWithValue("@Paid", paid);
+                    invCmd.Parameters.AddWithValue("@CreatedDate", invoiceDate);
+                    var invoiceIdObj = invCmd.ExecuteScalar();
+                    actualInvoiceId = Convert.ToInt32(invoiceIdObj);
+                }
 
                 foreach (var (productId, quantity, unitPrice) in items)
                 {
@@ -953,7 +989,7 @@ namespace WpfApp1
                     string insertItem = @"INSERT INTO InvoiceItems (InvoiceId, ProductId, EmployeeId, UnitPrice, Quantity, LineTotal)
                                            VALUES (@InvoiceId, @ProductId, @EmployeeId, @UnitPrice, @Quantity, @LineTotal);";
                     using var itemCmd = new MySqlCommand(insertItem, connection, tx);
-                    itemCmd.Parameters.AddWithValue("@InvoiceId", invoiceId);
+                    itemCmd.Parameters.AddWithValue("@InvoiceId", actualInvoiceId);
                     itemCmd.Parameters.AddWithValue("@ProductId", productId);
                     itemCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
                     itemCmd.Parameters.AddWithValue("@UnitPrice", unitPrice);
@@ -969,7 +1005,7 @@ namespace WpfApp1
                 }
 
                 tx.Commit();
-                LastSavedInvoiceId = invoiceId;
+                LastSavedInvoiceId = actualInvoiceId;
                 return true;
             }
             catch (Exception ex)
@@ -1597,7 +1633,7 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            // Check if customer is used by any invoices (when we implement them)
+            // Check if customer is used by any invoices
             try
             {
                 string checkCmd = "SELECT COUNT(*) FROM Invoices WHERE CustomerId=@id;";
@@ -1612,7 +1648,7 @@ namespace WpfApp1
             }
             catch
             {
-                // Invoices table doesn't exist yet, so we can safely delete
+                // Continue with deletion if check fails
             }
 
             string deleteCmd = "DELETE FROM Customers WHERE Id=@id;";
@@ -1641,7 +1677,7 @@ namespace WpfApp1
                 }
                 catch
                 {
-                    // Invoices table may not exist; allow truncate
+                    // Allow truncate if check fails
                 }
 
                 // Disable foreign key checks
@@ -2081,7 +2117,7 @@ namespace WpfApp1
                             var customerId = GetOrCreateCustomerId(currentInvoice.CustomerName, currentInvoice.CustomerPhone, currentInvoice.CustomerEmail, currentInvoice.CustomerAddress);
                             var empId = currentInvoice.EmployeeId > 0 ? currentInvoice.EmployeeId : employeeId;
                             
-                            // Save invoice with items to database
+                            // Save invoice with items to database - SỬ DỤNG ID TỪ CSV
                             var result = SaveInvoice(
                                 customerId,
                                 empId,
@@ -2092,7 +2128,8 @@ namespace WpfApp1
                                 currentInvoice.Total,
                                 currentInvoice.Paid,
                                 currentItems,
-                                currentInvoice.CreatedDate
+                                currentInvoice.CreatedDate,
+                                currentInvoice.Id  // Truyền ID từ CSV vào
                             );
                             
                             if (result)
@@ -2144,7 +2181,7 @@ namespace WpfApp1
                     var customerId = GetOrCreateCustomerId(currentInvoice.CustomerName, currentInvoice.CustomerPhone, currentInvoice.CustomerEmail, currentInvoice.CustomerAddress);
                     var empId = currentInvoice.EmployeeId > 0 ? currentInvoice.EmployeeId : employeeId;
                     
-                    // Save invoice with items to database
+                    // Save invoice with items to database - SỬ DỤNG ID TỪ CSV
                     var result = SaveInvoice(
                         customerId,
                         empId,
@@ -2155,7 +2192,8 @@ namespace WpfApp1
                         currentInvoice.Total,
                         currentInvoice.Paid,
                         currentItems,
-                        currentInvoice.CreatedDate
+                        currentInvoice.CreatedDate,
+                        currentInvoice.Id  // Truyền ID từ CSV vào
                     );
                     
                     if (result)
@@ -2170,11 +2208,38 @@ namespace WpfApp1
                 }
 
                 
+                // Reset AUTO_INCREMENT để tránh conflict ID trong tương lai
+                if (successCount > 0)
+                {
+                    try
+                    {
+                        using var connection = new MySqlConnection(ConnectionString);
+                        connection.Open();
+                        
+                        // Lấy ID lớn nhất hiện tại
+                        string getMaxIdCmd = "SELECT IFNULL(MAX(Id), 0) FROM Invoices";
+                        using var maxIdCmd = new MySqlCommand(getMaxIdCmd, connection);
+                        var maxId = Convert.ToInt32(maxIdCmd.ExecuteScalar());
+                        
+                        // Reset AUTO_INCREMENT về ID lớn nhất + 1
+                        string resetAutoIncrement = $"ALTER TABLE Invoices AUTO_INCREMENT = {maxId + 1}";
+                        using var resetCmd = new MySqlCommand(resetAutoIncrement, connection);
+                        resetCmd.ExecuteNonQuery();
+                        
+                        System.Diagnostics.Debug.WriteLine($"Reset AUTO_INCREMENT to {maxId + 1} after importing {successCount} invoices");
+                    }
+                    catch (Exception resetEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Warning: Could not reset AUTO_INCREMENT: {resetEx.Message}");
+                        // Không throw - import vẫn thành công
+                    }
+                }
+                
                 return successCount;
             }
             catch (Exception ex)
             {
-                
+                System.Diagnostics.Debug.WriteLine($"ImportInvoicesFromCsv Error: {ex.Message}");
                 return -1;
             }
         }

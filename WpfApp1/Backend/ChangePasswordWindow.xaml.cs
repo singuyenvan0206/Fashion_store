@@ -14,6 +14,7 @@ namespace WpfApp1
             string username = UsernameTextBox.Text.Trim();
             string oldPassword = OldPasswordBox.Password;
             string newPassword = NewPasswordBox.Password;
+            string confirmPassword = ConfirmPasswordBox.Password;
 
             // Validation
             if (string.IsNullOrWhiteSpace(username))
@@ -48,6 +49,14 @@ namespace WpfApp1
             {
                 MessageBox.Show("Mật khẩu mới phải khác mật khẩu hiện tại.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 NewPasswordBox.Focus();
+                return;
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                MessageBox.Show("Mật khẩu mới và xác nhận mật khẩu không khớp.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ConfirmPasswordBox.Clear();
+                ConfirmPasswordBox.Focus();
                 return;
             }
 

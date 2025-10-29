@@ -220,7 +220,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         
-                        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" MinHeight="400">
+                        <Border Grid.Row="0" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8">
                             <DataGrid x:Name="ProductDataGrid" 
                                       AutoGenerateColumns="False" 
                                       IsReadOnly="True"
@@ -229,10 +229,17 @@
                                       GridLinesVisibility="Horizontal"
                                       AlternatingRowBackground="#F8F9FA"
                                       RowHeight="35"
+                                      MinHeight="525"
                                       HorizontalAlignment="Stretch"
                                       VerticalAlignment="Stretch"
-                                      MinHeight="400"
-                                      CanUserResizeColumns="True">
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True"
+                                      EnableRowVirtualization="True"
+                                      EnableColumnVirtualization="False"
+                                      CanUserResizeColumns="True"
+                                      HeadersVisibility="Column"
+                                      BorderThickness="0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Binding="{Binding Id}" SortMemberPath="Id" Width="60">
                                     <DataGridTextColumn.ElementStyle>
@@ -284,11 +291,11 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="🏪 Nhà Cung Cấp" Binding="{Binding PurchaseUnit}" SortMemberPath="PurchaseUnit" Width="150"/>
-                                <DataGridTextColumn Header="📝 Mô Tả" Binding="{Binding Description}" SortMemberPath="Description" Width="*"/>
+                                <DataGridTextColumn Header="🏪 Nhà Cung Cấp" Binding="{Binding PurchaseUnit}" SortMemberPath="PurchaseUnit" Width="auto"/>
+                                <DataGridTextColumn Header="📝 Mô Tả" Binding="{Binding Description}" SortMemberPath="Description" Width="auto"/>
                             </DataGrid.Columns>
                             </DataGrid>
-                        </ScrollViewer>
+                        </Border>
                         
                         <!-- Pagination Controls -->
                         <Border Grid.Row="1" Background="#F8F9FA" Padding="15" Margin="0,10,0,0" CornerRadius="8">

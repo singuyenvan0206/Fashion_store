@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Windows;
 using MessageBox = System.Windows.MessageBox;
 
@@ -10,24 +9,7 @@ namespace WpfApp1
         public ReportsSettingsWindow()
         {
             InitializeComponent();
-            LoadSettings();
             LoadDatabaseStatistics();
-        }
-
-        private void LoadSettings()
-        {
-            // Load current settings from registry or config file
-            // For now, use default values
-            DefaultDateRangeComboBox.SelectedIndex = 1; // 30 days
-            AutoRefreshCheckBox.IsChecked = false;
-            ShowChartsCheckBox.IsChecked = true;
-            ItemsPerPageComboBox.SelectedIndex = 0; // 15 items
-            ExportFormatComboBox.SelectedIndex = 0; // CSV
-            IncludeChartsCheckBox.IsChecked = false;
-            
-            // Set default export location to Downloads folder
-            string downloadsPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            ExportLocationTextBox.Text = Path.Combine(downloadsPath, "Downloads");
         }
 
         private void LoadDatabaseStatistics()
@@ -100,20 +82,6 @@ namespace WpfApp1
             }
         }
 
-        private void BrowseExportLocationButton_Click(object sender, RoutedEventArgs e)
-        {
-            var folderDialog = new Microsoft.Win32.OpenFolderDialog
-            {
-                Title = "Chọn thư mục để lưu file xuất",
-                InitialDirectory = ExportLocationTextBox?.Text ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-            };
-            
-            if (folderDialog.ShowDialog() == true)
-            {
-                if (ExportLocationTextBox != null)
-                    ExportLocationTextBox.Text = folderDialog.FolderName;
-            }
-        }
 
         private void DeleteAllInvoicesButton_Click(object sender, RoutedEventArgs e)
         {
@@ -175,25 +143,67 @@ namespace WpfApp1
             }
         }
 
-        private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Save settings to registry or config file
-                // For now, just show confirmation
-                MessageBox.Show("Cài đặt đã được lưu thành công!", 
-                              "Lưu cài đặt", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi lưu cài đặt: {ex.Message}", 
-                              "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
+
+        #region CSV Import/Export Methods
+
+        private void ImportInvoicesCsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Chọn tệp CSV để nhập hóa đơn"
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                int importedCount = DatabaseHelper.ImportInvoicesFromCsv(filePath);
+                if (importedCount > 0)
+                {
+                    LoadDatabaseStatistics(); // Refresh statistics
+                    MessageBox.Show($"Đã nhập thành công {importedCount} hóa đơn từ tệp CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    
+                    // Trigger dashboard refresh for real-time updates
+                    DashboardWindow.TriggerDashboardRefresh();
+                }
+                else if (importedCount == 0)
+                {
+                    MessageBox.Show("Không có hóa đơn nào được nhập từ tệp CSV.\n\nVui lòng kiểm tra:\n1. File CSV có đúng format export từ hệ thống này không\n2. File có dữ liệu items (các dòng bắt đầu bằng ITEM)\n3. ProductId trong file CSV phải tồn tại trong database", "Không có dữ liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể nhập hóa đơn từ tệp CSV. Vui lòng kiểm tra định dạng tệp.", "Lỗi nhập", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ExportInvoicesCsvButton_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "CSV Files (*.csv)|*.csv",
+                Title = "Lưu hóa đơn vào tệp CSV",
+                FileName = $"invoices_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                string filePath = saveFileDialog.FileName;
+                bool success = DatabaseHelper.ExportInvoicesToCsv(filePath);
+                if (success)
+                {
+                    MessageBox.Show("Đã xuất hóa đơn thành công sang tệp CSV.", "Xuất thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Không thể xuất hóa đơn sang tệp CSV.", "Lỗi xuất", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        #endregion
     }
 }

@@ -29,97 +29,6 @@
         <!-- Content -->
         <ScrollViewer Grid.Row="1" Margin="20" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                
-                <!-- Report Configuration Section -->
-                <Border Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="📊 Cấu Hình Báo Cáo" FontSize="18" FontWeight="Bold" Foreground="#333" Margin="0,0,0,15"/>
-                        
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            
-                            <!-- Default Date Range -->
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="📅 Khoảng thời gian mặc định:" VerticalAlignment="Center" Margin="0,0,0,10"/>
-                            <ComboBox x:Name="DefaultDateRangeComboBox" Grid.Row="0" Grid.Column="1" Height="32" Margin="10,0,0,10">
-                                <ComboBoxItem Content="7 ngày gần nhất" IsSelected="True"/>
-                                <ComboBoxItem Content="30 ngày gần nhất"/>
-                                <ComboBoxItem Content="Tháng hiện tại"/>
-                                <ComboBoxItem Content="Quý hiện tại"/>
-                                <ComboBoxItem Content="Năm hiện tại"/>
-                            </ComboBox>
-                            
-                            <!-- Auto Refresh -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="🔄 Tự động làm mới:" VerticalAlignment="Center" Margin="0,0,0,10"/>
-                            <CheckBox x:Name="AutoRefreshCheckBox" Grid.Row="1" Grid.Column="1" Content="Bật tự động làm mới mỗi 5 phút" 
-                                     VerticalAlignment="Center" Margin="10,0,0,10"/>
-                            
-                            <!-- Show Charts by Default -->
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="📈 Hiển thị biểu đồ:" VerticalAlignment="Center" Margin="0,0,0,10"/>
-                            <CheckBox x:Name="ShowChartsCheckBox" Grid.Row="2" Grid.Column="1" Content="Hiển thị biểu đồ khi mở báo cáo" 
-                                     IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,10"/>
-                            
-                            <!-- Items per page -->
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="📄 Số hóa đơn mỗi trang:" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="ItemsPerPageComboBox" Grid.Row="3" Grid.Column="1" Height="32" Margin="10,0,0,0">
-                                <ComboBoxItem Content="15" IsSelected="True"/>
-                                <ComboBoxItem Content="25"/>
-                                <ComboBoxItem Content="50"/>
-                                <ComboBoxItem Content="100"/>
-                            </ComboBox>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <!-- Export Settings Section -->
-                <Border Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="📤 Cài Đặt Xuất Dữ Liệu" FontSize="18" FontWeight="Bold" Foreground="#333" Margin="0,0,0,15"/>
-                        
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            
-                            <!-- Export Format -->
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="📋 Định dạng xuất:" VerticalAlignment="Center" Margin="0,0,0,10"/>
-                            <ComboBox x:Name="ExportFormatComboBox" Grid.Row="0" Grid.Column="1" Height="32" Margin="10,0,0,10">
-                                <ComboBoxItem Content="CSV (Excel)" IsSelected="True"/>
-                                <ComboBoxItem Content="PDF"/>
-                                <ComboBoxItem Content="Excel (XLSX)"/>
-                            </ComboBox>
-                            
-                            <!-- Include Charts -->
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="📊 Bao gồm biểu đồ:" VerticalAlignment="Center" Margin="0,0,0,10"/>
-                            <CheckBox x:Name="IncludeChartsCheckBox" Grid.Row="1" Grid.Column="1" Content="Xuất kèm biểu đồ (chỉ PDF)" 
-                                     VerticalAlignment="Center" Margin="10,0,0,10"/>
-                            
-                            <!-- Export Location -->
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="📁 Thư mục xuất:" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
-                                <TextBox x:Name="ExportLocationTextBox" Width="200" Height="32" VerticalContentAlignment="Center" 
-                                        Text="C:\Users\Downloads" Margin="0,0,10,0"/>
-                                <Button Content="📁" Width="32" Height="32" Background="#4CAF50" Foreground="White" 
-                                       Click="BrowseExportLocationButton_Click"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
                 <!-- Data Management Section -->
                 <Border Background="White" CornerRadius="12" Padding="20" BorderBrush="#E0E0E0" BorderThickness="1" Margin="0,0,0,20">
                     <StackPanel>
@@ -173,10 +82,39 @@
                         
                         <!-- Data Management Actions -->
                         <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Import/Export Section -->
+                            <Border Grid.Row="0" Background="#FFF3E0" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="📁 Quản Lý Hóa Đơn CSV" FontWeight="Bold" FontSize="14" 
+                                               Foreground="#F57C00" Margin="0,0,0,10" HorizontalAlignment="Center"/>
+                                    
+                                    <UniformGrid Columns="2">
+                                        <Button Content="📥 Nhập Hóa Đơn CSV" 
+                                                Height="40" 
+                                                Background="#FF9800" 
+                                                Foreground="White" 
+                                                Click="ImportInvoicesCsvButton_Click"
+                                                Margin="0,0,5,0"/>
+                                        <Button Content="📤 Xuất Hóa Đơn CSV" 
+                                                Height="40" 
+                                                Background="#9C27B0" 
+                                                Foreground="White"
+                                                Click="ExportInvoicesCsvButton_Click"
+                                                Margin="5,0,0,0"/>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+                            
                             <!-- Delete All Invoices - DANGER ZONE -->
-                            <Button Content="🗑️ XÓA TẤT CẢ HÓA ĐƠN (NGUY HIỂM)" Height="50" 
+                            <Button Grid.Row="1" Content="🗑️ XÓA TẤT CẢ HÓA ĐƠN (NGUY HIỂM)" Height="50" 
                                    Background="#F44336" Foreground="White" FontWeight="Bold" FontSize="14"
-                                   Margin="0,0,0,0" Click="DeleteAllInvoicesButton_Click"/>
+                                   Margin="0,0,0,15" Click="DeleteAllInvoicesButton_Click"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -187,19 +125,9 @@
         <!-- Footer Buttons -->
         <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="20">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <Button Grid.Column="1" Content="💾 Lưu Cài Đặt" Width="120" Height="35" 
-                       Background="#4CAF50" Foreground="White" FontWeight="SemiBold" 
-                       Margin="0,0,10,0" Click="SaveSettingsButton_Click"/>
-                
-                <Button Grid.Column="2" Content="❌ Đóng" Width="80" Height="35" 
+                <Button Content="❌ Đóng" Width="100" Height="35" 
                        Background="#757575" Foreground="White" FontWeight="SemiBold" 
-                       Click="CloseButton_Click"/>
+                       HorizontalAlignment="Right" Click="CloseButton_Click"/>
             </Grid>
         </Border>
     </Grid>

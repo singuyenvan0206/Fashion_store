@@ -72,6 +72,8 @@ namespace WpfApp1
         private void UpdateDisplayAndPagination()
         {
             // Update DataGrid with current page items
+            // Reset ItemsSource để tránh lỗi hiển thị
+            ProductDataGrid.ItemsSource = null;
             ProductDataGrid.ItemsSource = _paginationHelper.GetCurrentPageItems();
             
             // Update pagination info
@@ -201,7 +203,6 @@ namespace WpfApp1
             }
         }
 
-
         private void ImportCsvButton_Click(object sender, RoutedEventArgs e)
         {
             var openFileDialog = new Microsoft.Win32.OpenFileDialog
@@ -246,7 +247,7 @@ namespace WpfApp1
                 }
                 else
                 {
-                    MessageBox.Show("Không thể xuất sản phẩm sang tệp CSV. Vui lòng thử lại.", "Lỗi xuất", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Không thể xuất sản phẩm sang tệp CSV.", "Lỗi xuất", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

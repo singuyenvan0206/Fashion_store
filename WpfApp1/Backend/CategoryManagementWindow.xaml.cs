@@ -11,6 +11,28 @@ namespace WpfApp1
         {
             InitializeComponent();
             LoadCategories();
+            SetupPlaceholder();
+        }
+
+        private void SetupPlaceholder()
+        {
+            CategoryNameTextBox.GotFocus += (s, e) => {
+                if (CategoryNameTextBox.Text == "Tên Danh Mục")
+                {
+                    CategoryNameTextBox.Text = "";
+                    CategoryNameTextBox.Foreground = System.Windows.Media.Brushes.Black;
+                }
+            };
+            
+            CategoryNameTextBox.LostFocus += (s, e) => {
+                if (string.IsNullOrWhiteSpace(CategoryNameTextBox.Text))
+                {
+                    CategoryNameTextBox.Text = "Tên Danh Mục";
+                    CategoryNameTextBox.Foreground = System.Windows.Media.Brushes.Gray;
+                }
+            };
+            
+            CategoryNameTextBox.Foreground = System.Windows.Media.Brushes.Gray;
         }
 
         private void LoadCategories()
@@ -30,7 +52,8 @@ namespace WpfApp1
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             string name = CategoryNameTextBox.Text.Trim();
-            if (string.IsNullOrWhiteSpace(name))
+            
+            if (name == "Tên Danh Mục" || string.IsNullOrWhiteSpace(name))
             {
                 MessageBox.Show("Vui lòng nhập tên danh mục.", "Lỗi xác thực", MessageBoxButton.OK, MessageBoxImage.Warning);
                 CategoryNameTextBox.Focus();
@@ -46,7 +69,8 @@ namespace WpfApp1
             if (DatabaseHelper.AddCategory(name))
             {
                 LoadCategories();
-                CategoryNameTextBox.Clear();
+                CategoryNameTextBox.Text = "Tên Danh Mục";
+                CategoryNameTextBox.Foreground = System.Windows.Media.Brushes.Gray;
                 MessageBox.Show($"Danh mục '{name}' đã được thêm thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Trigger dashboard refresh for real-time updates

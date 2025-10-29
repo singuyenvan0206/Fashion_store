@@ -1,7 +1,5 @@
-using System.Configuration;
-using System.Data;
-using System.Windows;
 using System;
+using System.Windows;
 
 namespace WpfApp1
 {

@@ -37,7 +37,9 @@ namespace WpfApp1
             // Set current user in application resources for other windows to access
             Application.Current.Resources["CurrentUser"] = username;
             
-            UserInfoTextBlock.Text = $"Chào mừng, {username} ({role})";
+            // Get employee name for display
+            string employeeName = DatabaseHelper.GetEmployeeName(username);
+            UserInfoTextBlock.Text = $"Chào mừng, {employeeName} ({role})";
             LoadKpis();
 
             // Initialize auto-refresh timer - DISABLED: Now using event-driven updates

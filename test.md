@@ -438,13 +438,13 @@ classDiagram
     }
 
     %% Relationships
-    Account ||--|| UserRole : has
-    UserRole ||--o{ UserRoleExtensions : extends
+    Account "1" -- "1" UserRole : has
+    UserRole "1" -- "1" UserRoleExtensions : extends
     
-    Category ||--o{ Product : contains
-    Product ||--o{ InvoiceItem : referenced by
-    Customer ||--o{ Invoice : creates
-    Invoice ||--o{ InvoiceItem : contains
+    Category "1" -- "*" Product : contains
+    Product "1" -- "*" InvoiceItem : referenced by
+    Customer "1" -- "*" Invoice : creates
+    Invoice "1" -- "*" InvoiceItem : contains
     
     DatabaseHelper ..> Account : manages
     DatabaseHelper ..> Category : manages

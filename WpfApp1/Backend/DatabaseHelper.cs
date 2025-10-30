@@ -2098,11 +2098,36 @@ namespace WpfApp1
                         if (fields.Length >= 12)
                         {
                             // Item format: "", "", "", "", "", "", "ITEM", ProductName, ProductId, Quantity, UnitPrice, LineTotal
-                            if (int.TryParse(fields[8], out int productId) && 
-                                int.TryParse(fields[9], out int qty) &&
-                                decimal.TryParse(fields[10], out decimal unitPrice))
+                            var productName = fields[7]?.Trim('"') ?? string.Empty;
+                            bool parsedQty = int.TryParse(fields[9], out int qty);
+                            bool parsedUnit = decimal.TryParse(fields[10], out decimal unitPrice);
+                            if (parsedQty && parsedUnit)
                             {
-                                currentItems.Add((productId, qty, unitPrice));
+                                int productIdToUse = 0;
+                                if (int.TryParse(fields[8], out int productIdFromCsv))
+                                {
+                                    // Prefer the CSV ProductId if it exists in current DB
+                                    if (DoesProductIdExist(productIdFromCsv))
+                                    {
+                                        productIdToUse = productIdFromCsv;
+                                    }
+                                }
+
+                                if (productIdToUse == 0 && !string.IsNullOrWhiteSpace(productName))
+                                {
+                                    // Fallback: try resolve by product name
+                                    productIdToUse = FindProductIdByName(productName);
+                                }
+
+                                if (productIdToUse > 0)
+                                {
+                                    currentItems.Add((productIdToUse, qty, unitPrice));
+                                }
+                                else
+                                {
+                                    // Skip item if product cannot be resolved to prevent FK errors
+                                    System.Diagnostics.Debug.WriteLine($"ImportInvoicesFromCsv: Skipped item for unknown product '{productName}' (csvId='{fields[8]}')");
+                                }
                             }
                         }
                     }
@@ -2241,6 +2266,42 @@ namespace WpfApp1
             {
                 System.Diagnostics.Debug.WriteLine($"ImportInvoicesFromCsv Error: {ex.Message}");
                 return -1;
+            }
+        }
+
+
+        private static bool DoesProductIdExist(int productId)
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                using var cmd = new MySqlCommand("SELECT 1 FROM Products WHERE Id=@id LIMIT 1;", connection);
+                cmd.Parameters.AddWithValue("@id", productId);
+                var exists = cmd.ExecuteScalar();
+                return exists != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static int FindProductIdByName(string productName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(productName)) return 0;
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+                using var cmd = new MySqlCommand("SELECT Id FROM Products WHERE Name=@name LIMIT 1;", connection);
+                cmd.Parameters.AddWithValue("@name", productName);
+                var val = cmd.ExecuteScalar();
+                return val == null ? 0 : Convert.ToInt32(val);
+            }
+            catch
+            {
+                return 0;
             }
         }
 

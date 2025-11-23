@@ -1,17 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
-using Microsoft.Win32;
-using OxyPlot;
-using OxyPlot.Axes;
-using OxyPlot.Series;
-
 namespace WpfApp1
 {
     public partial class ReportsWindow : Window
@@ -195,46 +186,7 @@ namespace WpfApp1
 
  
 
-        private void ImportCsvFile(string filePath)
-        {
-            try
-            {
-                // Check if file exists
-                if (!System.IO.File.Exists(filePath))
-                {
-                    MessageBox.Show("File CSV không tồn tại.", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                int importedCount = DatabaseHelper.ImportInvoicesFromCsv(filePath);
-                
-                if (importedCount > 0)
-                {
-                    MessageBox.Show($"Đã nhập thành công {importedCount} hóa đơn (bao gồm chi tiết items) từ file CSV.", "Nhập thành công", MessageBoxButton.OK, MessageBoxImage.Information);
-                    
-                    // Refresh the list
-                    LoadInvoices();
-                    
-                    // Trigger dashboard refresh
-                    DashboardWindow.TriggerDashboardRefresh();
-                }
-                else if (importedCount == 0)
-                {
-                    MessageBox.Show("Không có hóa đơn nào được nhập từ file CSV.\n\nVui lòng kiểm tra:\n1. File CSV có đúng format export từ hệ thống này không\n2. File có dữ liệu items (các dòng bắt đầu bằng ITEM)\n3. ProductId trong file CSV phải tồn tại trong database\n4. Định dạng file CSV đúng\n\nXem Output Window để biết chi tiết lỗi.", "Không có dữ liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                else
-                {
-                    MessageBox.Show("Không thể nhập hóa đơn từ file CSV.\n\nNguyên nhân có thể:\n1. File CSV đang được mở bởi Excel/ứng dụng khác (vui lòng đóng file)\n2. Định dạng file CSV không đúng\n3. Sản phẩm không tồn tại trong database\n4. Lỗi kết nối database\n\nVui lòng xem Output Window để biết chi tiết lỗi.", "Lỗi nhập", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi khi nhập file CSV:\n{ex.Message}\n\nChi tiết:\n{ex.StackTrace}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-      
-
+        
         // Pagination event handlers
         private void ReportsFirstPageButton_Click(object sender, RoutedEventArgs e)
         {

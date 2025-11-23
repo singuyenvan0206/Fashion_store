@@ -4,15 +4,14 @@
         xmlns:oxy="http://oxyplot.org/wpf"
         Title="Bảng Điều Khiển - Hệ Thống POS" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
-        WindowState="Maximized">
-    
+        WindowState="Maximized">  
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="15"
+                                CornerRadius="8"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center"
@@ -56,9 +55,8 @@
                                VerticalAlignment="Center"
                                Margin="20,0,0,0"/>
                 </StackPanel>
-                
+
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Low Stock Alert Button -->
                     <Button x:Name="LowStockAlertButton"
                             Click="LowStockAlertButton_Click"
                             Width="180" 

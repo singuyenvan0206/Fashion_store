@@ -80,7 +80,6 @@
                             </Border>
                         </Grid>
                         
-                        <!-- Data Management Actions -->
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

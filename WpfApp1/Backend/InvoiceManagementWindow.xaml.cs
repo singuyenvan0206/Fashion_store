@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -119,7 +117,7 @@ namespace WpfApp1
         {
             try
             {
-                var products = DatabaseHelper.GetAllProducts();
+                var products = DatabaseHelper.GetAllProductsWithCategories();
                 var productList = products.ConvertAll(p => new ProductListItem
                 {
                     Id = p.Id,
@@ -423,7 +421,7 @@ namespace WpfApp1
             {
                 var paymentSettings = PaymentSettingsManager.Load();
 
-                if (InvoiceQRCode == null || PaymentMethodComboBox == null) return;
+                if (InvoiceQRCode == null || PaymentMethodComboBox == null || TotalTextBlock == null) return;
 
                 var selectedPayment = GetSelectedPaymentMethod();
 
@@ -439,7 +437,10 @@ namespace WpfApp1
                     return;
                 }
 
-                if (total <= 0)
+                // Lấy giá trị Tổng cộng trực tiếp từ TotalTextBlock để đảm bảo chính xác
+                var totalAmount = decimal.TryParse(TotalTextBlock.Text, out var parsedTotal) ? parsedTotal : total;
+                
+                if (totalAmount <= 0)
                 {
                     ShowErrorQRCode("Vui lòng thêm sản phẩm để tạo QR thanh toán");
                     return;
@@ -451,7 +452,7 @@ namespace WpfApp1
                     return;
                 }
 
-                GenerateQRCode(paymentSettings, total);
+                GenerateQRCode(paymentSettings, totalAmount);
             }
             catch
             {
@@ -476,10 +477,13 @@ namespace WpfApp1
         private void GenerateQRCode(PaymentSettings settings, decimal total)
         {
             var description = GenerateTransactionDescription();
+            // Use amount the customer needs to pay via bank transfer (remaining due)
+            var paid = decimal.TryParse(PaidTextBox?.Text, out var p) ? p : 0m;
+            var amountDue = Math.Max(0, total - paid);
             var qrCode = QRCodeHelper.GenerateVietQRCode_Safe(
                 settings.BankCode.ToLower(),
                 settings.BankAccount,
-                total,
+                amountDue,
                 description,
                 true,
                 370,

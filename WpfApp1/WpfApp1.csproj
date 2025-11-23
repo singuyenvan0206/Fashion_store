@@ -10,6 +10,8 @@
     <CopyRetryDelayMilliseconds>200</CopyRetryDelayMilliseconds>
     <AssemblyTitle>Sale Management System</AssemblyTitle>
     <Product>Business Application</Product>
+    <!-- Tối ưu hóa kích thước build -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.9" />
     <PackageReference Include="MySql.Data" Version="9.4.0" />
     <PackageReference Include="OxyPlot.Wpf" Version="2.1.0" />
     <PackageReference Include="QRCoder" Version="1.4.3" />
@@ -29,6 +30,7 @@
     <OutputPath>bin\Debug\net8.0-windows\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
   </PropertyGroup>
   
@@ -39,6 +41,11 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
+    <!-- Tối ưu hóa kích thước output -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>false</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
 </Project>

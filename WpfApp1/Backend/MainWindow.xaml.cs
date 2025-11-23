@@ -78,4 +78,4 @@ namespace WpfApp1
             changePasswordWindow.ShowDialog();
         }
     }
-}
+}          

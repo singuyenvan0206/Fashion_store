@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Windows;
 using System.Windows.Controls;
 
@@ -249,7 +247,7 @@ namespace WpfApp1
                 {
                     MessageBox.Show("Không thể xuất sản phẩm sang tệp CSV.", "Lỗi xuất", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-            }
+                 }
         }
 
         private void DeleteAllButton_Click(object sender, RoutedEventArgs e)

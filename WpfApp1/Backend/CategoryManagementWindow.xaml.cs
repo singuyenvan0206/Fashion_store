@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Collections.Generic;
 
 namespace WpfApp1
 {

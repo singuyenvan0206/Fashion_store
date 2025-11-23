@@ -1,4 +1,4 @@
-using System;
+
 using System.IO;
 using System.Text.Json;
 
@@ -111,52 +111,21 @@ namespace WpfApp1
             }
         }
 
-        /// <summary>
-        /// Get the current discount percentage for a tier
-        /// </summary>
+
         public static decimal GetTierDiscount(string tier)
         {
             var settings = Load();
             return settings.GetDiscountForTier(tier);
         }
 
-        /// <summary>
-        /// Get the benefits description for a tier
-        /// </summary>
-        public static string GetTierBenefits(string tier)
-        {
-            var settings = Load();
-            return settings.GetBenefitsForTier(tier);
-        }
 
-        /// <summary>
-        /// Determine tier based on points using current settings
-        /// </summary>
         public static string DetermineTierByPoints(int points)
         {
             var settings = Load();
             return settings.DetermineTierByPoints(points);
         }
 
-        /// <summary>
-        /// Update customer tier based on current point thresholds
-        /// </summary>
-        public static bool UpdateCustomerTierByPoints(int customerId, int points)
-        {
-            try
-            {
-                var newTier = DetermineTierByPoints(points);
-                return DatabaseHelper.UpdateCustomerLoyalty(customerId, points, newTier);
-            }
-            catch
-            {
-                return false;
-            }
-        }
 
-        /// <summary>
-        /// Update all customers' tiers based on their current points and new tier thresholds
-        /// </summary>
         public static int UpdateAllCustomerTiers()
         {
             try

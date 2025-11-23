@@ -111,16 +111,12 @@
 					          SelectionMode="Single"
 					          Background="White"
 					          RowHeaderWidth="0"
-					          ScrollViewer.VerticalScrollBarVisibility="Auto"
-					          ScrollViewer.HorizontalScrollBarVisibility="Auto"
 					          EnableRowVirtualization="True"
 					          EnableColumnVirtualization="False"
 					          BorderThickness="0"
 					          GridLinesVisibility="Horizontal"
 					          HeadersVisibility="Column"
-					          MinHeight="400"
-					          HorizontalAlignment="Stretch"
-					          VerticalAlignment="Stretch">
+					          MinHeight="400">
 				<DataGrid.Resources>
 					<Style TargetType="TextBlock" x:Key="RightAlignedCell">
 						<Setter Property="TextAlignment" Value="Right"/>
@@ -169,10 +165,8 @@
 				</Grid>
 			</Border>
 
-			<!-- Mini summary chart removed for a cleaner interface -->
 
-			<!-- Totals sidebar on the right -->
-			<Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" Background="White" CornerRadius="12" Padding="20" Margin="12,0,0,0" BorderBrush="#E0E0E0" BorderThickness="1">
+			<Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="3" Background="White" CornerRadius="0" Padding="20" Margin="12,0,0,0" BorderBrush="#E0E0E0" BorderThickness="1">
 				<Grid>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto"/>
@@ -269,8 +263,8 @@
 
 									<!-- QR Code Image -->
 									<Border Grid.Row="1" Background="#F5F5F5" CornerRadius="8" Padding="10" 
-											BorderBrush="#E0E0E0" BorderThickness="2" MinHeight="200">
-										<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+											BorderBrush="#E0E0E0" BorderThickness="2" MinHeight="200"> 
+											<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
 											<Image x:Name="InvoiceQRCode" Width="200" Height="200"
 												   Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 											<TextBlock x:Name="QRPlaceholderText" Text="Chọn 'Chuyển khoản' để hiển thị QR" FontSize="10"
@@ -281,7 +275,7 @@
 								</Grid>
 							</Border>
 							
-							<StackPanel Grid.Row="9" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+							<StackPanel Grid.Row="9" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,0">
 								<Button x:Name="SaveInvoiceButton" Content="💾 Lưu Hóa Đơn" Width="140" Height="40" 
 										Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="SaveInvoiceButton_Click" Margin="0,0,8,0"/>
 								<Button x:Name="ClearInvoiceButton" Content="🧹 Xóa Hóa Đơn" Width="140" Height="40"

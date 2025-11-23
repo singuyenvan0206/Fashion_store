@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
+
 using System.Windows.Media;
 
 namespace WpfApp1

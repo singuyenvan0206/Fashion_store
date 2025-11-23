@@ -1,11 +1,9 @@
-using System;
+
 using System.Windows;
 
 namespace WpfApp1
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
+
     public partial class App : Application
     {
         protected override void OnStartup(StartupEventArgs e)
@@ -13,12 +11,10 @@ namespace WpfApp1
             base.OnStartup(e);
             TryInitializeDatabaseWithFallback();
         }
-
         protected override void OnExit(ExitEventArgs e)
         {
             try
             {
-                // Close all opened windows just in case
                 foreach (Window w in Current.Windows)
                 {
                     try { w.Close(); } catch { }
@@ -28,14 +24,11 @@ namespace WpfApp1
 
             try
             {
-                // Force cleanup of MySQL connection pool
                 MySql.Data.MySqlClient.MySqlConnection.ClearAllPools();
             }
             catch { }
-
             try
             {
-                // Force garbage collection to cleanup any remaining resources
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 GC.Collect();

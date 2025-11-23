@@ -446,44 +446,6 @@ namespace WpfApp1
             }
         }
 
-
-        public static List<(int Id, string Name, string Code, int CategoryId, decimal SalePrice, int StockQuantity, string Description)> GetAllProducts()
-        {
-            var products = new List<(int, string, string, int, decimal, int, string)>();
-            using var connection = new MySqlConnection(ConnectionString);
-            connection.Open();
-
-            string checkColumnCmd = "SHOW COLUMNS FROM Products LIKE 'SalePrice';";
-            using var checkColumn = new MySqlCommand(checkColumnCmd, connection);
-            var salePriceExists = checkColumn.ExecuteScalar();
-
-            string cmdText;
-            if (salePriceExists != null)
-            {
-                cmdText = "SELECT Id, Name, Code, CategoryId, SalePrice, StockQuantity, Description FROM Products ORDER BY Name LIMIT 10000;";
-            }
-            else
-            {
-                cmdText = "SELECT Id, Name, Code, CategoryId, Price, StockQuantity, Description FROM Products ORDER BY Name LIMIT 10000;";
-            }
-
-            using var cmd = new MySqlCommand(cmdText, connection);
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                products.Add((
-                    reader.GetInt32(0),
-                    reader.GetString(1),
-                    reader.IsDBNull(2) ? "" : reader.GetString(2),
-                    reader.IsDBNull(3) ? 0 : reader.GetInt32(3),
-                    reader.GetDecimal(4),
-                    reader.GetInt32(5),
-                    reader.IsDBNull(6) ? "" : reader.GetString(6)
-                ));
-            }
-            return products;
-        }
-
         public static List<(int Id, string Name, string Code, int CategoryId, string CategoryName, decimal SalePrice, decimal PurchasePrice, string PurchaseUnit, int ImportQuantity, int StockQuantity, string Description)> GetAllProductsWithCategories()
         {
             var products = new List<(int, string, string, int, string, decimal, decimal, string, int, int, string)>();
@@ -780,31 +742,19 @@ namespace WpfApp1
                 writer.WriteLine("Id,Name,Code,CategoryId,CategoryName,SalePrice,PurchasePrice,PurchaseUnit,ImportQuantity,StockQuantity,Description");
                 foreach (var p in products)
                 {
-                    // Escape commas and quotes in text fields
-                    string Esc(string? s)
-                    {
-                        s ??= string.Empty;
-                        if (s.Contains('"')) s = s.Replace("\"", "\"\"");
-                        if (s.Contains(',') || s.Contains('\n') || s.Contains('\r') || s.Contains('"'))
-                        {
-                            s = "\"" + s + "\"";
-                        }
-                        return s;
-                    }
-
                     string line = string.Join(",", new string[]
                     {
                         p.Id.ToString(),
-                        Esc(p.Name),
-                        Esc(p.Code),
+                        EscapeCsvField(p.Name),
+                        EscapeCsvField(p.Code),
                         p.CategoryId.ToString(),
-                        Esc(p.CategoryName),
+                        EscapeCsvField(p.CategoryName),
                         p.SalePrice.ToString(System.Globalization.CultureInfo.InvariantCulture),
                         p.PurchasePrice.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                        Esc(p.PurchaseUnit),
+                        EscapeCsvField(p.PurchaseUnit),
                         p.ImportQuantity.ToString(),
                         p.StockQuantity.ToString(),
-                        Esc(p.Description)
+                        EscapeCsvField(p.Description)
                     });
                     writer.WriteLine(line);
                 }
@@ -872,6 +822,17 @@ namespace WpfApp1
         {
             if (idx < 0) return string.Empty;
             return idx < cols.Length ? cols[idx].Trim() : string.Empty;
+        }
+
+        private static string EscapeCsvField(string? s)
+        {
+            s ??= string.Empty;
+            if (s.Contains('"')) s = s.Replace("\"", "\"\"");
+            if (s.Contains(',') || s.Contains('\n') || s.Contains('\r') || s.Contains('"'))
+            {
+                s = "\"" + s + "\"";
+            }
+            return s;
         }
 
         private static string[] SplitCsvLine(string line)
@@ -1425,35 +1386,7 @@ namespace WpfApp1
             return list;
         }
 
-        // Get customer trend (new customers by month from first invoice)
-        public static List<(int Year, int Month, int Count)> GetCustomerTrend(int months = 12)
-        {
-            var list = new List<(int, int, int)>();
-            using var connection = new MySqlConnection(ConnectionString);
-            connection.Open();
-            // Use MIN invoice date per customer as customer creation date
-            string sql = @"SELECT YEAR(first_invoice_date) as Year, MONTH(first_invoice_date) as Month, COUNT(*) as Count
-                           FROM (
-                               SELECT c.Id, MIN(i.CreatedDate) as first_invoice_date
-                               FROM Customers c
-                               LEFT JOIN Invoices i ON i.CustomerId = c.Id
-                               WHERE i.CreatedDate IS NOT NULL
-                               GROUP BY c.Id
-                               HAVING first_invoice_date >= DATE_SUB(CURDATE(), INTERVAL @months MONTH)
-                           ) as customer_first_date
-                           GROUP BY YEAR(first_invoice_date), MONTH(first_invoice_date)
-                           ORDER BY Year ASC, Month ASC";
-            using var cmd = new MySqlCommand(sql, connection);
-            cmd.Parameters.AddWithValue("@months", months);
-            using var r = cmd.ExecuteReader();
-            while (r.Read())
-            {
-                list.Add((r.GetInt32(0), r.GetInt32(1), r.GetInt32(2)));
-            }
-            return list;
-        }
 
-        // Get low stock products (stock quantity <= threshold)
         public static List<(string ProductName, int StockQuantity, string CategoryName)> GetLowStockProducts(int threshold = 10)
         {
             var list = new List<(string, int, string)>();
@@ -1582,22 +1515,15 @@ namespace WpfApp1
                 foreach (var c in customers)
                 {
                     var (tier, pts) = GetCustomerLoyalty(c.Id);
-                    string Esc(string? s)
-                    {
-                        s ??= string.Empty;
-                        if (s.Contains('"')) s = s.Replace("\"", "\"\"");
-                        if (s.Contains(',') || s.Contains('\n') || s.Contains('\r') || s.Contains('"')) s = "\"" + s + "\"";
-                        return s;
-                    }
                     writer.WriteLine(string.Join(",", new[]
                     {
                         c.Id.ToString(),
-                        Esc(c.Name),
-                        Esc(c.Phone),
-                        Esc(c.Email),
-                        Esc(c.CustomerType),
-                        Esc(c.Address),
-                        Esc(tier),
+                        EscapeCsvField(c.Name),
+                        EscapeCsvField(c.Phone),
+                        EscapeCsvField(c.Email),
+                        EscapeCsvField(c.CustomerType),
+                        EscapeCsvField(c.Address),
+                        EscapeCsvField(tier),
                         pts.ToString()
                     }));
                 }
@@ -1955,102 +1881,101 @@ namespace WpfApp1
             try
             {
                 using var writer = new System.IO.StreamWriter(filePath, false, System.Text.Encoding.UTF8);
-                
-                // CSV Header
-                writer.WriteLine("InvoiceId,InvoiceDate,CustomerName,CustomerPhone,CustomerEmail,CustomerAddress,Subtotal,TaxPercent,TaxAmount,Discount,Total,Paid,EmployeeId");
-                
-                string Esc(string? s)
-                {
-                    s ??= string.Empty;
-                    if (s.Contains('"')) s = s.Replace("\"", "\"\"");
-                    if (s.Contains(',') || s.Contains('\n') || s.Contains('\r') || s.Contains('"'))
-                    {
-                        s = "\"" + s + "\"";
-                    }
-                    return s;
-                }
-                
+                WriteInvoiceCsvHeader(writer);
+
                 using var connection = new MySqlConnection(ConnectionString);
                 connection.Open();
-                
-                // Get all invoice IDs
-                string idsSql = "SELECT Id FROM Invoices ORDER BY Id DESC LIMIT 10000";
-                using var idsCmd = new MySqlCommand(idsSql, connection);
-                using var idsReader = idsCmd.ExecuteReader();
-                var invoiceIds = new List<int>();
-                while (idsReader.Read())
-                {
-                    invoiceIds.Add(idsReader.GetInt32(0));
-                }
-                idsReader.Close();
-                
-                // Process each invoice
+
+                var invoiceIds = GetAllInvoiceIds(connection);
                 foreach (int invoiceId in invoiceIds)
                 {
-                    // Get invoice header
-                    string sql = @"SELECT i.Id, i.CreatedDate, c.Name, 
-                                          IFNULL(c.Phone, ''), IFNULL(c.Email, ''), IFNULL(c.Address, ''),
-                                          i.Subtotal, i.TaxPercent, i.TaxAmount, i.Discount, i.Total, i.Paid, i.EmployeeId
-                                   FROM Invoices i
-                                   LEFT JOIN Customers c ON c.Id = i.CustomerId
-                                   WHERE i.Id = @id";
-                    using var cmd = new MySqlCommand(sql, connection);
-                    cmd.Parameters.AddWithValue("@id", invoiceId);
-                    using var reader = cmd.ExecuteReader();
-                    
-                    if (reader.Read())
-                    {
-                        // Write invoice header
-                        writer.WriteLine(string.Join(",", new string[]
-                        {
-                            reader.GetInt32(0).ToString(),
-                            Esc(reader.GetDateTime(1).ToString("yyyy-MM-dd HH:mm:ss")),
-                            Esc(reader.IsDBNull(2) ? "" : reader.GetString(2)),
-                            Esc(reader.IsDBNull(3) ? "" : reader.GetString(3)),
-                            Esc(reader.IsDBNull(4) ? "" : reader.GetString(4)),
-                            Esc(reader.IsDBNull(5) ? "" : reader.GetString(5)),
-                            reader.GetDecimal(6).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            reader.GetDecimal(7).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            reader.GetDecimal(8).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            reader.GetDecimal(9).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            reader.GetDecimal(10).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            reader.GetDecimal(11).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            reader.GetInt32(12).ToString()
-                        }));
-                    }
-                    reader.Close();
-                    
-                    // Get items
-                    string itemsSql = @"SELECT p.Id, p.Name, ii.Quantity, ii.UnitPrice, ii.LineTotal
-                                        FROM InvoiceItems ii
-                                        INNER JOIN Products p ON p.Id = ii.ProductId
-                                        WHERE ii.InvoiceId = @id";
-                    using var itemsCmd = new MySqlCommand(itemsSql, connection);
-                    itemsCmd.Parameters.AddWithValue("@id", invoiceId);
-                    using var itemsReader = itemsCmd.ExecuteReader();
-                    
-                    while (itemsReader.Read())
-                    {
-                        writer.WriteLine(string.Join(",", new string[]
-                        {
-                            "", "", "", "", "", "",
-                            "ITEM",
-                            Esc(itemsReader.IsDBNull(1) ? "" : itemsReader.GetString(1)),
-                            itemsReader.GetInt32(0).ToString(),
-                            itemsReader.GetInt32(2).ToString(),
-                            itemsReader.GetDecimal(3).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
-                            itemsReader.GetDecimal(4).ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
-                        }));
-                    }
-                    itemsReader.Close();
+                    WriteInvoiceHeaderRecord(writer, connection, invoiceId);
+                    WriteInvoiceItemsRecords(writer, connection, invoiceId);
                 }
-                
+
                 return true;
             }
             catch
             {
                 return false;
             }
+        }
+
+        private static void WriteInvoiceCsvHeader(System.IO.StreamWriter writer)
+        {
+            writer.WriteLine("InvoiceId,InvoiceDate,CustomerName,CustomerPhone,CustomerEmail,CustomerAddress,Subtotal,TaxPercent,TaxAmount,Discount,Total,Paid,EmployeeId");
+        }
+
+        private static List<int> GetAllInvoiceIds(MySqlConnection connection)
+        {
+            var invoiceIds = new List<int>();
+            string idsSql = "SELECT Id FROM Invoices ORDER BY Id DESC LIMIT 10000";
+            using var idsCmd = new MySqlCommand(idsSql, connection);
+            using var idsReader = idsCmd.ExecuteReader();
+            while (idsReader.Read())
+            {
+                invoiceIds.Add(idsReader.GetInt32(0));
+            }
+            idsReader.Close();
+            return invoiceIds;
+        }
+
+        private static void WriteInvoiceHeaderRecord(System.IO.StreamWriter writer, MySqlConnection connection, int invoiceId)
+        {
+            string sql = @"SELECT i.Id, i.CreatedDate, c.Name,
+                                  IFNULL(c.Phone, ''), IFNULL(c.Email, ''), IFNULL(c.Address, ''),
+                                  i.Subtotal, i.TaxPercent, i.TaxAmount, i.Discount, i.Total, i.Paid, i.EmployeeId
+                           FROM Invoices i
+                           LEFT JOIN Customers c ON c.Id = i.CustomerId
+                           WHERE i.Id = @id";
+            using var cmd = new MySqlCommand(sql, connection);
+            cmd.Parameters.AddWithValue("@id", invoiceId);
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                writer.WriteLine(string.Join(",", new string[]
+                {
+                    reader.GetInt32(0).ToString(),
+                    EscapeCsvField(reader.GetDateTime(1).ToString("yyyy-MM-dd HH:mm:ss")),
+                    EscapeCsvField(reader.IsDBNull(2) ? string.Empty : reader.GetString(2)),
+                    EscapeCsvField(reader.IsDBNull(3) ? string.Empty : reader.GetString(3)),
+                    EscapeCsvField(reader.IsDBNull(4) ? string.Empty : reader.GetString(4)),
+                    EscapeCsvField(reader.IsDBNull(5) ? string.Empty : reader.GetString(5)),
+                    reader.GetDecimal(6).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    reader.GetDecimal(7).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    reader.GetDecimal(8).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    reader.GetDecimal(9).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    reader.GetDecimal(10).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    reader.GetDecimal(11).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    reader.GetInt32(12).ToString()
+                }));
+            }
+            reader.Close();
+        }
+
+        private static void WriteInvoiceItemsRecords(System.IO.StreamWriter writer, MySqlConnection connection, int invoiceId)
+        {
+            string itemsSql = @"SELECT p.Id, p.Name, ii.Quantity, ii.UnitPrice, ii.LineTotal
+                                FROM InvoiceItems ii
+                                INNER JOIN Products p ON p.Id = ii.ProductId
+                                WHERE ii.InvoiceId = @id";
+            using var itemsCmd = new MySqlCommand(itemsSql, connection);
+            itemsCmd.Parameters.AddWithValue("@id", invoiceId);
+            using var itemsReader = itemsCmd.ExecuteReader();
+            while (itemsReader.Read())
+            {
+                writer.WriteLine(string.Join(",", new string[]
+                {
+                    string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty,
+                    "ITEM",
+                    EscapeCsvField(itemsReader.IsDBNull(1) ? string.Empty : itemsReader.GetString(1)),
+                    itemsReader.GetInt32(0).ToString(),
+                    itemsReader.GetInt32(2).ToString(),
+                    itemsReader.GetDecimal(3).ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    itemsReader.GetDecimal(4).ToString("F2", System.Globalization.CultureInfo.InvariantCulture)
+                }));
+            }
+            itemsReader.Close();
         }
 
         public static int ImportInvoicesFromCsv(string filePath)
@@ -2068,24 +1993,11 @@ namespace WpfApp1
                 var currentInvoice = new InvoiceHeader();
                 var currentItems = new List<(int ProductId, int Quantity, decimal UnitPrice)>();
 
-                // Get current user - default to admin
-                int employeeId = 1;
-                try
-                {
-                    var currentUser = System.Windows.Application.Current?.Resources["CurrentUser"] as string;
-                    if (!string.IsNullOrEmpty(currentUser))
-                    {
-                        employeeId = GetEmployeeIdByUsername(currentUser);
-                    }
-                }
-                catch
-                {
-                    employeeId = 1;
-                }
+                int employeeId = ResolveEmployeeIdFromCurrentUserOrDefault();
 
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    var fields = ParseCsvLine(lines[i]);
+                    var fields = SplitCsvLine(lines[i]);
 
                     if (fields.Length == 0 || (fields.Length == 1 && string.IsNullOrWhiteSpace(fields[0])))
                     {
@@ -2095,41 +2007,7 @@ namespace WpfApp1
                     // Check if this is an ITEM line (fields[6] = "ITEM")
                     if (fields.Length > 6 && fields[6] == "ITEM")
                     {
-                        if (fields.Length >= 12)
-                        {
-                            // Item format: "", "", "", "", "", "", "ITEM", ProductName, ProductId, Quantity, UnitPrice, LineTotal
-                            var productName = fields[7]?.Trim('"') ?? string.Empty;
-                            bool parsedQty = int.TryParse(fields[9], out int qty);
-                            bool parsedUnit = decimal.TryParse(fields[10], out decimal unitPrice);
-                            if (parsedQty && parsedUnit)
-                            {
-                                int productIdToUse = 0;
-                                if (int.TryParse(fields[8], out int productIdFromCsv))
-                                {
-                                    // Prefer the CSV ProductId if it exists in current DB
-                                    if (DoesProductIdExist(productIdFromCsv))
-                                    {
-                                        productIdToUse = productIdFromCsv;
-                                    }
-                                }
-
-                                if (productIdToUse == 0 && !string.IsNullOrWhiteSpace(productName))
-                                {
-                                    // Fallback: try resolve by product name
-                                    productIdToUse = FindProductIdByName(productName);
-                                }
-
-                                if (productIdToUse > 0)
-                                {
-                                    currentItems.Add((productIdToUse, qty, unitPrice));
-                                }
-                                else
-                                {
-                                    // Skip item if product cannot be resolved to prevent FK errors
-                                    System.Diagnostics.Debug.WriteLine($"ImportInvoicesFromCsv: Skipped item for unknown product '{productName}' (csvId='{fields[8]}')");
-                                }
-                            }
-                        }
+                        TryAppendItemFromFields(currentItems, fields);
                     }
                     else if (fields.Length >= 13 && !string.IsNullOrEmpty(fields[0]))
                     {
@@ -2137,35 +2015,7 @@ namespace WpfApp1
                         // Save previous invoice if exists
                         if (currentInvoice.Id > 0 && currentItems.Count > 0)
                         {
-                            
-                            
-                            var customerId = GetOrCreateCustomerId(currentInvoice.CustomerName, currentInvoice.CustomerPhone, currentInvoice.CustomerEmail, currentInvoice.CustomerAddress);
-                            var empId = currentInvoice.EmployeeId > 0 ? currentInvoice.EmployeeId : employeeId;
-                            
-                            // Save invoice with items to database - SỬ DỤNG ID TỪ CSV
-                            var result = SaveInvoice(
-                                customerId,
-                                empId,
-                                currentInvoice.Subtotal,
-                                currentInvoice.TaxPercent, // tax percent
-                                currentInvoice.TaxAmount,
-                                currentInvoice.Discount,
-                                currentInvoice.Total,
-                                currentInvoice.Paid,
-                                currentItems,
-                                currentInvoice.CreatedDate,
-                                currentInvoice.Id  // Truyền ID từ CSV vào
-                            );
-                            
-                            if (result)
-                            {
-                                successCount++;
-                                
-                            }
-                            else
-                            {
-                                
-                            }
+                            if (SaveInvoiceWithResolvedCustomer(currentInvoice, currentItems, employeeId)) successCount++;
                         }
                         else if (currentInvoice.Id > 0 && currentItems.Count == 0)
                         {
@@ -2202,34 +2052,7 @@ namespace WpfApp1
 
                 if (currentInvoice.Id > 0 && currentItems.Count > 0)
                 {
-
-                    var customerId = GetOrCreateCustomerId(currentInvoice.CustomerName, currentInvoice.CustomerPhone, currentInvoice.CustomerEmail, currentInvoice.CustomerAddress);
-                    var empId = currentInvoice.EmployeeId > 0 ? currentInvoice.EmployeeId : employeeId;
-                    
-                    // Save invoice with items to database - SỬ DỤNG ID TỪ CSV
-                    var result = SaveInvoice(
-                        customerId,
-                        empId,
-                        currentInvoice.Subtotal,
-                        currentInvoice.TaxPercent, // tax percent
-                        currentInvoice.TaxAmount,
-                        currentInvoice.Discount,
-                        currentInvoice.Total,
-                        currentInvoice.Paid,
-                        currentItems,
-                        currentInvoice.CreatedDate,
-                        currentInvoice.Id  // Truyền ID từ CSV vào
-                    );
-                    
-                    if (result)
-                    {
-                        successCount++;
-                        
-                    }
-                    else
-                    {
-                        
-                    }
+                    if (SaveInvoiceWithResolvedCustomer(currentInvoice, currentItems, employeeId)) successCount++;
                 }
 
                 
@@ -2269,6 +2092,73 @@ namespace WpfApp1
             }
         }
 
+        private static int ResolveEmployeeIdFromCurrentUserOrDefault()
+        {
+            try
+            {
+                var currentUser = System.Windows.Application.Current?.Resources["CurrentUser"] as string;
+                if (!string.IsNullOrEmpty(currentUser))
+                {
+                    return GetEmployeeIdByUsername(currentUser);
+                }
+            }
+            catch { }
+            return 1;
+        }
+
+        private static void TryAppendItemFromFields(List<(int ProductId, int Quantity, decimal UnitPrice)> items, string[] fields)
+        {
+            if (fields.Length < 12) return;
+            var productName = fields[7]?.Trim('"') ?? string.Empty;
+            bool parsedQty = int.TryParse(fields[9], out int qty);
+            bool parsedUnit = decimal.TryParse(fields[10], out decimal unitPrice);
+            if (!parsedQty || !parsedUnit) return;
+
+            int productIdToUse = 0;
+            if (int.TryParse(fields[8], out int productIdFromCsv))
+            {
+                if (DoesProductIdExist(productIdFromCsv))
+                {
+                    productIdToUse = productIdFromCsv;
+                }
+            }
+            if (productIdToUse == 0 && !string.IsNullOrWhiteSpace(productName))
+            {
+                productIdToUse = FindProductIdByName(productName);
+            }
+            if (productIdToUse > 0)
+            {
+                items.Add((productIdToUse, qty, unitPrice));
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"ImportInvoicesFromCsv: Skipped item for unknown product '{productName}' (csvId='{(fields.Length>8?fields[8]:string.Empty)}')");
+            }
+        }
+
+        private static bool SaveInvoiceWithResolvedCustomer(InvoiceHeader header, List<(int ProductId, int Quantity, decimal UnitPrice)> items, int defaultEmployeeId)
+        {
+            try
+            {
+                var customerId = GetOrCreateCustomerId(header.CustomerName, header.CustomerPhone, header.CustomerEmail, header.CustomerAddress);
+                var empId = header.EmployeeId > 0 ? header.EmployeeId : defaultEmployeeId;
+                return SaveInvoice(
+                    customerId,
+                    empId,
+                    header.Subtotal,
+                    header.TaxPercent,
+                    header.TaxAmount,
+                    header.Discount,
+                    header.Total,
+                    header.Paid,
+                    items,
+                    header.CreatedDate,
+                    header.Id
+                );
+            }
+            catch { return false; }
+        }
+
 
         private static bool DoesProductIdExist(int productId)
         {
@@ -2304,8 +2194,6 @@ namespace WpfApp1
                 return 0;
             }
         }
-
-
         private static int GetOrCreateCustomerId(string name, string phone, string email, string address)
         {
             using var connection = new MySqlConnection(ConnectionString);
@@ -2333,34 +2221,6 @@ namespace WpfApp1
             cmd.Parameters.AddWithValue("@address", address);
             var newId = cmd.ExecuteScalar();
             return Convert.ToInt32(newId);
-        }
-
-        private static string[] ParseCsvLine(string line)
-        {
-            var result = new List<string>();
-            bool inQuotes = false;
-            var current = new System.Text.StringBuilder();
-            
-            for (int i = 0; i < line.Length; i++)
-            {
-                char c = line[i];
-                
-                if (c == '"')
-                {
-                    inQuotes = !inQuotes;
-                }
-                else if (c == ',' && !inQuotes)
-                {
-                    result.Add(current.ToString());
-                    current.Clear();
-                }
-                else
-                {
-                    current.Append(c);
-                }
-            }
-            result.Add(current.ToString());
-            return result.ToArray();
         }
 
     }

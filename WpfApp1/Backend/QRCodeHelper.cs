@@ -1,13 +1,11 @@
-using System;
+
 using System.IO;
 using System.Net.Http;
-using System.Text;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Collections.Generic;
-using System.Threading;
+
 
 namespace WpfApp1
 {

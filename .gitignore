@@ -8,8 +8,11 @@
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
+[Dd]ebugVanguard/
 [Rr]elease/
 [Rr]eleases/
+[Rr]eleaseVanguard/
+[Aa]ltDebug/
 x64/
 x86/
 [Aa][Rr][Mm]/

@@ -1,13 +1,10 @@
 using System.Windows;
-using System;
-using System.Collections.Generic;
+
 using System.Windows.Controls;
 using System.Windows.Media;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using OxyPlot.Wpf;
-using System.Windows.Threading;
 
 namespace WpfApp1
 {
@@ -254,7 +251,6 @@ namespace WpfApp1
                     LowStockAlertCount.Text = count.ToString();
                 }
                 
-                // Disable button if no low stock products
                 if (LowStockAlertButton != null)
                 {
                     LowStockAlertButton.IsEnabled = count > 0;

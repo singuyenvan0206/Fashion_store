@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Windows;
 using System.Windows.Controls;
 
@@ -208,7 +206,6 @@ namespace WpfApp1
         public string Username { get; set; } = string.Empty;
         public string EmployeeName { get; set; } = string.Empty;
         public UserRole Role { get; set; }
-        public string RoleDisplayName => Role.GetDisplayName();
-        public string RoleDescription => Role.GetDescription();
+
     }
 }

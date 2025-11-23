@@ -5,13 +5,13 @@
         KeyDown="Window_KeyDown"
         Loaded="Window_Loaded">
     <Window.Resources>
-        <!-- Button Style -->
+
         <Style TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="18"
+                                CornerRadius="15"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center"

@@ -12,7 +12,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="8"
+                                CornerRadius="0"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}">
                             <ContentPresenter HorizontalAlignment="Center"
@@ -145,7 +145,7 @@
                         
                         <!-- Secondary Actions -->
                         <TextBlock Text="Quản Lý Dữ Liệu" FontWeight="Bold" FontSize="14" Foreground="#666" Margin="0,15,0,10"/>
-                        
+
                         <UniformGrid Columns="2" Margin="0,0,0,10">
                             <Button Content="📥 Nhập CSV" 
                                     Background="#FF9800" 
@@ -158,14 +158,12 @@
                                     Click="ExportCsvButton_Click"
                                     Margin="5,0,0,5"/>
                         </UniformGrid>
-                        
                         <Button Content="⚠️ Xóa Tất Cả" 
                                 Background="#9E9E9E" 
                                 Foreground="White" 
                                 Click="DeleteAllButton_Click"
                                 Margin="0,5,0,0"/>
-                        
-                        <!-- Status -->
+
                         <TextBlock x:Name="StatusTextBlock" 
                                    Text="Sẵn sàng" 
                                    FontSize="12" 
@@ -175,14 +173,13 @@
                     </StackPanel>
                 </ScrollViewer>
             </Border>
-            
-            <!-- Product List -->
+
             <Border Grid.Column="1" 
                     Background="White" 
                     CornerRadius="10" 
                     Padding="20">
                 <StackPanel>
-                    <!-- Header with Search -->
+
                     <Grid Margin="0,0,0,15">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -297,7 +294,6 @@
                             </DataGrid>
                         </Border>
                         
-                        <!-- Pagination Controls -->
                         <Border Grid.Row="1" Background="#F8F9FA" Padding="15" Margin="0,10,0,0" CornerRadius="8">
                             <Grid>
                                 <Grid.ColumnDefinitions>

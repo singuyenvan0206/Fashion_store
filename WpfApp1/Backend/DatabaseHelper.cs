@@ -5,11 +5,9 @@ namespace WpfApp1
     public static class DatabaseHelper
     {
         private static string ConnectionString => SettingsManager.BuildConnectionString();
-        
 
         public static void InitializeDatabase()
         {
-
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
@@ -21,7 +19,6 @@ namespace WpfApp1
             );";
             using var cmd = new MySqlCommand(tableCmd, connection);
             cmd.ExecuteNonQuery();
-
 
             string categoryCmd = @"CREATE TABLE IF NOT EXISTS Categories (
                 Id INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,8 +103,6 @@ namespace WpfApp1
             invItemsCmd.ExecuteNonQuery();
 
             UpdateProductsTable(connection);
-
-
             FixExistingProductData(connection);
 
             string checkAdminCmd = "SELECT COUNT(*) FROM Accounts WHERE Username='admin';";
@@ -120,8 +115,6 @@ namespace WpfApp1
                 insertCmd.ExecuteNonQuery();
             }
         }
-
-        
 
         private static void UpdateProductsTable(MySqlConnection connection)
         {
@@ -262,45 +255,32 @@ namespace WpfApp1
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-            string insertCmd = "INSERT INTO Accounts (Username, EmployeeName, Password, Role) VALUES (@username, @employeeName, @password, @role);";
-            using var cmd = new MySqlCommand(insertCmd, connection);
+            using var cmd = new MySqlCommand("INSERT INTO Accounts (Username, EmployeeName, Password, Role) VALUES (@username, @employeeName, @password, @role);", connection);
             cmd.Parameters.AddWithValue("@username", username);
             cmd.Parameters.AddWithValue("@employeeName", employeeName);
             cmd.Parameters.AddWithValue("@password", password);
             cmd.Parameters.AddWithValue("@role", role);
-            try
-            {
-                cmd.ExecuteNonQuery();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            try { return cmd.ExecuteNonQuery() > 0; }
+            catch { return false; }
         }
-
 
         public static string ValidateLogin(string username, string password)
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-            string selectCmd = "SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@password;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
+            using var cmd = new MySqlCommand("SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@password;", connection);
             cmd.Parameters.AddWithValue("@username", username);
             cmd.Parameters.AddWithValue("@password", password);
-            long count = (long)cmd.ExecuteScalar();
-            return count > 0 ? "true" : "false";
+            return (long)cmd.ExecuteScalar() > 0 ? "true" : "false";
         }
 
         public static string GetUserRole(string username)
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-            string selectCmd = "SELECT Role FROM Accounts WHERE Username=@username;";
-            using var cmd = new MySqlCommand(selectCmd, connection);
+            using var cmd = new MySqlCommand("SELECT Role FROM Accounts WHERE Username=@username;", connection);
             cmd.Parameters.AddWithValue("@username", username);
-            var result = cmd.ExecuteScalar();
-            return result?.ToString() ?? "Cashier";
+            return cmd.ExecuteScalar()?.ToString() ?? "Cashier";
         }
 
         public static UserRole GetUserRoleEnum(string username)

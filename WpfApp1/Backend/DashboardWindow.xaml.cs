@@ -1,5 +1,4 @@
 using System.Windows;
-
 using System.Windows.Controls;
 using System.Windows.Media;
 using OxyPlot;
@@ -13,8 +12,6 @@ namespace WpfApp1
         private string _currentUsername;
         private string _currentRole;
         private bool _isRefreshing = false;
-        
-        // Static event system for real-time updates
         public static event Action? OnDashboardRefreshNeeded;
         private static DashboardWindow? _currentInstance;
 
@@ -67,13 +64,13 @@ namespace WpfApp1
         private static UserRole ParseRole(string role)
         {
             if (string.IsNullOrWhiteSpace(role)) return UserRole.Cashier;
-            switch (role.Trim().ToLower())
+            return role.Trim().ToLower() switch
             {
-                case "admin": return UserRole.Admin;
-                case "manager": return UserRole.Manager;
-                case "cashier": return UserRole.Cashier;
-                default: return UserRole.Cashier;
-            }
+                "admin" => UserRole.Admin,
+                "manager" => UserRole.Manager,
+                "cashier" => UserRole.Cashier,
+                _ => UserRole.Cashier
+            };
         }
 
         private void ApplyRoleVisibility(UserRole role)

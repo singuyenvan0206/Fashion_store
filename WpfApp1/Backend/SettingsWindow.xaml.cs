@@ -202,5 +202,37 @@ namespace WpfApp1
                 MessageBox.Show($"Lỗi khi mở cài đặt hạng thành viên: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void RunPasswordMigrationButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var migrationWindow = new PasswordMigrationWindow();
+                
+                try
+                {
+                    if (this.IsLoaded)
+                    {
+                        migrationWindow.Owner = this;
+                        migrationWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    }
+                    else
+                    {
+                        migrationWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    migrationWindow.Owner = null;
+                    migrationWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                }
+
+                migrationWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi mở cửa sổ migration: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }

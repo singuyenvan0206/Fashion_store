@@ -1,6 +1,7 @@
 <Window x:Class="WpfApp1.InvoicePrintWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WpfApp1"
         Title="Xem Trước In Hóa Đơn" Height="800" Width="1000"
         WindowStartupLocation="CenterScreen"
         Background="White">
@@ -11,29 +12,22 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Print Controls -->
         <Border Grid.Row="0" Background="#1CB5E0" Padding="16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="🖨️ Xem Trước In Hóa Đơn" FontSize="18" FontWeight="Bold" Foreground="White"/>
                     <TextBlock Text=" - Kiểm tra trước khi in" FontSize="12" Foreground="#E3F2FD" Margin="8,0,0,0"/>
                 </StackPanel>
-                
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="PrintButton" Content="🖨️ In Hóa Đơn" Width="120" Height="36" 
-                            Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="PrintButton_Click" Margin="0,0,8,0"/>
-                    <Button x:Name="CloseButton" Content="❌ Đóng" Width="100" Height="36" 
-                            Background="#F44336" Foreground="White" FontWeight="SemiBold" Click="CloseButton_Click"/>
+                    <Button x:Name="PrintButton" Content="🖨️ In Hóa Đơn" Width="120" Height="36" Background="#4CAF50" Foreground="White" FontWeight="SemiBold" Click="PrintButton_Click" Margin="0,0,8,0"/>
+                    <Button x:Name="CloseButton" Content="❌ Đóng" Width="100" Height="36" Background="#F44336" Foreground="White" FontWeight="SemiBold" Click="CloseButton_Click"/>
                 </StackPanel>
             </Grid>
         </Border>
-
-        <!-- Invoice Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <Border Background="White" Padding="50" Margin="20">
                 <Grid x:Name="InvoicePreviewRoot" Width="800">

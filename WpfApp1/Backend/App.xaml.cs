@@ -27,6 +27,8 @@ namespace WpfApp1
                 MySql.Data.MySqlClient.MySqlConnection.ClearAllPools();
             }
             catch { }
+
+
             try
             {
                 GC.Collect();
@@ -37,14 +39,12 @@ namespace WpfApp1
 
             base.OnExit(e);
 
-            // Hard-exit the process to ensure no background tasks keep it alive
-            try 
-            { 
-                System.Environment.Exit(0); 
-            } 
-            catch 
-            { 
-                // Last resort - force terminate
+            try
+            {
+                System.Environment.Exit(0);
+            }
+            catch
+            {
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
         }

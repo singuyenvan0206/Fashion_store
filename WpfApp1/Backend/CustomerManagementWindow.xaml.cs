@@ -496,28 +496,6 @@ namespace WpfApp1
             }
         }
 
-        private void TierSettingsButton_Click(object sender, RoutedEventArgs e)
-        {
-            var tierSettingsWindow = new TierSettingsWindow();
-            try
-            {
-                tierSettingsWindow.Owner = this;
-                tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            }
-            catch
-            {
-                tierSettingsWindow.Owner = null;
-                tierSettingsWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            }
-            tierSettingsWindow.ShowDialog();
-
-            // Refresh customer list after tier settings might have changed
-            LoadCustomers();
-
-            // Trigger dashboard refresh for real-time updates
-            DashboardWindow.TriggerDashboardRefresh();
-        }
-
 
         // Pagination event handlers
         private void CustomerFirstPageButton_Click(object sender, RoutedEventArgs e)

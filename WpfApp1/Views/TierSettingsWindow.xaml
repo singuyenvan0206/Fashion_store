@@ -1,6 +1,7 @@
 <Window x:Class="WpfApp1.TierSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WpfApp1"
         Title="Cài Đặt Hạng Thành Viên" Height="600" Width="800"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize">

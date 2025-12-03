@@ -1,8 +1,6 @@
-
 using System.Printing;
 using System.Windows;
 using System.Windows.Controls;
-
 using System.Windows.Media;
 
 namespace WpfApp1
@@ -21,12 +19,11 @@ namespace WpfApp1
         private readonly int _employeeId;
         private DatabaseHelper.InvoiceHeader? _invoiceHeader;
 
-        public InvoicePrintWindow(List<InvoiceItemViewModel> items, CustomerListItem customer, 
-            decimal subtotal, decimal taxPercent, decimal taxAmount, decimal discount, 
+        public InvoicePrintWindow(List<InvoiceItemViewModel> items, CustomerListItem customer,
+            decimal subtotal, decimal taxPercent, decimal taxAmount, decimal discount,
             decimal total, int invoiceId, DateTime invoiceDate)
         {
             InitializeComponent();
-            
             _items = items;
             _customer = customer;
             _subtotal = subtotal;
@@ -36,16 +33,13 @@ namespace WpfApp1
             _total = total;
             _invoiceId = invoiceId;
             _invoiceDate = invoiceDate;
-            _employeeId = 1; // Giá trị mặc định cho constructor cũ
-
+            _employeeId = 1;
             LoadInvoiceData();
         }
-
 
         public InvoicePrintWindow(int invoiceId, int employeeId)
         {
             InitializeComponent();
-
             _items = new List<InvoiceItemViewModel>();
             _customer = new CustomerListItem();
             _subtotal = 0m;
@@ -56,24 +50,17 @@ namespace WpfApp1
             _invoiceId = invoiceId;
             _employeeId = employeeId;
             _invoiceDate = DateTime.Now;
-
             LoadFromDatabase(invoiceId, employeeId);
         }
 
         private void SetText(string elementName, string text)
         {
-            if (FindName(elementName) is TextBlock tb)
-            {
-                tb.Text = text;
-            }
+            if (FindName(elementName) is TextBlock tb) tb.Text = text;
         }
 
         private void SetItemsSource(string elementName, object items)
         {
-            if (FindName(elementName) is ItemsControl ic)
-            {
-                ic.ItemsSource = items as System.Collections.IEnumerable;
-            }
+            if (FindName(elementName) is ItemsControl ic) ic.ItemsSource = items as System.Collections.IEnumerable;
         }
 
         private void LoadInvoiceData()

@@ -110,9 +110,174 @@ namespace WpfApp1
             long adminExists = (long)checkCmd.ExecuteScalar();
             if (adminExists == 0)
             {
-                string insertAdminCmd = "INSERT INTO Accounts (Username, Password, Role) VALUES ('admin', 'admin', 'Admin');";
+                // Mã hóa mật khẩu admin mặc định
+                string hashedPassword = PasswordHelper.HashPassword("admin");
+                string insertAdminCmd = "INSERT INTO Accounts (Username, Password, Role) VALUES ('admin', @password, 'Admin');";
                 using var insertCmd = new MySqlCommand(insertAdminCmd, connection);
+                insertCmd.Parameters.AddWithValue("@password", hashedPassword);
                 insertCmd.ExecuteNonQuery();
+            }
+            else
+            {
+                // Cập nhật mật khẩu admin cũ sang mã hóa nếu chưa được mã hóa
+                string getAdminCmd = "SELECT Password FROM Accounts WHERE Username='admin';";
+                using var getCmd = new MySqlCommand(getAdminCmd, connection);
+                var adminPassword = getCmd.ExecuteScalar()?.ToString();
+                if (adminPassword != null && !PasswordHelper.IsHashed(adminPassword))
+                {
+                    string hashedPassword = PasswordHelper.HashPassword("admin");
+                    string updateAdminCmd = "UPDATE Accounts SET Password=@password WHERE Username='admin';";
+                    using var updateCmd = new MySqlCommand(updateAdminCmd, connection);
+                    updateCmd.Parameters.AddWithValue("@password", hashedPassword);
+                    updateCmd.ExecuteNonQuery();
+                }
+            }
+
+            // Migrate tất cả mật khẩu chưa được mã hóa
+            MigratePasswordsToHashed(connection);
+        }
+
+        /// <summary>
+        /// Migrate tất cả mật khẩu chưa được mã hóa sang dạng đã mã hóa
+        /// </summary>
+        public static void MigratePasswordsToHashed(MySqlConnection? connection = null)
+        {
+            bool shouldCloseConnection = connection == null;
+            if (connection == null)
+            {
+                connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+            }
+
+            try
+            {
+                // Lấy tất cả tài khoản
+                string selectCmd = "SELECT Id, Username, Password FROM Accounts;";
+                using var selectCmdObj = new MySqlCommand(selectCmd, connection);
+                using var reader = selectCmdObj.ExecuteReader();
+
+                var accountsToMigrate = new List<(int Id, string Username, string Password)>();
+                while (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string username = reader.GetString(1);
+                    string password = reader.GetString(2);
+
+                    // Kiểm tra xem mật khẩu đã được mã hóa chưa
+                    if (!PasswordHelper.IsHashed(password))
+                    {
+                        accountsToMigrate.Add((id, username, password));
+                    }
+                }
+                reader.Close();
+
+                // Mã hóa và cập nhật từng mật khẩu
+                int migratedCount = 0;
+                foreach (var account in accountsToMigrate)
+                {
+                    try
+                    {
+                        string hashedPassword = PasswordHelper.HashPassword(account.Password);
+                        string updateCmd = "UPDATE Accounts SET Password=@password WHERE Id=@id;";
+                        using var updateCmdObj = new MySqlCommand(updateCmd, connection);
+                        updateCmdObj.Parameters.AddWithValue("@password", hashedPassword);
+                        updateCmdObj.Parameters.AddWithValue("@id", account.Id);
+                        updateCmdObj.ExecuteNonQuery();
+                        migratedCount++;
+                    }
+                    catch
+                    {
+                        // Bỏ qua lỗi cho từng tài khoản, tiếp tục với tài khoản khác
+                    }
+                }
+
+                if (migratedCount > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Đã mã hóa {migratedCount} mật khẩu.");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lỗi khi migrate mật khẩu: {ex.Message}");
+            }
+            finally
+            {
+                if (shouldCloseConnection && connection != null)
+                {
+                    connection.Close();
+                    connection.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Chạy migration mật khẩu độc lập (có thể gọi từ UI hoặc script)
+        /// </summary>
+        public static (bool Success, int MigratedCount, string Message) RunPasswordMigration()
+        {
+            try
+            {
+                using var connection = new MySqlConnection(ConnectionString);
+                connection.Open();
+
+                // Lấy tất cả tài khoản
+                string selectCmd = "SELECT Id, Username, Password FROM Accounts;";
+                using var selectCmdObj = new MySqlCommand(selectCmd, connection);
+                using var reader = selectCmdObj.ExecuteReader();
+
+                var accountsToMigrate = new List<(int Id, string Username, string Password)>();
+                while (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    string username = reader.GetString(1);
+                    string password = reader.GetString(2);
+
+                    // Kiểm tra xem mật khẩu đã được mã hóa chưa
+                    if (!PasswordHelper.IsHashed(password))
+                    {
+                        accountsToMigrate.Add((id, username, password));
+                    }
+                }
+                reader.Close();
+
+                if (accountsToMigrate.Count == 0)
+                {
+                    return (true, 0, "Tất cả mật khẩu đã được mã hóa.");
+                }
+
+                // Mã hóa và cập nhật từng mật khẩu
+                int migratedCount = 0;
+                int failedCount = 0;
+                foreach (var account in accountsToMigrate)
+                {
+                    try
+                    {
+                        string hashedPassword = PasswordHelper.HashPassword(account.Password);
+                        string updateCmd = "UPDATE Accounts SET Password=@password WHERE Id=@id;";
+                        using var updateCmdObj = new MySqlCommand(updateCmd, connection);
+                        updateCmdObj.Parameters.AddWithValue("@password", hashedPassword);
+                        updateCmdObj.Parameters.AddWithValue("@id", account.Id);
+                        updateCmdObj.ExecuteNonQuery();
+                        migratedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        System.Diagnostics.Debug.WriteLine($"Lỗi khi migrate mật khẩu cho {account.Username}: {ex.Message}");
+                    }
+                }
+
+                string message = $"Đã mã hóa {migratedCount} mật khẩu.";
+                if (failedCount > 0)
+                {
+                    message += $" {failedCount} mật khẩu không thể mã hóa.";
+                }
+
+                return (failedCount == 0, migratedCount, message);
+            }
+            catch (Exception ex)
+            {
+                return (false, 0, $"Lỗi khi chạy migration: {ex.Message}");
             }
         }
 
@@ -255,10 +420,12 @@ namespace WpfApp1
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
+            // Mã hóa mật khẩu trước khi lưu
+            string hashedPassword = PasswordHelper.HashPassword(password);
             using var cmd = new MySqlCommand("INSERT INTO Accounts (Username, EmployeeName, Password, Role) VALUES (@username, @employeeName, @password, @role);", connection);
             cmd.Parameters.AddWithValue("@username", username);
             cmd.Parameters.AddWithValue("@employeeName", employeeName);
-            cmd.Parameters.AddWithValue("@password", password);
+            cmd.Parameters.AddWithValue("@password", hashedPassword);
             cmd.Parameters.AddWithValue("@role", role);
             try { return cmd.ExecuteNonQuery() > 0; }
             catch { return false; }
@@ -268,10 +435,17 @@ namespace WpfApp1
         {
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
-            using var cmd = new MySqlCommand("SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@password;", connection);
+            // Lấy mật khẩu đã hash từ database
+            using var cmd = new MySqlCommand("SELECT Password FROM Accounts WHERE Username=@username;", connection);
             cmd.Parameters.AddWithValue("@username", username);
-            cmd.Parameters.AddWithValue("@password", password);
-            return (long)cmd.ExecuteScalar() > 0 ? "true" : "false";
+            var storedPassword = cmd.ExecuteScalar()?.ToString();
+            
+            if (string.IsNullOrEmpty(storedPassword))
+                return "false";
+            
+            // Xác minh mật khẩu (hỗ trợ cả mật khẩu cũ chưa mã hóa và mật khẩu mới đã mã hóa)
+            bool isValid = PasswordHelper.VerifyPassword(password, storedPassword);
+            return isValid ? "true" : "false";
         }
 
         public static string GetUserRole(string username)
@@ -300,19 +474,26 @@ namespace WpfApp1
             using var connection = new MySqlConnection(ConnectionString);
             connection.Open();
 
-            string verifyCmd = "SELECT COUNT(*) FROM Accounts WHERE Username=@username AND Password=@oldPassword;";
-            using var verify = new MySqlCommand(verifyCmd, connection);
-            verify.Parameters.AddWithValue("@username", username);
-            verify.Parameters.AddWithValue("@oldPassword", oldPassword);
-            long count = (long)verify.ExecuteScalar();
+            // Lấy mật khẩu đã hash từ database
+            string getPasswordCmd = "SELECT Password FROM Accounts WHERE Username=@username;";
+            using var getPassword = new MySqlCommand(getPasswordCmd, connection);
+            getPassword.Parameters.AddWithValue("@username", username);
+            var storedPassword = getPassword.ExecuteScalar()?.ToString();
 
-            if (count == 0)
+            if (string.IsNullOrEmpty(storedPassword))
                 return false;
 
+            // Xác minh mật khẩu cũ (hỗ trợ cả mật khẩu cũ chưa mã hóa và mật khẩu mới đã mã hóa)
+            bool isOldPasswordValid = PasswordHelper.VerifyPassword(oldPassword, storedPassword);
+            if (!isOldPasswordValid)
+                return false;
+
+            // Mã hóa mật khẩu mới trước khi lưu
+            string hashedNewPassword = PasswordHelper.HashPassword(newPassword);
             string updateCmd = "UPDATE Accounts SET Password=@newPassword WHERE Username=@username;";
             using var update = new MySqlCommand(updateCmd, connection);
             update.Parameters.AddWithValue("@username", username);
-            update.Parameters.AddWithValue("@newPassword", newPassword);
+            update.Parameters.AddWithValue("@newPassword", hashedNewPassword);
             return update.ExecuteNonQuery() > 0;
         }
 
@@ -1795,8 +1976,10 @@ namespace WpfApp1
 
             if (!string.IsNullOrWhiteSpace(newPassword))
             {
+                // Mã hóa mật khẩu mới trước khi lưu
+                string hashedPassword = PasswordHelper.HashPassword(newPassword);
                 sets.Add("Password=@password");
-                cmd.Parameters.AddWithValue("@password", newPassword);
+                cmd.Parameters.AddWithValue("@password", hashedPassword);
             }
             if (!string.IsNullOrWhiteSpace(newRole))
             {

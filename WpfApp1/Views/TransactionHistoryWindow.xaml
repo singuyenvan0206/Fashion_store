@@ -1,6 +1,7 @@
 <Window x:Class="WpfApp1.TransactionHistoryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WpfApp1"
         Title="Lịch Sử Giao Dịch" Height="600" Width="900"
         WindowStartupLocation="CenterOwner">
     <Grid Background="#F5F5F5" Margin="10">

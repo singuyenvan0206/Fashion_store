@@ -1,4 +1,3 @@
-
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -30,22 +29,13 @@ namespace WpfApp1
         {
             try
             {
-                var paymentSettings = PaymentSettingsManager.Load();
-                if (InvoiceQRCode != null)
-                {
-                    HideQRCode(); // Hidden by default until payment method selected
-                }
+                PaymentSettingsManager.Load();
+                HideQRCode();
             }
-            catch
-            {
-                // Silent failure - QR code will be hidden
-            }
+            catch { }
         }
 
-        private void FocusProductEntry()
-        {
-            ProductComboBox?.Focus();
-        }
+        private void FocusProductEntry() => ProductComboBox?.Focus();
 
         #region Customer Management
 
@@ -88,24 +78,16 @@ namespace WpfApp1
             {
                 var (tier, points) = GetSelectedCustomerLoyalty();
 
-                if (LoyaltyTierTextBlock != null)
-                    LoyaltyTierTextBlock.Text = tier;
-
-                if (LoyaltyPointsTextBlock != null)
-                    LoyaltyPointsTextBlock.Text = $"{points} điểm";
+                LoyaltyTierTextBlock.Text = tier;
+                LoyaltyPointsTextBlock.Text = $"{points} điểm";
             }
-            catch
-            {
-                // Silent failure
-            }
+            catch { }
         }
 
         private (string tier, int points) GetSelectedCustomerLoyalty()
         {
             if (CustomerComboBox?.SelectedValue is int customerId && customerId > 0)
-            {
                 return DatabaseHelper.GetCustomerLoyalty(customerId);
-            }
             return ("Regular", 0);
         }
 
@@ -257,11 +239,7 @@ namespace WpfApp1
             InvoiceItemsDataGrid.ItemsSource = null;
             InvoiceItemsDataGrid.ItemsSource = _invoiceItems.ToList();
             
-            // Update item count
-            if (ItemCountTextBlock != null)
-            {
-                ItemCountTextBlock.Text = $"{_invoiceItems.Count} mục";
-            }
+            ItemCountTextBlock.Text = $"{_invoiceItems.Count} mục";
         }
 
         private void RemoveItemButton_Click(object sender, RoutedEventArgs e)
@@ -533,23 +511,13 @@ namespace WpfApp1
             ShowQRCode();
         }
 
-        private void ShowQRCode()
-        {
-            if (InvoiceQRCode != null)
-                InvoiceQRCode.Visibility = Visibility.Visible;
-        }
+        private void ShowQRCode() => InvoiceQRCode.Visibility = Visibility.Visible;
 
         private void HideQRCode()
         {
-            if (InvoiceQRCode != null)
-            {
-                InvoiceQRCode.Source = null;
-                InvoiceQRCode.Visibility = Visibility.Collapsed;
-            }
-
-            // Show placeholder text when hiding
-            var placeholderText = this.FindName("QRPlaceholderText") as TextBlock;
-            if (placeholderText != null)
+            InvoiceQRCode.Source = null;
+            InvoiceQRCode.Visibility = Visibility.Collapsed;
+            if (this.FindName("QRPlaceholderText") is TextBlock placeholderText)
             {
                 placeholderText.Text = "Chọn 'Chuyển khoản' để hiển thị QR";
                 placeholderText.Visibility = Visibility.Visible;
@@ -799,26 +767,12 @@ namespace WpfApp1
 
         #region Helper Methods
 
-        private static string GetTextOrEmpty(TextBox textBox)
-        {
-            return textBox?.Text ?? string.Empty;
-        }
-
-        private static decimal TryGetDecimal(string text)
-        {
-            return decimal.TryParse(text, out var value) && value >= 0 ? value : 0m;
-        }
-
+        private static string GetTextOrEmpty(TextBox textBox) => textBox?.Text ?? string.Empty;
+        private static decimal TryGetDecimal(string text) => decimal.TryParse(text, out var value) && value >= 0 ? value : 0m;
         private int GetEmployeeId(string username)
         {
-            try
-            {
-                return DatabaseHelper.GetEmployeeIdByUsername(username);
-            }
-            catch
-            {
-                return 1; // Default to admin
-            }
+            try { return DatabaseHelper.GetEmployeeIdByUsername(username); }
+            catch { return 1; }
         }
 
         #endregion

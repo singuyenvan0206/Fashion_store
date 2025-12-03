@@ -1,4 +1,3 @@
-
 using System.Windows;
 using System.Windows.Controls;
 
@@ -17,8 +16,6 @@ namespace WpfApp1
             _selectedProduct = new ProductViewModel();
             _paginationHelper.PageChanged += OnPageChanged;
             LoadData();
-            
-            // Enable sorting for DataGrid
             ProductDataGrid.Sorting += ProductDataGrid_Sorting;
         }
 
@@ -69,12 +66,8 @@ namespace WpfApp1
 
         private void UpdateDisplayAndPagination()
         {
-            // Update DataGrid with current page items
-            // Reset ItemsSource để tránh lỗi hiển thị
             ProductDataGrid.ItemsSource = null;
             ProductDataGrid.ItemsSource = _paginationHelper.GetCurrentPageItems();
-            
-            // Update pagination info
             if (PageInfoTextBlock != null)
             {
                 PageInfoTextBlock.Text = $"📄 Trang: {_paginationHelper.GetPageInfo()} • 📊 Tổng: {_paginationHelper.TotalItems} sản phẩm";
